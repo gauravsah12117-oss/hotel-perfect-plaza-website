@@ -281,10 +281,12 @@ main > section { position: relative; overflow-x: clip; }
     linear-gradient(180deg, rgba(10, 14, 26, .55) 0%, rgba(10, 14, 26, 0) 22%);
 }
 @media (max-width: 1023px) {
-  /* stacked on phones: the whole frame darkens more evenly */
+  /* Phones and tablets: the picture is a band at the top, not behind the
+     words (see HERO ON PHONES below), so the grade only has to melt its
+     foot into the navy the words sit on. */
   .hero {
     --hero-grade:
-      linear-gradient(180deg, rgba(10, 14, 26, .78) 0%, rgba(10, 14, 26, .74) 45%, rgba(10, 14, 26, .9) 100%);
+      linear-gradient(180deg, rgba(10, 14, 26, 0) 55%, rgba(10, 14, 26, .55) 82%, var(--night) 100%);
   }
 }
 
@@ -316,18 +318,16 @@ main > section { position: relative; overflow-x: clip; }
 .hero__tour-play svg { width: 1.1rem; height: 1.1rem; margin-left: .15rem; }
 .hero__tour:hover .hero__tour-play { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
 .hero__tour-time { margin-left: .35rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
-@media (max-width: 1023px) { .hero__tour { justify-content: center; } }
 
+/* Left-aligned at every width, like every other section of the page. */
 .hero__inner {
   position: relative; display: grid; align-items: end; gap: 2rem;
   padding-top: 7.5rem; padding-bottom: 2rem;
-  text-align: center;
 }
 @media (min-width: 1024px) {
   .hero__inner {
     grid-template-columns: 1fr auto; gap: 3rem;
     padding-top: 9rem; padding-bottom: 2.5rem;
-    text-align: left;
   }
 }
 
@@ -349,24 +349,20 @@ main > section { position: relative; overflow-x: clip; }
 .hero__facts dd { font-weight: 600; }
 
 .hero__place {
-  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: .55rem;
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem;
   margin-bottom: 1rem; font-size: .92rem;
 }
 .hero__place .deva { font-size: 1.1rem; color: #E6D6A8; }
-@media (min-width: 1024px) { .hero__place { justify-content: flex-start; } }
 
 .hero__title {
   font-family: var(--display); font-weight: 500;
   font-size: clamp(2.6rem, 1.8rem + 3.4vw, 4.6rem); line-height: 1.02;
   color: #fff; text-wrap: balance;
 }
-.hero__lede { max-width: 34rem; margin: 1.25rem auto 0; font-size: 1.05rem; line-height: 1.65; text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
+.hero__lede { max-width: 34rem; margin-top: 1.25rem; font-size: 1.05rem; line-height: 1.65; text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
 .hero__title { text-shadow: 0 2px 24px rgba(0, 0, 0, .35); }
-@media (min-width: 1024px) { .hero__lede { margin-inline: 0; } }
 
-.hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 2rem; }
-@media (min-width: 1024px) { .hero__actions { justify-content: flex-start; } }
-@media (max-width: 479px) { .hero__actions .btn { flex: 1 1 100%; } }
+.hero__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
 
 /* A short, quiet entrance. CSS, so nothing can be left stuck invisible if a
    script fails. */
@@ -395,13 +391,45 @@ main > section { position: relative; overflow-x: clip; }
 .booking .field-min input:focus {
   border-color: rgba(255, 255, 255, .7); box-shadow: 0 0 0 3px rgba(255, 255, 255, .15);
 }
-@media (min-width: 640px) { .booking__form { grid-template-columns: 1fr 1fr; padding: 1.25rem; } }
+/* Two columns below desktop: check-in | check-out, then guests | the button. */
+.booking__form { grid-template-columns: 1fr 1fr; align-items: end; }
+@media (min-width: 640px) { .booking__form { padding: 1.25rem; } }
 @media (min-width: 1024px) {
-  .booking__form { grid-template-columns: 1fr 1fr .6fr auto; align-items: end; gap: 1.1rem; padding: 1.25rem 1.5rem; }
+  .booking__form { grid-template-columns: 1fr 1fr .6fr auto; gap: 1.1rem; padding: 1.25rem 1.5rem; }
 }
 .booking__go { padding-block: .8rem; }
-@media (max-width: 1023px) { .booking__go { width: 100%; } }
-@media (min-width: 640px) and (max-width: 1023px) { .booking__go { grid-column: 1 / -1; } }
+@media (max-width: 1023px) { .booking__go { width: 100%; padding-inline: .6rem; } }
+
+/* ------------------------------------------------------- HERO ON PHONES
+   Below 1024px the picture no longer sits behind the words. A 16:9 film
+   stretched to fill an upright phone shows only a quarter of each shot,
+   enlarged until it blurs — so here the photograph and the film play in a
+   band across the top (4:3 on phones, 16:9 on tablets), sharp and nearly
+   whole, and the words sit below on plain navy, left-aligned like the rest
+   of the page. --band is the band's height; the words start beneath it. */
+@media (max-width: 1023px) {
+  .hero { display: block; min-height: 0; padding-bottom: 1.75rem; --band: 75vw; }
+  /* .hero in front: the film's own rule further down would otherwise win */
+  .hero .hero__bg, .hero .hero__film { inset: 4.5rem 0 auto 0; height: var(--band); overflow: hidden; }
+  .hero__inner { padding-top: calc(4.5rem + var(--band) + 1.25rem); padding-bottom: 1.5rem; gap: 1.5rem; }
+  .hero__title, .hero__lede { text-shadow: none; }
+  .hero__title { font-size: clamp(2.3rem, 1.6rem + 3.4vw, 3.4rem); }
+  .hero__lede { font-size: 1rem; }
+  /* the two buttons side by side, equal widths */
+  .hero__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: 1.5rem; }
+  .hero__actions .btn { width: 100%; padding-inline: .7rem; }
+  .hero__tour { margin-top: 1.1rem; }
+  /* the header sits on plain navy here, so its extra shade over the film
+     would only darken the top of the band */
+  html.film-on .masthead:not(.is-stuck)::before { opacity: 0; }
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hero { --band: 56.25vw; }
+  /* tablets have the width: buttons at their natural size, not stretched */
+  .hero__actions { display: flex; }
+  .hero__actions .btn { width: auto; padding-inline: 1.55rem; }
+}
+@media (max-width: 359px) { .hero__actions { grid-template-columns: 1fr; } }
 
 .field-min { display: grid; gap: .35rem; min-width: 0; }
 .field-min label, .field label { font-size: .84rem; font-weight: 600; color: var(--ink); }
@@ -412,6 +440,22 @@ main > section { position: relative; overflow-x: clip; }
   color: var(--ink); font-size: .95rem;
   transition: border-color .2s, box-shadow .2s;
 }
+/* Date fields on phones. iPhones otherwise shrink an empty date box to a
+   sliver and ignore its width; Android squeezes "mm/dd/yyyy" against the
+   calendar icon when two sit side by side. A fixed height, room for the
+   icon, and a left-aligned value keep both tidy. 16px text stops an iPhone
+   zooming the page when a field is tapped. */
+@media (max-width: 639px) {
+  input[type="date"] {
+    -webkit-appearance: none; appearance: none;
+    min-height: 2.9rem; padding-inline: .6rem .45rem;
+    font-size: 1rem; text-align: left;
+  }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+  input[type="date"]::-webkit-calendar-picker-indicator { margin-left: .2rem; padding: 0; }
+  .field input, .field select, .field textarea, .field-min input { font-size: 1rem; }
+}
+
 .field-min input:focus, .field input:focus, .field select:focus, .field textarea:focus {
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(187, 62, 59, .16);
 }
@@ -492,6 +536,8 @@ img[data-failed] { visibility: hidden; }
   margin-top: 2.5rem; padding-top: 1.75rem; border-top: 1px solid var(--rule-2);
   font-size: .92rem; color: var(--ink-2);
 }
+/* two tidy columns on phones, instead of a ragged wrap */
+@media (max-width: 639px) { .amenity-row { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem 1rem; } }
 .amenity-row li { display: inline-flex; align-items: center; gap: .5rem; }
 .amenity-row svg { width: 1.15rem; height: 1.15rem; color: var(--accent); }
 
@@ -513,6 +559,18 @@ img[data-failed] { visibility: hidden; }
 }
 .tab:hover { color: var(--ink); }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* Phones: an underlined row of three tabs does not fit — the last one was
+   cut off mid-word. Here they become pills that wrap onto a second line. */
+@media (max-width: 639px) {
+  .ui-ready .tablist { flex-wrap: wrap; gap: .5rem; border-bottom: 0; overflow: visible; }
+  .tab {
+    margin: 0; padding: .6rem 1rem;
+    border: 1px solid var(--rule-2); border-radius: 999px;
+    font-size: .92rem; color: var(--ink-2);
+  }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+}
 
 .panel { margin-top: 1.75rem; display: grid; }
 @media (min-width: 1024px) { .panel { grid-template-columns: 1fr 1fr; } }
@@ -585,15 +643,22 @@ img[data-failed] { visibility: hidden; }
 .contact__what { font-weight: 600; color: var(--ink); }
 .contact:hover .contact__what { color: var(--accent); }
 .contact__detail { font-size: .9rem; color: var(--ink-3); white-space: nowrap; }
-@media (max-width: 400px) { .contact__detail { display: none; } }
 
 /* The Mobile row: two numbers, each its own link, so the row itself is not
-   a link and does not change colour on hover. Never hidden — here the
-   numbers ARE the content. */
+   a link and does not change colour on hover. */
 .contact--multi:hover, .contact--multi:hover .contact__what { color: inherit; }
 .contact__nums { font-size: .9rem; color: var(--ink-3); text-align: right; }
 .contact__nums a { color: var(--ink); font-weight: 600; white-space: nowrap; }
 .contact__nums a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Phones: the number or address moves under its label rather than being
+   hidden — on a phone it is exactly what the guest came for. After the
+   rules above on purpose: it has to win over them. */
+@media (max-width: 479px) {
+  .contact { grid-template-columns: auto 1fr; row-gap: .15rem; }
+  .contact svg { grid-row: 1 / span 2; align-self: start; margin-top: .15rem; }
+  .contact__detail, .contact__nums { grid-column: 2; text-align: left; white-space: normal; font-size: .92rem; }
+}
 
 .getting { display: flex; flex-direction: column; gap: 1rem; }
 .getting .h3 { font-size: 1.35rem; }
@@ -611,6 +676,13 @@ img[data-failed] { visibility: hidden; }
 @media (min-width: 640px) {
   .form-grid { grid-template-columns: 1fr 1fr; }
   .field--wide { grid-column: 1 / -1; }
+}
+/* Phones: long fields full width, the short ones (dates, guests, room) two
+   to a row — a shorter form with nothing cramped. */
+@media (max-width: 639px) {
+  .form-grid { grid-template-columns: 1fr 1fr; column-gap: .75rem; }
+  .form-grid > .field { grid-column: 1 / -1; }
+  .form-grid > .field--pair { grid-column: auto; }
 }
 .field { display: grid; gap: .4rem; min-width: 0; }
 .field textarea { resize: vertical; }

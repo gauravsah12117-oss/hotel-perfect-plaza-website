@@ -204,12 +204,17 @@
 
 <!-- ============================================================== FACTS -->
 <section class="facts" aria-label="At a glance">
-  <ul class="wrap facts__list" role="list">
-    <li><svg aria-hidden="true"><use href="#i-pin"/></svg><span><strong>10 minutes' walk</strong>to the Janaki Mandir</span></li>
-    <li><svg aria-hidden="true"><use href="#i-clock"/></svg><span><strong>Open all night</strong>front desk and room service</span></li>
-    <li><svg aria-hidden="true"><use href="#i-dish"/></svg><span><strong>Breakfast included</strong>in every room rate</span></li>
-    <li><svg aria-hidden="true"><use href="#i-ac"/></svg><span><strong>Air-conditioned</strong>with hot water and Wi&#8209;Fi</span></li>
-  </ul>
+  <!-- The list sits INSIDE .wrap rather than being it: ul[role="list"]
+       resets padding, which silently cancelled .wrap's side padding and
+       pushed these four facts out of line with the rest of the page. -->
+  <div class="wrap">
+    <ul class="facts__list" role="list">
+      <li><svg aria-hidden="true"><use href="#i-pin"/></svg><span><strong>10 minutes' walk</strong>to the Janaki Mandir</span></li>
+      <li><svg aria-hidden="true"><use href="#i-clock"/></svg><span><strong>Open all night</strong>front desk and room service</span></li>
+      <li><svg aria-hidden="true"><use href="#i-dish"/></svg><span><strong>Breakfast included</strong>in every room rate</span></li>
+      <li><svg aria-hidden="true"><use href="#i-ac"/></svg><span><strong>Air-conditioned</strong>with hot water and Wi&#8209;Fi</span></li>
+    </ul>
+  </div>
 </section>
 
 <!-- ============================================================ WELCOME -->
@@ -508,21 +513,21 @@
             <label for="f-phone">Phone or WhatsApp <span class="field__opt">(optional)</span></label>
             <input id="f-phone" name="phone" type="tel" autocomplete="tel">
           </div>
-          <div class="field">
+          <div class="field field--pair">
             <label for="f-in">Check-in</label>
             <input id="f-in" name="arriving" type="date" required>
             <p class="field__err" data-err="f-in" hidden>Pick the date you arrive.</p>
           </div>
-          <div class="field">
+          <div class="field field--pair">
             <label for="f-out">Check-out</label>
             <input id="f-out" name="leaving" type="date" required>
             <p class="field__err" data-err="f-out" hidden>Check-out needs to come after check-in.</p>
           </div>
-          <div class="field">
+          <div class="field field--pair">
             <label for="f-guests">Guests</label>
             <input id="f-guests" name="guests" type="number" min="1" max="20" value="2">
           </div>
-          <div class="field">
+          <div class="field field--pair">
             <label for="f-room">Room</label>
             <select id="f-room" name="room">
               <option>Not sure yet</option>
