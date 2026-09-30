@@ -43,22 +43,26 @@ hotel's own photographs matter most.
 
 ## The design
 
-Plain, the way a real hotel presents itself. An earlier version used dark glass panels, gold
-gradients, glowing buttons and light "orbs"; it looked like a template, so all of that is gone.
+Professional and photo-led, with glass used sparingly. An earlier version put glass, gold
+gradients and glowing "orbs" everywhere and looked like a template; now glass appears only where
+there is a real photograph behind it to frost.
 
-- **Palette.** A warm light page (`#FAF7F2`), dark type, and one accent — a deep sindoor red
-  (`#8A2D1E`) for buttons and links. Gold appears only in the lotus mark.
-- **The hero** is the one dark band, `#0B0F19` — the ground of the Ram & Sita picture, so the
-  picture's edges melt into it rather than sitting on it as a box.
+- **Palette.** A warm light page (`#FAF7F2`), dark type, and one accent — the logo's own red
+  (`#BB3E3B`) for buttons and links, so the site and the signage match.
+- **The hero** is the hotel's own lobby, full-bleed and colour-graded twice: once in the file
+  (`hero-lobby.jpg` — warmer, slightly less saturated), and again in CSS (a navy wash under the
+  words, shade under the booking bar, a warm bloom at the chandeliers). It drifts very slowly.
+- **Glass** — the stay-details card and the booking bar in the hero, the "Call reception"
+  button, and the header once the page scrolls. Each has a solid fallback for browsers without
+  `backdrop-filter`.
 - **Type.** Cormorant Garamond for headings, Inter for everything else, Tiro Devanagari Hindi
   for जनकपुरधाम.
-- **Photographs carry the page.** Square-cornered frames, no filters. Until the hotel's own
-  photos arrive, each empty frame shows a small lotus on a stone-coloured ground.
-- **Lord Ram and Mata Sita** stand in the hero as a still picture. There is no rotation: the
-  12-frame sheet is separate AI images, Ram's dress changes from one to the next, and no turn
-  built from them could look right.
-- **Motion** is limited to a short fade as things appear, and respects *Reduce motion* in the
-  visitor's device settings.
+- **Photographs carry the page**, in softly rounded frames with a light shadow; room and place
+  photos ease in slightly on hover.
+- **Lord Ram and Mata Sita** are out of the hero for now (see CONTENT-TODO, section 5). The
+  picture and its script are kept for when they return.
+- **Motion** is limited to short fades and the hero's slow drift, and all of it stops for
+  visitors who ask their device for less motion.
 
 ---
 

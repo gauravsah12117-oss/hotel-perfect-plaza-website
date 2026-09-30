@@ -82,9 +82,14 @@ shows them, and the Janakpur section leads with the temple.
 
 ---
 
-## 5. Lord Ram & Mata Sita in the hero — a sharper picture
+## 5. Lord Ram & Mata Sita — out of the hero for now
 
-The hero shows **frame 2** of your 12-frame sheet, Ram and Sita facing forward, as a still
+**At your request the picture has been taken out of the hero**, which now shows the hotel's own
+lobby, colour-graded, with glass panels for the stay details and the booking bar. The file
+(`assets/images/ram-sita.jpg`) and its script (`assets/js/hero-figure.js`) are kept, so it can
+come back whenever you say — the notes below still apply when it does.
+
+It was **frame 2** of your 12-frame sheet, Ram and Sita facing forward, as a still
 picture. The 360° turn has been removed. Each frame on the sheet is a separate AI image — Ram's
 dress changes from one to the next — so no rotation built from them could look smooth.
 

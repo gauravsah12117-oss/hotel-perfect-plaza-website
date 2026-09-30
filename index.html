@@ -120,28 +120,22 @@
 <!-- ================================================================ HERO -->
 <section class="hero" id="top" aria-labelledby="hero-title">
 
+  <!-- The hotel's own lobby, colour-graded (warmer, a touch less saturated)
+       and darkened on the left by .hero__bg::after so the words stay
+       legible. The Lord Ram & Mata Sita picture is out of the hero for now;
+       ram-sita.jpg and hero-figure.js are kept for when it comes back. -->
+  <div class="hero__bg" aria-hidden="true">
+    <img src="assets/images/hero-lobby.jpg" alt="" width="2400" height="1600" fetchpriority="high" decoding="async">
+  </div>
+
   <!-- The hero film. Dormant until assets/video/ram-hero.mp4 exists; then
-       film.js fades it in behind the words and the picture steps aside.
-       See VIDEO-BRIEF.md. -->
+       film.js fades it in over the photograph. See VIDEO-BRIEF.md. -->
   <div class="hero__film" data-film aria-hidden="true">
     <video muted loop playsinline preload="none" disablepictureinpicture disableremoteplayback></video>
     <div class="hero__scrim"></div>
   </div>
 
   <div class="wrap hero__inner">
-
-    <!-- Lord Ram and Mata Sita. The static gold lotus beneath is the fallback
-         if the picture cannot load (hero-figure.js). -->
-    <div class="scene" data-scene>
-      <div class="scene__fallback" aria-hidden="true">
-        <svg class="scene__lotus"><use href="#lotus"/></svg>
-      </div>
-      <figure class="deity" data-figure>
-        <img class="deity__img" src="assets/images/ram-sita.jpg" width="247" height="362"
-             alt="Lord Ram and Mata Sita standing together, robed in gold, Ram holding his bow"
-             fetchpriority="high" decoding="async">
-      </figure>
-    </div>
 
     <div class="hero__text">
       <p class="hero__place hero-in hero-in--1">
@@ -155,32 +149,47 @@
         breakfast included, our own restaurant, and a front desk open through the night.
       </p>
       <div class="hero__actions hero-in hero-in--4">
-        <a class="btn btn--lg" href="#enquire">Check availability</a>
-        <a class="btn btn--lg btn--light" href="#rooms">View rooms</a>
+        <a class="btn btn--lg" href="#rooms">View rooms</a>
+        <a class="btn btn--lg btn--glass" data-tel href="#">
+          <svg aria-hidden="true"><use href="#i-phone"/></svg>
+          Call reception
+        </a>
       </div>
     </div>
+
+    <!-- A glass card of the practical facts. -->
+    <aside class="hero__card glass hero-in hero-in--4" aria-label="Stay details">
+      <p class="hero__card-label">Your stay</p>
+      <dl class="hero__facts">
+        <div><dt>Check-in</dt><dd data-checkin>From 14:00</dd></div>
+        <div><dt>Check-out</dt><dd data-checkout>By 12:00</dd></div>
+        <div><dt>Breakfast</dt><dd>Included</dd></div>
+        <div><dt>Reception</dt><dd>Open 24 hours</dd></div>
+      </dl>
+    </aside>
+  </div>
+
+  <!-- The availability bar, a glass panel along the foot of the hero. It
+       carries dates and guests down into the enquiry form, so nothing is
+       typed twice. -->
+  <div class="wrap booking hero-in hero-in--5">
+    <form class="booking__form glass" data-avail aria-label="Check availability">
+      <div class="field-min">
+        <label for="a-in">Check-in</label>
+        <input id="a-in" type="date" data-avail-in>
+      </div>
+      <div class="field-min">
+        <label for="a-out">Check-out</label>
+        <input id="a-out" type="date" data-avail-out>
+      </div>
+      <div class="field-min">
+        <label for="a-guests">Guests</label>
+        <input id="a-guests" type="number" min="1" max="20" value="2" data-avail-guests>
+      </div>
+      <button class="btn booking__go" type="submit">Check availability</button>
+    </form>
   </div>
 </section>
-
-<!-- The availability bar, laid over the foot of the hero. It carries dates
-     and guests down into the enquiry form, so nothing is typed twice. -->
-<div class="wrap booking">
-  <form class="booking__form" data-avail aria-label="Check availability">
-    <div class="field-min">
-      <label for="a-in">Check-in</label>
-      <input id="a-in" type="date" data-avail-in>
-    </div>
-    <div class="field-min">
-      <label for="a-out">Check-out</label>
-      <input id="a-out" type="date" data-avail-out>
-    </div>
-    <div class="field-min">
-      <label for="a-guests">Guests</label>
-      <input id="a-guests" type="number" min="1" max="20" value="2" data-avail-guests>
-    </div>
-    <button class="btn booking__go" type="submit">Check availability</button>
-  </form>
-</div>
 
 <!-- ============================================================== FACTS -->
 <section class="facts" aria-label="At a glance">

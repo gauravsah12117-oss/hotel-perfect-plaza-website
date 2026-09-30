@@ -116,9 +116,9 @@ window.HPP = (function () {
       el.rel = "noopener";
     });
 
-    const ci = $("[data-checkin]"), co = $("[data-checkout]"), yr = $("[data-year]");
-    if (ci) ci.textContent = SITE_CONFIG.checkIn;
-    if (co) co.textContent = SITE_CONFIG.checkOut;
+    $$("[data-checkin]").forEach(el => { el.textContent = SITE_CONFIG.checkIn; });
+    $$("[data-checkout]").forEach(el => { el.textContent = SITE_CONFIG.checkOut; });
+    const yr = $("[data-year]");
     if (yr) yr.textContent = new Date().getFullYear();
   }
 
@@ -255,26 +255,49 @@ window.HPP = (function () {
     });
   }
 
-  /* ------------------------------------- "Enquire about…" → the enquiry form
-     Links marked data-enquiry pick the matching enquiry type, then bring the
-     form into view with the cursor in it.                                 */
+  /* ------------------------------------------ availability bar → the form
+     The bar in the hero carries its dates and guests down into the enquiry
+     form; every "Check availability" / "Enquire about…" link marked
+     data-room also picks the matching option in the form's Room list.    */
 
-  function wireEnquiryLinks() {
+  function wireAvailability() {
     const form = $("[data-form]"), target = $("#enquire");
     if (!form || !target) return;
-    const type = $("#f-type"), first = $("[data-focus]", form), date = $("#f-date");
-    if (date) date.min = today();
 
-    $$("[data-enquiry]").forEach(link => {
+    const fIn = $("#f-in"), fOut = $("#f-out"), fGuests = $("#f-guests"),
+          fRoom = $("#f-room"), fName = $("[data-focus]", form);
+    linkDates(fIn, fOut);
+
+    const handOff = () => {
+      target.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+      window.setTimeout(() => {
+        const first = [fName, fIn, fOut].find(el => el && !el.value);
+        (first || fName || form).focus({ preventScroll: true });
+      }, calm ? 0 : 700);
+    };
+
+    const bar = $("[data-avail]");
+    if (bar) {
+      const aIn = $("[data-avail-in]"), aOut = $("[data-avail-out]"), aGuests = $("[data-avail-guests]");
+      linkDates(aIn, aOut);
+      bar.addEventListener("submit", e => {
+        e.preventDefault();
+        if (aIn && aIn.value && fIn) fIn.value = aIn.value;
+        if (aOut && aOut.value && fOut) fOut.value = aOut.value;
+        if (aGuests && aGuests.value && fGuests) fGuests.value = aGuests.value;
+        handOff();
+      });
+    }
+
+    $$("[data-room]").forEach(link => {
       link.addEventListener("click", e => {
         e.preventDefault();
-        const wanted = link.dataset.enquiry;
-        if (type && wanted) {
-          const match = Array.from(type.options).find(o => o.value === wanted || o.text === wanted);
-          if (match) type.value = match.value;
+        const wanted = link.dataset.room;
+        if (fRoom && wanted) {
+          const match = Array.from(fRoom.options).find(o => o.value === wanted || o.text === wanted);
+          if (match) fRoom.value = match.value;
         }
-        form.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
-        window.setTimeout(() => (first || form).focus({ preventScroll: true }), calm ? 0 : 700);
+        handOff();
       });
     });
   }
@@ -293,9 +316,12 @@ window.HPP = (function () {
     };
 
     const validate = () => {
+      const dIn = $("#f-in"), dOut = $("#f-out");
       const bad = {
         "f-name":  !$("#f-name").value.trim(),
-        "f-email": !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#f-email").value.trim())
+        "f-email": !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#f-email").value.trim()),
+        "f-in":    !!dIn && !dIn.value,
+        "f-out":   !!dOut && (!dOut.value || (dIn.value && dOut.value <= dIn.value))
       };
       Object.keys(bad).forEach(id => setErr(id, bad[id]));
       const firstBad = Object.keys(bad).find(id => bad[id]);
@@ -304,10 +330,9 @@ window.HPP = (function () {
     };
 
     const summarise = d =>
-      "Hello Hotel Perfect Plaza,\n\nI would like to ask about: " + d.type + ".\n\n" +
-      "Name: " + d.name + (d.company ? "\nCompany: " + d.company : "") +
-      (d.date ? "\nDate: " + d.date : "") + (d.people ? "\nPeople: " + d.people : "") +
-      (d.rooms ? "\nRooms: " + d.rooms : "") +
+      "Hello Hotel Perfect Plaza,\n\nI would like to ask about a stay.\n\n" +
+      "Name: " + d.name + "\nCheck-in: " + d.arriving + "\nCheck-out: " + d.leaving +
+      "\nGuests: " + d.guests + "\nRoom: " + d.room +
       (d.message ? "\n\n" + d.message : "") +
       "\n\nEmail: " + d.email + (d.phone ? "\nPhone: " + d.phone : "");
 
@@ -329,7 +354,7 @@ window.HPP = (function () {
       const label = submit.textContent;
       if (SITE_CONFIG.formspreeId) { submit.disabled = true; submit.textContent = "Sending…"; }
 
-      sendToHotel(data, "Enquiry: " + data.type + " — " + data.name, text)
+      sendToHotel(data, "Enquiry: " + data.room + " — " + data.name, text)
         .then(via => {
           status.classList.add("is-ok");
           if (via === "whatsapp") {
@@ -423,7 +448,7 @@ window.HPP = (function () {
   guardImages();
   wireMasthead();
   wireDrawer();
-  wireEnquiryLinks();
+  wireAvailability();
   wireForm();
   wireLightbox();
   wireSchema();
