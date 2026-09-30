@@ -563,6 +563,14 @@ img[data-failed] { visibility: hidden; }
 .contact__detail { font-size: .9rem; color: var(--ink-3); white-space: nowrap; }
 @media (max-width: 400px) { .contact__detail { display: none; } }
 
+/* The Mobile row: two numbers, each its own link, so the row itself is not
+   a link and does not change colour on hover. Never hidden — here the
+   numbers ARE the content. */
+.contact--multi:hover, .contact--multi:hover .contact__what { color: inherit; }
+.contact__nums { font-size: .9rem; color: var(--ink-3); text-align: right; }
+.contact__nums a { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.contact__nums a:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
 .getting { display: flex; flex-direction: column; gap: 1rem; }
 .getting .h3 { font-size: 1.35rem; }
 .routes { display: grid; gap: .85rem; }
@@ -607,6 +615,8 @@ img[data-failed] { visibility: hidden; }
 .footer__addr .deva { font-size: 1.05rem; color: #E6D6A8; }
 .footer__links { display: grid; align-content: start; gap: .6rem; font-size: .93rem; }
 .footlink:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.footer__mobiles a { white-space: nowrap; }
+.footer__mobiles a:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 .footer__legal {
   padding: 1.25rem; border-top: 1px solid rgba(255, 255, 255, .1);
   text-align: center; font-size: .82rem;

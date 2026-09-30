@@ -8,14 +8,20 @@
 const SITE_CONFIG = {
 
   /* WhatsApp number: country code first, digits only.
-     Nepal is 977, so a mobile 98XXXXXXXX becomes "97798XXXXXXXX". */
-  whatsapp: "9779800000000",
+     Nepal is 977, so a mobile 98XXXXXXXX becomes "97798XXXXXXXX".
+     This is the first mobile on the letterhead — if WhatsApp is on the
+     other one (9844022215), change it to "9779844022215". */
+  whatsapp: "9779854022215",
 
-  /* Shown on the page and used for the Call button. */
-  phone: "+977-41-000000",
+  /* The landline — shown on the page and used by every Call button. */
+  phone: "+977-41-590911",
+
+  /* The mobiles, listed under "Mobile" in the contact section and footer.
+     Digits only, as many as you like. */
+  mobiles: ["9854022215", "9844022215"],
 
   /* Leave empty to hide the email row entirely. */
-  email: "stay@hotelperfectplaza.com",
+  email: "hotelperfectplaza@gmail.com",
 
   /* From formspree.io — create a form, copy the ID out of the endpoint URL.
      Example endpoint https://formspree.io/f/xyzabcde  →  "xyzabcde"
@@ -26,11 +32,12 @@ const SITE_CONFIG = {
      Leave empty and the map panel shows a hint instead. */
   mapEmbed: "",
 
-  /* The plain "open in Maps" link. */
-  mapsUrl: "https://maps.google.com/?q=Hotel+Perfect+Plaza+Janakpurdham",
+  /* The plain "open in Maps" link. Better still: find the hotel on Google
+     Maps, press Share, and paste that link here — it opens on the exact pin. */
+  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Hotel+Perfect+Plaza%2C+Ramanand+Chowk%2C+Janakpurdham",
 
   address: {
-    street: "Janakpurdham",
+    street: "Ramanand Chowk-9",
     city: "Janakpurdham",
     region: "Madhesh Province",
     postalCode: "45600",
@@ -39,30 +46,6 @@ const SITE_CONFIG = {
 
   checkIn:  "From 14:00",
   checkOut: "By 12:00",
-
-  /* The reception line shown in the footer as "open 24 hours". Leave empty
-     to use the main phone number above. */
-  emergencyPhone: "",
-
-  /* ONLINE CARD PAYMENT — optional.
-     Create a Payment Link in your Stripe dashboard (it starts
-     https://buy.stripe.com/…) and paste it here. Checkout then offers
-     "Pay online by card", and the guest pays on Stripe's own secure page.
-     Card numbers are never typed into this website. Leave it empty and
-     guests pay at the hotel. */
-  paymentLink: "",
-
-  /* GUEST REVIEWS — real ones only. Copy your rating and a few reviews from
-     Google or TripAdvisor. While everything here is empty, the reviews
-     section stays hidden. Example:
-       google: { rating: 4.6, count: 128, url: "https://g.page/…" },
-       quotes: [{ text: "Spotless room and…", name: "Anil S.", role: "Business traveller",
-                  source: "Google", date: "August 2026" }]            */
-  reviews: {
-    google:      { rating: null, count: null, url: "" },
-    tripadvisor: { rating: null, count: null, url: "" },
-    quotes: []
-  },
 
   /* Add your own, e.g. { facebook: "https://...", instagram: "https://..." } */
   social: {}
@@ -97,10 +80,21 @@ window.HPP = (function () {
 
     $$("[data-phone-display]").forEach(el => { el.textContent = SITE_CONFIG.phone; });
 
-    const reception = SITE_CONFIG.emergencyPhone || SITE_CONFIG.phone;
-    $$("[data-tel-reception]").forEach(el => {
-      el.href = "tel:" + String(reception).replace(/[^\d+]/g, "");
-      el.textContent = reception;
+    /* the WhatsApp number as a guest would type it: 98XXXXXXXX */
+    $$("[data-whatsapp-display]").forEach(el => { el.textContent = waDigits.replace(/^977/, ""); });
+
+    /* each mobile as its own tap-to-call link, separated by a dot */
+    const mobiles = (SITE_CONFIG.mobiles || []).map(m => String(m).replace(/\D/g, "")).filter(Boolean);
+    $$("[data-mobiles]").forEach(el => {
+      if (!mobiles.length) { const row = el.closest("li, p"); if (row) row.remove(); return; }
+      el.textContent = "";
+      mobiles.forEach((m, i) => {
+        if (i) el.append(" · ");
+        const a = document.createElement("a");
+        a.href = "tel:+977" + m;
+        a.textContent = m;
+        el.append(a);
+      });
     });
 
     if (SITE_CONFIG.email) {
@@ -231,8 +225,7 @@ window.HPP = (function () {
   }
 
   /* --------------------------------------------------- sending to the hotel
-     One route for everything a guest sends: the enquiry form here and the
-     booking request in booking.js. With a Formspree ID it is emailed; without
+     The enquiry form sends through here. With a Formspree ID it is emailed; without
      one, WhatsApp opens with the message written out. WhatsApp must open
      inside the click itself or the browser blocks the new tab, so that branch
      runs before anything is awaited. Resolves to "email" or "whatsapp";
@@ -422,7 +415,7 @@ window.HPP = (function () {
       "@context": "https://schema.org",
       "@type": "Hotel",
       name: "Hotel Perfect Plaza",
-      description: "A hotel in Janakpurdham, Nepal, ten minutes' walk from the Janaki Mandir, with conference and banquet halls.",
+      description: "A hotel at Ramanand Chowk, Janakpurdham, Nepal, ten minutes' walk from the Janaki Mandir.",
       url: window.location.origin + window.location.pathname,
       image: new URL("assets/images/og-image.jpg", window.location.href).href,
       telephone: SITE_CONFIG.phone,
@@ -435,8 +428,8 @@ window.HPP = (function () {
       checkinTime: SITE_CONFIG.checkIn,
       checkoutTime: SITE_CONFIG.checkOut,
       sameAs: Object.values(SITE_CONFIG.social).filter(Boolean),
-      amenityFeature: ["Air conditioning", "Free Wi-Fi", "Restaurant", "24-hour room service",
-                       "Airport shuttle", "24-hour front desk", "Conference hall", "Laundry service"]
+      amenityFeature: ["Air conditioning", "Free Wi-Fi", "Restaurant", "Room service",
+                       "Airport shuttle", "24-hour front desk", "Laundry service"]
         .map(n => ({ "@type": "LocationFeatureSpecification", name: n, value: true }))
     });
   }
@@ -455,7 +448,7 @@ window.HPP = (function () {
 
   document.body.classList.remove("is-loading");
 
-  /* Shared with booking.js and sections.js, which load after this file. */
+  /* Exposed for any add-on script; nothing on the page reads it today. */
   return {
     config: SITE_CONFIG, calm, $, $$,
     waLink, sendToHotel, isoLocal, today, addDays, linkDates

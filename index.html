@@ -91,7 +91,7 @@
 
     <a class="masthead__tel" data-tel href="#">
       <svg aria-hidden="true"><use href="#i-phone"/></svg>
-      <span data-phone-display>+977-41-000000</span>
+      <span data-phone-display>+977-41-590911</span>
     </a>
     <a class="btn masthead__book" href="#enquire">Book now</a>
 
@@ -111,7 +111,7 @@
   </nav>
   <div class="drawer__foot">
     <a class="btn btn--block" href="#enquire">Book now</a>
-    <a class="drawer__tel" data-tel href="#">Call <span data-phone-display>+977-41-000000</span></a>
+    <a class="drawer__tel" data-tel href="#">Call <span data-phone-display>+977-41-590911</span></a>
   </div>
 </div>
 
@@ -436,20 +436,28 @@
       </div>
 
       <ul class="contact-list" role="list">
-        <li><a class="contact" data-tel href="#">
+        <li><a class="contact" data-tel href="tel:+97741590911">
           <svg aria-hidden="true"><use href="#i-phone"/></svg>
           <span class="contact__what">Call the front desk</span>
-          <span class="contact__detail" data-phone-display>+977-41-000000</span>
+          <span class="contact__detail" data-phone-display>+977-41-590911</span>
         </a></li>
-        <li><a class="contact" data-whatsapp href="#">
+        <!-- Two numbers, so not one link: each number is its own tap-to-call
+             link (filled from SITE_CONFIG.mobiles). Kept visible on the
+             smallest phones, unlike the other rows' details. -->
+        <li><div class="contact contact--multi">
+          <svg aria-hidden="true"><use href="#i-phone"/></svg>
+          <span class="contact__what">Mobile</span>
+          <span class="contact__nums" data-mobiles><a href="tel:+9779854022215">9854022215</a> · <a href="tel:+9779844022215">9844022215</a></span>
+        </div></li>
+        <li><a class="contact" data-whatsapp href="https://wa.me/9779854022215">
           <svg aria-hidden="true"><use href="#i-whatsapp"/></svg>
           <span class="contact__what">WhatsApp</span>
-          <span class="contact__detail" data-phone-display>+977-41-000000</span>
+          <span class="contact__detail" data-whatsapp-display>9854022215</span>
         </a></li>
-        <li><a class="contact" data-email href="#">
+        <li><a class="contact" data-email href="mailto:hotelperfectplaza@gmail.com">
           <svg aria-hidden="true"><use href="#i-mail"/></svg>
           <span class="contact__what">Email</span>
-          <span class="contact__detail" data-email-display>stay@hotelperfectplaza.com</span>
+          <span class="contact__detail" data-email-display>hotelperfectplaza@gmail.com</span>
         </a></li>
       </ul>
 
@@ -543,7 +551,7 @@
       <p class="footer__tag">For Perfect Satisfaction</p>
       <address class="footer__addr">
         <span class="deva" lang="ne">जनकपुरधाम</span><br>
-        Janakpurdham, Dhanusha<br>Madhesh Province, Nepal
+        Ramanand Chowk-9, Janakpurdham<br>Dhanusha, Madhesh Province, Nepal
       </address>
     </div>
     <nav class="footer__links" aria-label="Footer">
@@ -553,8 +561,10 @@
       <a class="footlink" href="#enquire">Contact</a>
     </nav>
     <div class="footer__links">
-      <a class="footlink" data-tel href="#"><span data-phone-display>+977-41-000000</span></a>
-      <a class="footlink" data-whatsapp href="#">WhatsApp</a>
+      <a class="footlink" data-tel href="tel:+97741590911">Tel <span data-phone-display>+977-41-590911</span></a>
+      <p class="footer__mobiles">Mobile <span data-mobiles><a class="footlink" href="tel:+9779854022215">9854022215</a> · <a class="footlink" href="tel:+9779844022215">9844022215</a></span></p>
+      <a class="footlink" data-whatsapp href="https://wa.me/9779854022215">WhatsApp</a>
+      <a class="footlink" data-email href="mailto:hotelperfectplaza@gmail.com"><span data-email-display>hotelperfectplaza@gmail.com</span></a>
       <a class="footlink" data-maps href="#">Find us on the map</a>
     </div>
   </div>

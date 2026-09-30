@@ -36,18 +36,29 @@ If any of these is wrong, tell me which and I will rewrite it — or remove the 
 
 ---
 
-## 2. Your contact details
+## 2. Your contact details — done, from your letterhead
 
-Open `assets/js/main.js`. Everything is in the `SITE_CONFIG` block at the very top.
+They're in `assets/js/main.js`, in the `SITE_CONFIG` block at the very top, and every Call,
+WhatsApp and email link on the page now uses them.
 
-| Setting | What to put there |
+| Setting | Now set to |
 |---|---|
-| `whatsapp` | Country code then number, digits only. A Nepali mobile `9812345678` becomes `"9779812345678"` |
-| `phone` | As you want it printed, e.g. `"+977-41-590123"` |
-| `email` | Your booking inbox. Leave `""` and the email row disappears |
-| `mapsUrl` | Open Google Maps, find the hotel, press Share, copy the link |
-| `address` | Street, city, region, postal code |
-| `checkIn` / `checkOut` | Your actual times |
+| `phone` | `+977-41-590911` — the landline, used by every Call button |
+| `mobiles` | `9854022215`, `9844022215` — listed under "Mobile" in the contact section and footer |
+| `whatsapp` | `9779854022215` — **please confirm WhatsApp is on 9854022215.** If it's on the other mobile, change this to `"9779844022215"` |
+| `email` | `hotelperfectplaza@gmail.com` |
+| `address` | Ramanand Chowk-9, Janakpurdham, Dhanusha, Madhesh Province |
+
+Two things to check:
+- [ ] **WhatsApp number** — as above
+- [ ] **Map pin** — the "Open in Google Maps" links search for the hotel by name at Ramanand
+      Chowk. For the exact pin: find the hotel on Google Maps, press **Share**, copy the link, and
+      paste it into `mapsUrl`
+- [ ] Your **check-in / check-out times** (`checkIn` / `checkOut`) — still the placeholders
+      14:00 / 12:00
+
+`pradeepsah984@gmail.com` from the letterhead is **not** on the site: it looks like a personal
+address, and a public web page attracts spam. Tell me if you'd like it added.
 
 **Until `formspreeId` is filled in, the enquiry form opens WhatsApp with the message
 pre-written instead of emailing you.** That works, but see section 3.
@@ -212,9 +223,14 @@ These are placeholders written to sound right. Confirm each against reality.
 ## 8. Before you go live
 
 - [ ] Everything in section 1 confirmed or corrected
-- [x] The site's address — `canonical`/`og:url` in `index.html`, `sitemap.xml` and `robots.txt`
-      — points at `https://hotel-perfect-plaza-website.vercel.app/`. Once you have a real domain,
-      tell me and I'll swap all four in one go (and it's a five-minute add in Vercel's dashboard)
+- [ ] **Re-register `hotelperfectplaza.com` — urgent.** Your letterhead prints
+      www.hotelperfectplaza.com, but as of 30 September 2026 that domain is **not registered to
+      anyone** (it has lapsed, or was never registered), so the address leads nowhere and anyone
+      could buy it. Register it (about US$10–15 a year, at any registrar such as Namecheap,
+      GoDaddy or Cloudflare) in the hotel's name. Then tell me: I'll connect it to this site in
+      Vercel and point the site's address — `canonical`/`og:url` in `index.html`, `sitemap.xml`
+      and `robots.txt` — at it. Until then the site lives at
+      `https://hotel-perfect-plaza-website.vercel.app/`
 - [x] iPhone/Android home-screen icon — `assets/favicon/apple-touch-icon.png`, made from your
       real logo (see section 6 for the one caveat on its sharpness)
 - [ ] Send one test enquiry and confirm it lands
