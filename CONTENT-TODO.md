@@ -115,39 +115,46 @@ to make the file small — is in **[VIDEO-BRIEF.md](VIDEO-BRIEF.md)**.
 
 ---
 
-## 6. Photographs of the hotel — the most important item here
+## 6. Photographs of the hotel — done, from the set on your desktop
 
-These seven frames are still empty, and **they are what will make the site look real**. They
-must be photographs of the actual hotel — a guest who books a room from a stock photo and finds
-a different room is a complaint waiting to happen. A good phone camera in daylight is enough:
-switch on every light, open the curtains, tidy, and shoot from a corner at chest height.
+I went through `C:\Users\hotel\Desktop\hotel photo` and placed these on the page, resized and
+compressed for the web (each auto-rotated, exact `width`/`height` and `alt` text updated to
+match what's actually in each photo):
 
-Drop them into `assets/images/` using **exactly these filenames**. Landscape, 1600 px wide or
-more, ideally under 400 KB each.
+| Site file | Made from | Used for |
+|---|---|---|
+| `hotel-lobby.jpg` | `Front view.JPG` | "About the hotel" — see below |
+| `front-desk.jpg` | `DSC_7061.JPG` | The reception desk, in Restaurant, events and services |
+| `room-1.jpg` | `deluxe room.JPG` | Deluxe Room |
+| `room-2.jpg` | `DSC_6972.JPG` | Executive Room |
+| `room-3.jpg` | `Glass view room.JPG` | Plaza Suite |
+| `og-image.jpg` | `Front main view.JPG`, cropped to 1200 × 630 | What appears when the link is shared |
 
-| File | What it should show |
-|---|---|
-| `hotel-exterior.jpg` | **The front of the hotel**, in daylight — the "About the hotel" section |
-| `room-1.jpg` | Deluxe Room |
-| `room-2.jpg` | Executive Room |
-| `room-3.jpg` | Plaza Suite |
-| `dining-room.jpg` | The restaurant, laid and lit |
-| `banquet.jpg` | The hall or lawn set up for a function. *Only if section 1 is confirmed* |
-| `front-desk.jpg` | The front desk, ideally with a member of staff |
+**No exterior photo was in that folder** — every photo is indoors. The "About the hotel" section
+therefore now shows the **lobby**, not the front of the building (the `<img>` was renamed from
+`hotel-exterior.jpg` to `hotel-lobby.jpg` and its alt text says "reception and lobby," not
+"front," so nothing on the page overclaims). If you'd like the actual building front there
+instead, send me a daylight photo of the entrance and I'll swap it in — same spot, one file.
 
-### Sharing
+**Still needed, because the folder had none:**
+- `dining-room.jpg` — the restaurant, laid and lit. (The restaurant's own signage is visible in
+  the lobby photos, but that's not the same as a photo of the dining room itself.)
+- `banquet.jpg` — the hall or lawn set up for a function. *Only if section 1 is confirmed.*
 
-| File | What it should show |
-|---|---|
-| `og-image.jpg` | What appears when someone shares the link. **1200 × 630** |
+**Photos I didn't use, still in your folder, available if you want a gallery per room later:**
+`room view.JPG`, `Double bed room.JPG` and `Bed view.JPG` (more angles of the two room types
+above), `DSC_7000.JPG` (a third angle of the Deluxe Room), and `Elevator View.JPG` (the
+lift/staircase corridor). The current room cards show one photo each; say the word and I'll add
+a click-to-enlarge gallery so guests can flick through all of a room's photos.
 
-**The gallery is gone.** The new design's brief did not include one, so the eight
-`gallery-*.jpg` photos from the earlier version are no longer used. If you would like a gallery
-back, say so — it is quick to add.
-
-**If you rename anything,** update the matching `src` in `index.html` and its `alt` text with it.
-The alt text is what blind visitors and search engines read, so describe the photo rather than
-labelling it.
+**The real logo** (`hotellogo.tif`) is now the phone/tablet **home-screen icon**
+(`assets/favicon/apple-touch-icon.png`) — the `<link rel="apple-touch-icon">` is already wired
+into `index.html`. One caveat: that source file is only 600 × 288 px, so the icon is a little
+soft when a phone displays it at full size. The header and footer still use the drawn gold lotus
+mark rather than this logo, because the real logo's dark-red-and-black colours would disappear
+against the dark hero background before the page is scrolled — if you'd like the real logo there
+too, the usual fix is a small white rounded tile behind it, and a higher-resolution copy of the
+logo (or the original vector/print file) would also look considerably sharper than this one.
 
 ---
 
@@ -197,12 +204,11 @@ These are placeholders written to sound right. Confirm each against reality.
 ## 8. Before you go live
 
 - [ ] Everything in section 1 confirmed or corrected
-- [ ] Replace `hotelperfectplaza.com` with your real domain in `index.html` (the `canonical` and
-      `og:url` tags), `sitemap.xml` and `robots.txt`
-- [ ] Add an iPhone home-screen icon: save a 180×180 PNG as
-      `assets/favicon/apple-touch-icon.png`, then add
-      `<link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">`
-      to `index.html` just below the existing `<link rel="icon" …>`
+- [x] The site's address — `canonical`/`og:url` in `index.html`, `sitemap.xml` and `robots.txt`
+      — points at `https://hotel-perfect-plaza-website.vercel.app/`. Once you have a real domain,
+      tell me and I'll swap all four in one go (and it's a five-minute add in Vercel's dashboard)
+- [x] iPhone/Android home-screen icon — `assets/favicon/apple-touch-icon.png`, made from your
+      real logo (see section 6 for the one caveat on its sharpness)
 - [ ] Send one test enquiry and confirm it lands
 - [ ] Open the site on a real phone and press Call and WhatsApp
 - [ ] Look through the whole page on a real phone: Lord Ram and Mata Sita appear in the hero,
