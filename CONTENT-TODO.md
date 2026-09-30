@@ -147,14 +147,17 @@ above), `DSC_7000.JPG` (a third angle of the Deluxe Room), and `Elevator View.JP
 lift/staircase corridor). The current room cards show one photo each; say the word and I'll add
 a click-to-enlarge gallery so guests can flick through all of a room's photos.
 
-**The real logo** (`hotellogo.tif`) is now the phone/tablet **home-screen icon**
-(`assets/favicon/apple-touch-icon.png`) — the `<link rel="apple-touch-icon">` is already wired
-into `index.html`. One caveat: that source file is only 600 × 288 px, so the icon is a little
-soft when a phone displays it at full size. The header and footer still use the drawn gold lotus
-mark rather than this logo, because the real logo's dark-red-and-black colours would disappear
-against the dark hero background before the page is scrolled — if you'd like the real logo there
-too, the usual fix is a small white rounded tile behind it, and a higher-resolution copy of the
-logo (or the original vector/print file) would also look considerably sharper than this one.
+**The real logo** (`hotellogo.tif`) is now used everywhere a mark appears: the header, the
+footer, and the phone/tablet home-screen icon (`assets/favicon/apple-touch-icon.png`, already
+wired in). In the header and footer it sits on its own small white card
+(`assets/images/hotel-logo.png`), which is why it stays legible over the dark hero, over the
+white header once the page scrolls, and on the dark footer — a plain image would disappear
+against the hero's colours, especially the black "HOTEL"/"PLAZA" text.
+
+**One real limitation:** the source file is only 600 × 288 px, so the logo is a little soft up
+close (most visible on the footer, where it's shown largest). If you have a bigger version — the
+original design file, or whatever was used to print your signage or letterhead — send it and
+I'll swap it in; everything else about the layout stays the same.
 
 ---
 
