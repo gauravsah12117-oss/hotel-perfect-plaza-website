@@ -1,0 +1,438 @@
+/* ==========================================================================
+   Hotel Perfect Plaza — Janakpurdham, Nepal
+   --------------------------------------------------------------------------
+   Everything you need to change lives in SITE_CONFIG, directly below.
+   Nothing else in this file needs editing.
+   ========================================================================== */
+
+const SITE_CONFIG = {
+
+  /* WhatsApp number: country code first, digits only.
+     Nepal is 977, so a mobile 98XXXXXXXX becomes "97798XXXXXXXX". */
+  whatsapp: "9779800000000",
+
+  /* Shown on the page and used for the Call button. */
+  phone: "+977-41-000000",
+
+  /* Leave empty to hide the email row entirely. */
+  email: "stay@hotelperfectplaza.com",
+
+  /* From formspree.io — create a form, copy the ID out of the endpoint URL.
+     Example endpoint https://formspree.io/f/xyzabcde  →  "xyzabcde"
+     While this is empty, the form politely hands guests to WhatsApp instead. */
+  formspreeId: "",
+
+  /* Paste the "Embed a map" iframe src from Google Maps.
+     Leave empty and the map panel shows a hint instead. */
+  mapEmbed: "",
+
+  /* The plain "open in Maps" link. */
+  mapsUrl: "https://maps.google.com/?q=Hotel+Perfect+Plaza+Janakpurdham",
+
+  address: {
+    street: "Janakpurdham",
+    city: "Janakpurdham",
+    region: "Madhesh Province",
+    postalCode: "45600",
+    country: "NP"
+  },
+
+  checkIn:  "From 14:00",
+  checkOut: "By 12:00",
+
+  /* The reception line shown in the footer as "open 24 hours". Leave empty
+     to use the main phone number above. */
+  emergencyPhone: "",
+
+  /* ONLINE CARD PAYMENT — optional.
+     Create a Payment Link in your Stripe dashboard (it starts
+     https://buy.stripe.com/…) and paste it here. Checkout then offers
+     "Pay online by card", and the guest pays on Stripe's own secure page.
+     Card numbers are never typed into this website. Leave it empty and
+     guests pay at the hotel. */
+  paymentLink: "",
+
+  /* GUEST REVIEWS — real ones only. Copy your rating and a few reviews from
+     Google or TripAdvisor. While everything here is empty, the reviews
+     section stays hidden. Example:
+       google: { rating: 4.6, count: 128, url: "https://g.page/…" },
+       quotes: [{ text: "Spotless room and…", name: "Anil S.", role: "Business traveller",
+                  source: "Google", date: "August 2026" }]            */
+  reviews: {
+    google:      { rating: null, count: null, url: "" },
+    tripadvisor: { rating: null, count: null, url: "" },
+    quotes: []
+  },
+
+  /* Add your own, e.g. { facebook: "https://...", instagram: "https://..." } */
+  social: {}
+};
+
+/* ========================================================================== */
+
+window.HPP = (function () {
+  "use strict";
+
+  const $  = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ------------------------------------------------------ contact details */
+
+  const waDigits = String(SITE_CONFIG.whatsapp || "").replace(/\D/g, "");
+  const telHref  = "tel:" + String(SITE_CONFIG.phone || "").replace(/[^\d+]/g, "");
+
+  const waLink = text =>
+    "https://wa.me/" + waDigits + (text ? "?text=" + encodeURIComponent(text) : "");
+
+  function wireContacts() {
+    $$("[data-tel]").forEach(el => { el.href = telHref; });
+
+    $$("[data-whatsapp]").forEach(el => {
+      el.href = waLink("Hello, I would like to ask about a room at Hotel Perfect Plaza.");
+      el.target = "_blank";
+      el.rel = "noopener";
+    });
+
+    $$("[data-phone-display]").forEach(el => { el.textContent = SITE_CONFIG.phone; });
+
+    const reception = SITE_CONFIG.emergencyPhone || SITE_CONFIG.phone;
+    $$("[data-tel-reception]").forEach(el => {
+      el.href = "tel:" + String(reception).replace(/[^\d+]/g, "");
+      el.textContent = reception;
+    });
+
+    if (SITE_CONFIG.email) {
+      $$("[data-email]").forEach(el => { el.href = "mailto:" + SITE_CONFIG.email; });
+      $$("[data-email-display]").forEach(el => { el.textContent = SITE_CONFIG.email; });
+    } else {
+      $$("[data-email]").forEach(el => { const li = el.closest("li"); if (li) li.remove(); });
+    }
+
+    $$("[data-maps]").forEach(el => {
+      el.href = SITE_CONFIG.mapsUrl || "#";
+      el.target = "_blank";
+      el.rel = "noopener";
+    });
+
+    const ci = $("[data-checkin]"), co = $("[data-checkout]"), yr = $("[data-year]");
+    if (ci) ci.textContent = SITE_CONFIG.checkIn;
+    if (co) co.textContent = SITE_CONFIG.checkOut;
+    if (yr) yr.textContent = new Date().getFullYear();
+  }
+
+  function wireMap() {
+    const holder = $("[data-map]");
+    if (!holder || !SITE_CONFIG.mapEmbed) return;
+    const frame = document.createElement("iframe");
+    frame.src = SITE_CONFIG.mapEmbed;
+    frame.loading = "lazy";
+    frame.title = "Hotel Perfect Plaza on the map";
+    frame.referrerPolicy = "no-referrer-when-downgrade";
+    frame.allowFullscreen = true;
+    holder.textContent = "";
+    holder.appendChild(frame);
+  }
+
+  /* ------------------------------------------------- missing-photo fallback
+     Until the photographs arrive, any image that fails to load is replaced
+     by a gold line lotus on a lit ground (.has-ph in site.css), so nothing
+     ever looks broken.                                                     */
+
+  function guardImages() {
+    const missing = [];
+
+    const fail = img => {
+      if (img.dataset.failed) return;
+      img.dataset.failed = "1";
+      const holder = img.closest(".frame__media");
+      if (holder) holder.classList.add("has-ph");
+      missing.push(img.getAttribute("src"));
+    };
+
+    $$("img[data-img]").forEach(img => {
+      img.addEventListener("error", () => fail(img));
+      if (img.complete && img.naturalWidth === 0) fail(img);
+    });
+
+    window.addEventListener("load", () => {
+      if (missing.length) {
+        console.info(
+          "Hotel Perfect Plaza — %d photo(s) not found yet. Drop them into " +
+          "assets/images/ using these exact names (see CONTENT-TODO.md):\n  %s",
+          missing.length, missing.join("\n  ")
+        );
+      }
+    });
+  }
+
+  /* ------------------------------------------------------ masthead & drawer */
+
+  function wireMasthead() {
+    const bar = $("[data-masthead]");
+    const actionbar = $("[data-actionbar]");
+    const hero = $(".hero");
+    if (!bar) return;
+
+    const onScroll = () => {
+      bar.classList.toggle("is-stuck", window.scrollY > 30);
+      if (actionbar && hero) {
+        actionbar.classList.toggle("is-up", window.scrollY > hero.offsetHeight * 0.7);
+      }
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+
+  function wireDrawer() {
+    const burger = $("[data-burger]"), drawer = $("[data-drawer]");
+    if (!burger || !drawer) return;
+
+    const setOpen = open => {
+      burger.setAttribute("aria-expanded", String(open));
+      drawer.hidden = !open;
+      document.body.style.overflow = open ? "hidden" : "";
+      burger.querySelector(".sr-only").textContent = open ? "Close menu" : "Open menu";
+    };
+
+    burger.addEventListener("click", () =>
+      setOpen(burger.getAttribute("aria-expanded") !== "true"));
+    drawer.addEventListener("click", e => { if (e.target.closest("a")) setOpen(false); });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && !drawer.hidden) { setOpen(false); burger.focus(); }
+    });
+  }
+
+  /* ------------------------------------------------------------ date fields
+     Formatted from local parts, never toISOString(): Nepal is UTC+5:45, so
+     converting to UTC rolls the date back a day.                          */
+
+  const isoLocal = d => {
+    const p = v => String(v).padStart(2, "0");
+    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+  };
+  const today = () => isoLocal(new Date());
+  const addDays = (iso, n) => {
+    const d = new Date(iso + "T00:00:00");
+    d.setDate(d.getDate() + n);
+    return isoLocal(d);
+  };
+
+  function linkDates(inEl, outEl) {
+    if (!inEl || !outEl) return;
+    inEl.min = today();
+    outEl.min = addDays(today(), 1);
+    inEl.addEventListener("change", () => {
+      if (!inEl.value) return;
+      outEl.min = addDays(inEl.value, 1);
+      if (outEl.value && outEl.value <= inEl.value) outEl.value = addDays(inEl.value, 1);
+    });
+  }
+
+  /* --------------------------------------------------- sending to the hotel
+     One route for everything a guest sends: the enquiry form here and the
+     booking request in booking.js. With a Formspree ID it is emailed; without
+     one, WhatsApp opens with the message written out. WhatsApp must open
+     inside the click itself or the browser blocks the new tab, so that branch
+     runs before anything is awaited. Resolves to "email" or "whatsapp";
+     rejects if the email could not be sent.                               */
+
+  function sendToHotel(fields, subject, text) {
+    if (!SITE_CONFIG.formspreeId) {
+      window.open(waLink(text), "_blank", "noopener");
+      return Promise.resolve("whatsapp");
+    }
+    const body = new FormData();
+    Object.keys(fields).forEach(k => body.append(k, fields[k] == null ? "" : String(fields[k])));
+    body.append("_subject", subject);
+    if (fields.email) body.append("_replyto", fields.email);
+    return fetch("https://formspree.io/f/" + SITE_CONFIG.formspreeId, {
+      method: "POST", headers: { Accept: "application/json" }, body
+    }).then(res => {
+      if (!res.ok) throw new Error("Formspree replied " + res.status);
+      return "email";
+    });
+  }
+
+  /* ------------------------------------- "Enquire about…" → the enquiry form
+     Links marked data-enquiry pick the matching enquiry type, then bring the
+     form into view with the cursor in it.                                 */
+
+  function wireEnquiryLinks() {
+    const form = $("[data-form]"), target = $("#enquire");
+    if (!form || !target) return;
+    const type = $("#f-type"), first = $("[data-focus]", form), date = $("#f-date");
+    if (date) date.min = today();
+
+    $$("[data-enquiry]").forEach(link => {
+      link.addEventListener("click", e => {
+        e.preventDefault();
+        const wanted = link.dataset.enquiry;
+        if (type && wanted) {
+          const match = Array.from(type.options).find(o => o.value === wanted || o.text === wanted);
+          if (match) type.value = match.value;
+        }
+        form.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
+        window.setTimeout(() => (first || form).focus({ preventScroll: true }), calm ? 0 : 700);
+      });
+    });
+  }
+
+  /* ------------------------------------------------------- the enquiry form */
+
+  function wireForm() {
+    const form = $("[data-form]");
+    if (!form) return;
+    const status = $("[data-status]", form), submit = $("[data-submit]", form);
+
+    const setErr = (id, bad) => {
+      const field = $("#" + id), note = $('[data-err="' + id + '"]', form);
+      if (field && field.parentElement) field.parentElement.classList.toggle("is-bad", bad);
+      if (note) note.hidden = !bad;
+    };
+
+    const validate = () => {
+      const bad = {
+        "f-name":  !$("#f-name").value.trim(),
+        "f-email": !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($("#f-email").value.trim())
+      };
+      Object.keys(bad).forEach(id => setErr(id, bad[id]));
+      const firstBad = Object.keys(bad).find(id => bad[id]);
+      if (firstBad) $("#" + firstBad).focus();
+      return !firstBad;
+    };
+
+    const summarise = d =>
+      "Hello Hotel Perfect Plaza,\n\nI would like to ask about: " + d.type + ".\n\n" +
+      "Name: " + d.name + (d.company ? "\nCompany: " + d.company : "") +
+      (d.date ? "\nDate: " + d.date : "") + (d.people ? "\nPeople: " + d.people : "") +
+      (d.rooms ? "\nRooms: " + d.rooms : "") +
+      (d.message ? "\n\n" + d.message : "") +
+      "\n\nEmail: " + d.email + (d.phone ? "\nPhone: " + d.phone : "");
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      status.className = "form__status";
+      status.textContent = "";
+
+      if ($('[name="_gotcha"]', form).value) return;     /* a bot filled the trap */
+      if (!validate()) {
+        status.classList.add("is-bad");
+        status.textContent = "Check the highlighted fields and send again.";
+        return;
+      }
+
+      const data = Object.fromEntries(new FormData(form).entries());
+      delete data._gotcha;
+      const text = summarise(data);
+      const label = submit.textContent;
+      if (SITE_CONFIG.formspreeId) { submit.disabled = true; submit.textContent = "Sending…"; }
+
+      sendToHotel(data, "Enquiry: " + data.type + " — " + data.name, text)
+        .then(via => {
+          status.classList.add("is-ok");
+          if (via === "whatsapp") {
+            status.textContent = "WhatsApp has opened with your enquiry written out — press Send there and it reaches us.";
+          } else {
+            form.reset();
+            status.textContent = "Thank you — your enquiry is with us. We usually reply within a few hours.";
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          status.classList.add("is-bad");
+          status.innerHTML = 'That did not send. Please <a class="link" href="' +
+            waLink(text) + '" target="_blank" rel="noopener">message us on WhatsApp</a> instead.';
+        })
+        .finally(() => { submit.disabled = false; submit.textContent = label; });
+    });
+  }
+
+  /* -------------------------------------------------------------- lightbox */
+
+  function wireLightbox() {
+    const box = $("[data-lightbox]"), shots = $$("[data-track] .shot");
+    if (!box || !shots.length || typeof box.showModal !== "function") return;
+
+    const img = $("[data-lb-img]", box), cap = $("[data-lb-cap]", box);
+    let at = 0;
+
+    const show = i => {
+      at = (i + shots.length) % shots.length;
+      const src = $("img", shots[at]);
+      img.src = src.currentSrc || src.src;
+      img.alt = src.alt;
+      cap.textContent = src.alt;
+    };
+
+    shots.forEach((shot, i) => {
+      shot.addEventListener("click", () => {
+        /* naturalWidth, not the failed flag: a lazy image further along the
+           rail has never been requested, so there is nothing to enlarge. */
+        if (!$("img", shot).naturalWidth) return;
+        show(i);
+        box.showModal();
+      });
+    });
+
+    $("[data-lb-prev]", box).addEventListener("click", () => show(at - 1));
+    $("[data-lb-next]", box).addEventListener("click", () => show(at + 1));
+    $("[data-lb-close]", box).addEventListener("click", () => box.close());
+    box.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft")  { e.preventDefault(); show(at - 1); }
+      if (e.key === "ArrowRight") { e.preventDefault(); show(at + 1); }
+    });
+    box.addEventListener("click", e => { if (e.target === box) box.close(); });
+    box.addEventListener("close", () => shots[at].focus());
+  }
+
+  /* ------------------------------------------------- search-engine listing */
+
+  function wireSchema() {
+    const slot = $("[data-schema]");
+    if (!slot) return;
+    const a = SITE_CONFIG.address;
+    slot.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Hotel",
+      name: "Hotel Perfect Plaza",
+      description: "A hotel in Janakpurdham, Nepal, ten minutes' walk from the Janaki Mandir, with conference and banquet halls.",
+      url: window.location.origin + window.location.pathname,
+      image: new URL("assets/images/og-image.jpg", window.location.href).href,
+      telephone: SITE_CONFIG.phone,
+      email: SITE_CONFIG.email || undefined,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: a.street, addressLocality: a.city, addressRegion: a.region,
+        postalCode: a.postalCode, addressCountry: a.country
+      },
+      checkinTime: SITE_CONFIG.checkIn,
+      checkoutTime: SITE_CONFIG.checkOut,
+      sameAs: Object.values(SITE_CONFIG.social).filter(Boolean),
+      amenityFeature: ["Air conditioning", "Free Wi-Fi", "Restaurant", "24-hour room service",
+                       "Airport shuttle", "24-hour front desk", "Conference hall", "Laundry service"]
+        .map(n => ({ "@type": "LocationFeatureSpecification", name: n, value: true }))
+    });
+  }
+
+  /* ----------------------------------------------------------------- start */
+
+  wireContacts();
+  wireMap();
+  guardImages();
+  wireMasthead();
+  wireDrawer();
+  wireEnquiryLinks();
+  wireForm();
+  wireLightbox();
+  wireSchema();
+
+  document.body.classList.remove("is-loading");
+
+  /* Shared with booking.js and sections.js, which load after this file. */
+  return {
+    config: SITE_CONFIG, calm, $, $$,
+    waLink, sendToHotel, isoLocal, today, addDays, linkDates
+  };
+})();

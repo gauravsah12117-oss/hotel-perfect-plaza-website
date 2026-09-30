@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The header's lotus, in the brand gold on midnight. The stroke is
+       heavier than in the logo so the petals still separate at 16px. -->
+  <rect width="64" height="64" rx="14" fill="#0B132B"/>
+  <g transform="translate(5 13) scale(.84)" fill="none" stroke="#D4AF37" stroke-width="2.6"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 35C26.5 27.5 26.5 15.5 32 5.5c5.5 10 5.5 22 0 29.5Z"/>
+    <path d="M31.6 35C24 33 18.6 25.2 17.6 13.8c8.4 2.2 13.4 10 14 21.2Z"/>
+    <path d="M32.4 35C40 33 45.4 25.2 46.4 13.8c-8.4 2.2-13.4 10-14 21.2Z"/>
+    <path d="M31 35.4C21.6 36.6 12.8 32 7.4 23.4c9-1.8 17.6 3 23.6 12Z"/>
+    <path d="M33 35.4c9.4 1.2 18.2-3.4 23.6-12-9-1.8-17.6 3-23.6 12Z"/>
+    <path d="M13 38.2h38"/>
+  </g>
+</svg>

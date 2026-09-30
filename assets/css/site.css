@@ -1,0 +1,646 @@
+/* ==========================================================================
+   Hotel Perfect Plaza — the stylesheet
+   --------------------------------------------------------------------------
+   The whole look lives here: no framework, no build step.
+
+   The design is deliberately plain. A warm light page, dark type, one accent
+   colour (a deep sindoor red) and square-cornered photographs — the way a
+   real hotel presents itself. No glass, no glows, no gradient text, no gold
+   pills: those are what made the earlier version read as a template.
+
+   The hero is the one dark band, #0B0F19, because that is the ground of the
+   Ram & Sita picture: the picture's edges melt into it instead of sitting on
+   it as a box.
+   ========================================================================== */
+
+/* ----------------------------------------------------------------- TOKENS */
+
+:root {
+  --paper:   #FAF7F2;   /* the page */
+  --paper-2: #F3EEE6;   /* alternate sections */
+  --card:    #FFFFFF;
+  --ink:     #1F1B17;   /* headings, strong text */
+  --ink-2:   #4A433B;   /* body text — 9:1 on --paper */
+  --ink-3:   #6B6258;   /* quieter text — 5:1 on --paper-2 */
+  --rule:    #E4DCD0;
+  --rule-2:  #CFC4B4;   /* input borders */
+
+  --accent:   #8A2D1E;  /* sindoor red — white on it is 8.5:1 */
+  --accent-2: #6E2217;
+  --gold:     #B08D3C;  /* the lotus mark and fine details only, never body text */
+
+  --night:     #0B0F19; /* the hero and the Ram & Sita picture's ground */
+  --night-ink: #F3EEE6;
+  --night-ink-2: rgba(243, 238, 230, .76);
+
+  --display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+  --sans:    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --deva:    "Tiro Devanagari Hindi", "Noto Serif Devanagari", serif;
+
+  --radius: 6px;
+  --ease: cubic-bezier(.22, .61, .36, 1);
+
+  color-scheme: light;
+}
+
+/* ------------------------------------------------------------ FOUNDATION */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+ul[role="list"] { list-style: none; padding: 0; }
+img { max-width: 100%; height: auto; display: block; }
+a { color: inherit; text-decoration: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* An inline <svg> with no size falls back to 300×150. This gives icons a
+   sane floor; :where() keeps it at zero specificity so any class wins. */
+:where(svg:not([width])) { width: 1.25em; height: 1.25em; flex: none; }
+
+/* The one thing that must stay hidden whatever else sets `display`. */
+[hidden] { display: none !important; }
+
+main > section { position: relative; overflow-x: clip; }
+
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip {
+  position: fixed; left: 50%; top: .75rem; z-index: 300;
+  translate: -50% -160%;
+  padding: .7rem 1.2rem; border-radius: 4px;
+  background: var(--accent); color: #fff; font-weight: 600; font-size: .9rem;
+  transition: translate .25s var(--ease);
+}
+.skip:focus { translate: -50% 0; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* on the dark bands the red ring is too faint */
+.hero :focus-visible, .footer :focus-visible,
+.masthead:not(.is-stuck) :focus-visible { outline-color: var(--night-ink); }
+
+.wrap { width: 100%; max-width: 76rem; margin-inline: auto; padding-inline: 1.25rem; }
+@media (min-width: 640px) { .wrap { padding-inline: 2rem; } }
+
+.deva { font-family: var(--deva); }
+
+/* ------------------------------------------------------------- TYPOGRAPHY */
+
+.h2 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(2rem, 1.55rem + 1.7vw, 2.9rem);
+  line-height: 1.1; letter-spacing: -.005em;
+  color: var(--ink); text-wrap: balance;
+}
+.h3 {
+  font-family: var(--display); font-weight: 600;
+  font-size: 1.5rem; line-height: 1.2; color: var(--ink);
+}
+.label {
+  margin-bottom: .6rem;
+  font-size: .78rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent);
+}
+.prose { margin-top: 1.4rem; }
+.prose p { font-size: 1.05rem; line-height: 1.75; }
+.prose p + p { margin-top: 1em; }
+
+.textlink {
+  display: inline-flex; align-items: center; gap: .4rem; align-self: flex-start;
+  color: var(--accent); font-size: .92rem; font-weight: 600;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+.textlink:hover { color: var(--accent-2); }
+.textlink svg { width: 1.05em; height: 1.05em; }
+
+/* ----------------------------------------------------------------- BUTTONS */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .75rem 1.3rem;
+  border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--accent); color: #fff;
+  font-size: .92rem; font-weight: 600; line-height: 1.2; white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .2s, border-color .2s, color .2s;
+}
+.btn:hover { background: var(--accent-2); border-color: var(--accent-2); }
+
+.btn--outline { background: transparent; color: var(--ink); border-color: var(--rule-2); }
+.btn--outline:hover { background: transparent; color: var(--accent); border-color: var(--accent); }
+
+/* for the dark hero */
+.btn--light { background: transparent; color: var(--night-ink); border-color: rgba(243, 238, 230, .45); }
+.btn--light:hover { background: rgba(243, 238, 230, .08); border-color: var(--night-ink); }
+
+.btn--lg { padding: .9rem 1.55rem; font-size: .98rem; }
+.btn--sm { padding: .55rem .95rem; font-size: .85rem; }
+.btn--block { width: 100%; }
+
+/* ---------------------------------------------------------------- MASTHEAD */
+
+.masthead {
+  position: fixed; inset: 0 0 auto; z-index: 100;
+  color: var(--night-ink);
+  border-bottom: 1px solid transparent;
+  transition: background-color .3s, color .3s, border-color .3s;
+}
+.masthead.is-stuck,
+.masthead:has([aria-expanded="true"]) {
+  background: #fff; color: var(--ink); border-bottom-color: var(--rule);
+}
+.masthead__bar { display: flex; align-items: center; gap: 1.5rem; height: 4.5rem; }
+
+.brand { display: flex; align-items: center; gap: .7rem; margin-right: auto; }
+.brand__mark { width: 2.4rem; height: 1.5rem; color: var(--gold); }
+.brand__text { display: flex; flex-direction: column; line-height: 1; }
+.brand__name { font-family: var(--display); font-size: 1.4rem; font-weight: 600; }
+.brand__tag { margin-top: .3rem; font-size: .72rem; opacity: .72; }
+
+.masthead__nav { display: none; gap: 1.8rem; font-size: .92rem; }
+@media (min-width: 1024px) { .masthead__nav { display: flex; } }
+.navlink { padding: .3rem 0; opacity: .82; transition: opacity .2s; }
+.navlink:hover { opacity: 1; }
+.navlink[aria-current="true"] {
+  opacity: 1;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 7px;
+}
+
+.masthead__tel { display: none; align-items: center; gap: .45rem; font-size: .9rem; }
+.masthead__tel svg { width: 1rem; height: 1rem; }
+@media (min-width: 1200px) { .masthead__tel { display: inline-flex; } }
+
+.masthead__book { display: none; }
+@media (min-width: 640px) { .masthead__book { display: inline-flex; } }
+
+.burger {
+  width: 44px; height: 44px; display: grid; place-items: center; flex: none;
+  border: 1px solid currentColor; border-radius: 4px; background: transparent;
+  cursor: pointer; opacity: .9;
+}
+@media (min-width: 1024px) { .burger { display: none; } }
+.burger__bars, .burger__bars::before, .burger__bars::after {
+  content: ""; display: block; width: 18px; height: 1.5px; background: currentColor;
+  transition: transform .25s var(--ease), background-color .25s;
+}
+.burger__bars::before { transform: translateY(-6px); }
+.burger__bars::after  { transform: translateY(4.5px); }
+.burger[aria-expanded="true"] .burger__bars { background: transparent; }
+.burger[aria-expanded="true"] .burger__bars::before { transform: rotate(45deg); }
+.burger[aria-expanded="true"] .burger__bars::after  { transform: rotate(-45deg) translateY(-1.5px); }
+
+.drawer {
+  position: fixed; inset: 0; z-index: 99;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 6rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+  background: #fff;
+}
+.drawer__nav { display: flex; flex-direction: column; }
+.drawer__link {
+  padding: .7rem 0; border-bottom: 1px solid var(--rule);
+  font-family: var(--display); font-size: 1.9rem; font-weight: 600; color: var(--ink);
+}
+.drawer__foot { display: grid; gap: .9rem; }
+.drawer__tel { text-align: center; font-size: .95rem; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------------- HERO */
+
+.hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--night); color: var(--night-ink-2);
+}
+.hero__inner {
+  position: relative; display: grid; align-items: center; gap: 1.5rem;
+  padding-top: 5.5rem; padding-bottom: 5.5rem;   /* the foot is under the booking bar */
+  text-align: center;
+}
+@media (min-width: 1024px) {
+  .hero__inner {
+    grid-template-columns: 1.05fr .95fr; gap: 3rem;
+    min-height: min(100svh, 860px);
+    padding-top: 6rem; padding-bottom: 7rem;
+    text-align: left;
+  }
+  .hero__text { order: -1; }
+}
+
+.hero__place {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: .55rem;
+  margin-bottom: 1rem; font-size: .92rem;
+}
+.hero__place .deva { font-size: 1.1rem; color: #E6D6A8; }
+@media (min-width: 1024px) { .hero__place { justify-content: flex-start; } }
+
+.hero__title {
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(2.6rem, 1.8rem + 3.4vw, 4.6rem); line-height: 1.02;
+  color: #fff; text-wrap: balance;
+}
+.hero__lede { max-width: 34rem; margin: 1.25rem auto 0; font-size: 1.05rem; line-height: 1.65; }
+@media (min-width: 1024px) { .hero__lede { margin-inline: 0; } }
+
+.hero__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .75rem; margin-top: 2rem; }
+@media (min-width: 1024px) { .hero__actions { justify-content: flex-start; } }
+@media (max-width: 479px) { .hero__actions .btn { flex: 1 1 100%; } }
+
+/* A short, quiet entrance. CSS, so nothing can be left stuck invisible if a
+   script fails. */
+@keyframes rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+.hero-in { animation: rise .8s var(--ease) both; }
+.hero-in--1 { animation-delay: .1s; }
+.hero-in--2 { animation-delay: .2s; }
+.hero-in--3 { animation-delay: .32s; }
+.hero-in--4 { animation-delay: .44s; }
+
+/* ---------------------------------------------------------------- BOOKING BAR */
+
+.booking { position: relative; z-index: 2; margin-top: -3.4rem; }
+.booking__form {
+  display: grid; gap: .9rem;
+  padding: 1.1rem;
+  background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius);
+  box-shadow: 0 12px 32px -18px rgba(31, 27, 23, .35);
+}
+@media (min-width: 640px) { .booking__form { grid-template-columns: 1fr 1fr; padding: 1.25rem; } }
+@media (min-width: 1024px) {
+  .booking__form { grid-template-columns: 1fr 1fr .6fr auto; align-items: end; gap: 1.1rem; padding: 1.25rem 1.5rem; }
+}
+.booking__go { padding-block: .8rem; }
+@media (max-width: 1023px) { .booking__go { width: 100%; } }
+@media (min-width: 640px) and (max-width: 1023px) { .booking__go { grid-column: 1 / -1; } }
+
+.field-min { display: grid; gap: .35rem; min-width: 0; }
+.field-min label, .field label { font-size: .84rem; font-weight: 600; color: var(--ink); }
+.field-min input, .field input, .field select, .field textarea {
+  width: 100%; min-width: 0;
+  padding: .7rem .8rem;
+  background: #fff; border: 1px solid var(--rule-2); border-radius: 4px;
+  color: var(--ink); font-size: .95rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field-min input:focus, .field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(138, 45, 30, .14);
+}
+
+/* --------------------------------------------------------------------- FACTS */
+
+.facts { padding: 2.5rem 0 .5rem; }
+.facts__list { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem 1rem; }
+@media (min-width: 1024px) { .facts__list { grid-template-columns: repeat(4, 1fr); } }
+.facts__list li { display: flex; align-items: flex-start; gap: .7rem; font-size: .9rem; line-height: 1.45; color: var(--ink-3); }
+.facts__list svg { width: 1.4rem; height: 1.4rem; margin-top: .05rem; color: var(--accent); }
+.facts__list strong { display: block; font-size: .98rem; font-weight: 600; color: var(--ink); }
+
+/* ----------------------------------------------------------------- SECTIONS */
+
+.section { padding-block: clamp(3.75rem, 2.75rem + 4vw, 6.5rem); }
+.section--alt { background: var(--paper-2); }
+
+.section__head { max-width: 44rem; margin-bottom: 2.5rem; }
+.section__head--split { max-width: none; display: grid; gap: 1rem; }
+@media (min-width: 1024px) {
+  .section__head--split { grid-template-columns: 1fr auto; align-items: end; gap: 3rem; }
+}
+.section__note { max-width: 26rem; font-size: .95rem; color: var(--ink-3); }
+.section__intro { margin-top: 1rem; font-size: 1.05rem; }
+
+.split { display: grid; gap: 2.5rem; align-items: center; }
+@media (min-width: 1024px) { .split { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+.split__media { aspect-ratio: 4 / 3; border-radius: var(--radius); }
+
+.card {
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius);
+}
+.card__body { display: flex; flex-direction: column; gap: .65rem; padding: 1.35rem; flex: 1; }
+.card__body > p { font-size: .95rem; }
+
+/* --------------------------------------------------------------- IMAGERY */
+
+.frame__media { position: relative; overflow: hidden; background: #E9E2D7; }
+.frame__media img { width: 100%; height: 100%; object-fit: cover; }
+img[data-failed] { visibility: hidden; }
+
+/* A photograph that has not arrived yet (main.js adds .has-ph when an image
+   fails to load): a plain stone-coloured frame with the lotus mark, small,
+   rather than a broken-image icon. */
+.frame__media.has-ph::after {
+  content: ""; position: absolute; inset: 0; margin: auto;
+  width: 22%; max-width: 110px; aspect-ratio: 64 / 40; height: auto;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 40'%3E%3Cg fill='none' stroke='%23B3A286' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 35C26.5 27.5 26.5 15.5 32 5.5c5.5 10 5.5 22 0 29.5Z'/%3E%3Cpath d='M31.6 35C24 33 18.6 25.2 17.6 13.8c8.4 2.2 13.4 10 14 21.2Z'/%3E%3Cpath d='M32.4 35C40 33 45.4 25.2 46.4 13.8c-8.4 2.2-13.4 10-14 21.2Z'/%3E%3Cpath d='M31 35.4C21.6 36.6 12.8 32 7.4 23.4c9-1.8 17.6 3 23.6 12Z'/%3E%3Cpath d='M33 35.4c9.4 1.2 18.2-3.4 23.6-12-9-1.8-17.6 3-23.6 12Z'/%3E%3Cpath d='M13 38.2h38'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* --------------------------------------------------------------------- ROOMS */
+
+.rooms { display: grid; gap: 1.5rem; }
+@media (min-width: 768px)  { .rooms { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .rooms { grid-template-columns: repeat(3, 1fr); } }
+
+.room__media { aspect-ratio: 3 / 2; }
+.room__specs { font-size: .86rem; color: var(--ink-3); }
+.room__foot {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem;
+  margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--rule);
+}
+.price { font-size: 1.08rem; font-weight: 600; color: var(--ink); }
+.price small { font-size: .85rem; font-weight: 400; color: var(--ink-3); }
+
+.amenity-row {
+  display: flex; flex-wrap: wrap; gap: .9rem 2rem;
+  margin-top: 2.5rem; padding-top: 1.75rem; border-top: 1px solid var(--rule-2);
+  font-size: .92rem; color: var(--ink-2);
+}
+.amenity-row li { display: inline-flex; align-items: center; gap: .5rem; }
+.amenity-row svg { width: 1.15rem; height: 1.15rem; color: var(--accent); }
+
+/* ---------------------------------------------------------------------- TABS */
+
+/* Hidden until ui.js has wired them. Without the script they would be
+   buttons that do nothing, over three panels that all show anyway. */
+.tablist { display: none; }
+.ui-ready .tablist {
+  display: flex; gap: 1.75rem;
+  border-bottom: 1px solid var(--rule-2);
+  overflow-x: auto; scrollbar-width: none;
+}
+.tab {
+  margin-bottom: -1px; padding: .8rem 0;
+  border: 0; border-bottom: 2px solid transparent; background: none;
+  color: var(--ink-3); font-size: .98rem; font-weight: 500; white-space: nowrap;
+  cursor: pointer; transition: color .2s, border-color .2s;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+.panel { margin-top: 1.75rem; display: grid; }
+@media (min-width: 1024px) { .panel { grid-template-columns: 1fr 1fr; } }
+.panel__media { min-height: 240px; }
+@media (min-width: 1024px) { .panel__media { min-height: 440px; } }
+.panel__body { display: flex; flex-direction: column; justify-content: center; gap: 1.1rem; padding: 1.6rem; }
+@media (min-width: 640px) { .panel__body { padding: 2.5rem; } }
+.panel__cta { align-self: flex-start; }
+.ui-ready .panel { animation: panel-in .35s var(--ease); }
+@keyframes panel-in { from { opacity: 0; } to { opacity: 1; } }
+
+.hours { display: grid; }
+.hours > div {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .65rem 0; border-bottom: 1px solid var(--rule);
+}
+.hours dt { font-size: .92rem; color: var(--ink-3); }
+.hours dd { font-weight: 600; color: var(--ink); }
+.hours--inline { grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+.hours--inline > div { flex-direction: column; gap: .15rem; }
+
+.ticks { display: grid; gap: .55rem; }
+.ticks li { position: relative; padding-left: 1.2rem; font-size: .95rem; }
+.ticks li::before {
+  content: ""; position: absolute; left: 0; top: .62em;
+  width: .4rem; height: .4rem; border-radius: 50%; background: var(--accent);
+}
+
+/* ------------------------------------------------------------------ JANAKPUR */
+
+/* The temple picture is wide, with towers at both ends, so it runs the full
+   width at its own proportions — nothing is cropped — with the words below. */
+.feature__media { aspect-ratio: 1048 / 558; }
+.feature__body { display: grid; gap: 1.25rem; padding: 1.6rem; }
+@media (min-width: 640px) { .feature__body { padding: 2.25rem 2.75rem 2.5rem; } }
+@media (min-width: 1024px) { .feature__body { grid-template-columns: 1.2fr 1fr; gap: 3.5rem; align-items: center; } }
+.feature__title { margin-bottom: .6rem; font-size: clamp(1.7rem, 1.4rem + 1vw, 2.2rem); }
+.feature__quote {
+  padding-left: 1rem; border-left: 2px solid var(--gold);
+  font-family: var(--display); font-weight: 500; font-style: italic;
+  font-size: 1.3rem; line-height: 1.35; color: var(--ink);
+}
+
+.places { display: grid; gap: 1.5rem; margin-top: 1.5rem; }
+@media (min-width: 640px)  { .places { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .places { grid-template-columns: repeat(3, 1fr); } }
+.place__media { aspect-ratio: 16 / 10; }
+.place .h3 { font-size: 1.35rem; }
+.place .card__body > p { font-size: .93rem; }
+
+/* The photographers' credits the Creative Commons licences require. */
+.credits { margin-top: 1.5rem; font-size: .78rem; line-height: 1.6; color: var(--ink-3); }
+.credits a { text-decoration: underline; text-underline-offset: 2px; }
+.credits a:hover { color: var(--accent); }
+
+/* ------------------------------------------------------------------- CONTACT */
+
+.contact-grid { display: grid; gap: 3rem; }
+@media (min-width: 1024px) { .contact-grid { grid-template-columns: 5fr 7fr; gap: 4rem; } }
+.contact-side { display: flex; flex-direction: column; gap: 2rem; }
+
+.contact-list { border-top: 1px solid var(--rule); }
+.contact {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .85rem;
+  padding: .95rem 0; border-bottom: 1px solid var(--rule);
+  transition: color .2s;
+}
+.contact:hover { color: var(--accent); }
+.contact svg { width: 1.25rem; height: 1.25rem; color: var(--accent); }
+.contact__what { font-weight: 600; color: var(--ink); }
+.contact:hover .contact__what { color: var(--accent); }
+.contact__detail { font-size: .9rem; color: var(--ink-3); white-space: nowrap; }
+@media (max-width: 400px) { .contact__detail { display: none; } }
+
+.getting { display: flex; flex-direction: column; gap: 1rem; }
+.getting .h3 { font-size: 1.35rem; }
+.routes { display: grid; gap: .85rem; }
+.routes li { display: grid; grid-template-columns: auto 1fr; gap: .75rem; font-size: .93rem; line-height: 1.6; }
+.routes svg { width: 1.2rem; height: 1.2rem; margin-top: .2rem; color: var(--accent); }
+.routes strong { font-weight: 600; color: var(--ink); }
+
+.enquiry { padding: 1.5rem; }
+@media (min-width: 640px) { .enquiry { padding: 2.25rem; } }
+.enquiry__title { margin-bottom: 1.25rem; }
+.enquiry__send { margin-top: 1.5rem; }
+
+.form-grid { display: grid; gap: 1.1rem; }
+@media (min-width: 640px) {
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .field--wide { grid-column: 1 / -1; }
+}
+.field { display: grid; gap: .4rem; min-width: 0; }
+.field textarea { resize: vertical; }
+.field__opt { font-weight: 400; color: var(--ink-3); }
+.field__err { font-size: .84rem; color: #A3261B; }
+
+/* main.js toggles .is-bad on each input's parent and rewrites the status
+   line's whole className — which is why these are plain classes here. */
+.field.is-bad input, .field.is-bad select { border-color: #B3261E; background: #FFF6F5; }
+.form__status { margin-top: 1rem; min-height: 1.5em; text-align: center; font-size: .93rem; color: var(--ink-2); }
+.form__status.is-ok  { color: #2E6A3A; }
+.form__status.is-bad { color: #A3261B; }
+.form__status .link  { color: var(--accent); text-decoration: underline; }
+
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* -------------------------------------------------------------------- FOOTER */
+
+.footer { background: var(--ink); color: rgba(243, 238, 230, .72); padding-bottom: 5rem; }
+@media (min-width: 1024px) { .footer { padding-bottom: 0; } }
+.footer__grid { display: grid; gap: 2.25rem; padding-block: 3.5rem; }
+@media (min-width: 768px) { .footer__grid { grid-template-columns: 2fr 1fr 1fr; } }
+.footer__name { display: flex; align-items: center; gap: .6rem; font-family: var(--display); font-size: 1.6rem; font-weight: 600; color: #fff; }
+.footer__mark { width: 2.2rem; height: 1.4rem; color: var(--gold); }
+.footer__tag { margin-top: .3rem; font-size: .85rem; }
+.footer__addr { margin-top: 1.1rem; font-style: normal; font-size: .92rem; line-height: 1.7; }
+.footer__addr .deva { font-size: 1.05rem; color: #E6D6A8; }
+.footer__links { display: grid; align-content: start; gap: .6rem; font-size: .93rem; }
+.footlink:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.footer__legal {
+  padding: 1.25rem; border-top: 1px solid rgba(255, 255, 255, .1);
+  text-align: center; font-size: .82rem;
+}
+
+/* ---------------------------------------------------------- PHONE ACTION BAR */
+
+.actionbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+  display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: .5rem;
+  padding: .6rem .75rem calc(.6rem + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--rule);
+  box-shadow: 0 -6px 20px -12px rgba(31, 27, 23, .25);
+  translate: 0 110%;
+  transition: translate .35s var(--ease);
+}
+.actionbar.is-up { translate: 0 0; }
+@media (min-width: 1024px) { .actionbar { display: none; } }
+.actionbar__btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .7rem .5rem; border: 1px solid var(--rule-2); border-radius: 4px;
+  font-size: .88rem; font-weight: 600; color: var(--ink);
+}
+.actionbar__btn svg { width: 1.05rem; height: 1.05rem; color: var(--accent); }
+.actionbar__btn--book { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ------------------------------------------------------------ HERO PICTURE */
+
+/* --scene-h is shared with the hero film's scrim on narrow screens, which is
+   positioned from it: change the picture area's height here and the scrim
+   follows. */
+.hero { --scene-h: max(38svh, 270px); }
+.scene { position: relative; height: var(--scene-h); }
+@media (min-width: 1024px) { .scene { height: min(600px, 72svh); } }
+
+.scene__fallback {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  transition: opacity 1s var(--ease);
+}
+.scene__lotus { width: min(55%, 320px); height: auto; aspect-ratio: 64 / 40; color: var(--gold); }
+.scene.has-figure .scene__fallback, .scene.is-live .scene__fallback { opacity: 0; }
+
+/* Only if the picture is taken out: scene.js then draws the 3D lotus. */
+.scene canvas {
+  position: absolute; inset: 0; width: 100% !important; height: 100% !important;
+  opacity: 0; transition: opacity 1.4s var(--ease);
+}
+.scene.is-live canvas { opacity: 1; }
+
+/* Lord Ram and Mata Sita (hero-figure.js adds .has-figure once the picture
+   has loaded). Sized by HEIGHT so they keep their presence as the window
+   narrows; 500px is a ceiling — the picture is 362px tall, and much past
+   1.4× a realistic render turns soft. */
+.deity {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%;
+  height: min(calc(100% - .5rem), 500px); aspect-ratio: 247 / 362;
+  pointer-events: none;
+  opacity: 0; transition: opacity 1.4s var(--ease);
+}
+.scene.has-figure .deity { opacity: 1; }
+.deity__img {
+  width: 100%; height: 100%;
+  /* Feathered, not clipped, so the render's dark ground melts into the
+     hero. The sides stop at 8%: Mata Sita's shoulder is at 10%. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%),
+                      linear-gradient(180deg, transparent 0, #000 7%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%),
+                      linear-gradient(180deg, transparent 0, #000 7%, #000 94%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-composite: intersect;
+}
+
+/* ----------------------------------------------------------------- HERO FILM */
+
+/* Dormant until film.js finds a film and adds .has-film to the hero. */
+.hero__film {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity 1.8s var(--ease);
+}
+.hero.has-film .hero__film { opacity: 1; }
+.hero__film video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
+/* A 16:9 film on an upright phone keeps about a quarter of its width; the
+   brief frames Ram on the right third, so crop toward him. */
+@media (max-aspect-ratio: 3/4) { .hero__film video { object-position: 74% 50%; } }
+.hero.film-portrait .hero__film video { object-position: 50% 30%; }
+
+.scene { transition: opacity 1.2s var(--ease); }
+.hero.has-film .scene { opacity: 0; }
+
+/* The scrim keeps the words legible whatever the film contains. Wide
+   screens: the words are on the left, so the left falls to near-black and
+   the right stays open for the subject. */
+.hero__scrim {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(0deg, rgba(11, 15, 25, .84) 0%, rgba(11, 15, 25, .5) 16%, rgba(11, 15, 25, 0) 34%),
+    linear-gradient(90deg, rgba(11, 15, 25, .93) 0%, rgba(11, 15, 25, .88) 42%, rgba(11, 15, 25, .6) 55%,
+                           rgba(11, 15, 25, .2) 72%, rgba(11, 15, 25, 0) 90%);
+}
+/* Narrow screens stack the words below the picture. The scrim is placed from
+   the LAYOUT — clear through the picture area (--scene-h), dark from just
+   above the first line of text. 5.5rem is the hero's top padding here. */
+@media (max-width: 1023px) {
+  .hero__scrim {
+    background: linear-gradient(180deg,
+      rgba(11, 15, 25, 0) 0,
+      rgba(11, 15, 25, 0) calc(5.5rem + var(--scene-h) - 5rem),
+      rgba(11, 15, 25, .9) calc(5.5rem + var(--scene-h) + .5rem),
+      rgba(11, 15, 25, .94) 100%);
+  }
+}
+/* The header's own shade over the film, until the page scrolls and the
+   white bar takes over. */
+.masthead::before {
+  content: ""; position: absolute; inset: 0 0 -40px; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(11, 15, 25, .86) 0%, rgba(11, 15, 25, .8) 60%, rgba(11, 15, 25, 0) 100%);
+  opacity: 0; transition: opacity .3s;
+}
+.film-on .masthead:not(.is-stuck)::before { opacity: 1; }
+
+/* -------------------------------------------------------------------- REVEAL */
+
+/* Hidden only once ui.js has confirmed it can bring them back (.js). If the
+   script never runs, nothing is ever hidden. */
+.js [data-reveal] {
+  opacity: 0; translate: 0 16px;
+  transition: opacity .7s var(--ease) var(--d, 0s), translate .7s var(--ease) var(--d, 0s);
+}
+.js [data-reveal].is-in { opacity: 1; translate: 0 0; }
+
+/* ------------------------------------------------------------ REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-in, .ui-ready .panel { animation: none; }
+  .js [data-reveal] { opacity: 1; translate: 0 0; transition: none; }
+}
