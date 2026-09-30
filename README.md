@@ -131,6 +131,16 @@ Each of these was a real bug found while building the page. They are commented i
    most shots, and behind the site's own headline they clash. If you re-cut it, check the first
    and last frame of every shot — captions fade in and out over half a second (see
    VIDEO-BRIEF.md).
+9. **The page always opens at the top, on the hero.** Left alone, a phone reopens a page where it
+   was last scrolled to, and a link copied after tapping "View rooms" carries `#rooms` and jumps
+   there — so guests landed mid-page. Two pieces fix it, and both must stay:
+   - the small `<script>` near the top of `index.html`'s `<head>` turns off the browser's
+     scroll-restoring and takes any `#…` off the address — **before** the page is built, so
+     nothing jumps. Moved later (say, into `main.js`), the page would visibly jump down and back;
+   - "section jumps" in `main.js` scroll every `href="#…"` link without putting `#…` back in
+     the address, and keep each jump in the browser's history so the phone's Back button still
+     returns to where the guest was. Add new section links as ordinary `<a href="#section">` —
+     they are picked up automatically.
 
 ---
 

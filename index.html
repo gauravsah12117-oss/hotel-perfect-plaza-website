@@ -3,6 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- Always open at the top, on the hero. Left alone, a phone reopens a page
+     where it was last scrolled to (a refresh, a tab brought back), and a link
+     copied after tapping "View rooms" carries "#rooms" and jumps straight
+     there. This runs before the page is built, so there is no jump to undo:
+     the browser is told not to restore the old position, and any "#…" comes
+     off the address. Section links keep working — main.js scrolls them
+     without putting "#…" back ("section jumps" there). Keep it first. -->
+<script>
+  try {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (location.href.indexOf("#") !== -1) history.replaceState(history.state, "", location.href.split("#")[0]);
+  } catch (e) { /* a page opened straight from disk may refuse; it still works */ }
+</script>
+
 <title>Hotel Perfect Plaza — Hotel in Janakpurdham, Nepal</title>
 <meta name="description" content="Hotel Perfect Plaza, Janakpurdham — ten minutes' walk from the Janaki Mandir. Air-conditioned rooms with breakfast, a restaurant, weddings and functions, and a front desk open all night.">
 <meta name="theme-color" content="#0B0F19">

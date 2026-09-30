@@ -198,6 +198,52 @@ window.HPP = (function () {
     });
   }
 
+  /* ---------------------------------------------------------- section jumps
+     Links to a part of this page — "View rooms", "Book now", the menu, the
+     footer — scroll there without writing "#rooms" into the address bar.
+     The address a guest copies or shares is then always the plain one, and
+     the plain one always opens on the hero (see the note at the top of
+     index.html). Each jump is still a step in the browser's history, so the
+     phone's Back button returns to where the guest was, as before. The page
+     keeps that position itself, in the history entry, because the browser's
+     own remembering is switched off by that note.                         */
+
+  const noteJump = section => {
+    try {
+      history.replaceState(Object.assign({}, history.state, { hppY: window.scrollY }), "");
+      history.pushState({ hppSection: section }, "");
+    } catch (e) { /* history refused (a page opened from disk): the jump still happens */ }
+  };
+
+  function wireSectionLinks() {
+    document.addEventListener("click", e => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      const target = document.getElementById(decodeURIComponent(link.getAttribute("href").slice(1)));
+      if (!target) return;                        /* nowhere to go: leave it to the browser */
+      e.preventDefault();
+      noteJump(target.id);
+      target.scrollIntoView({ block: "start" });  /* smooth unless the guest asked for less motion: the CSS decides */
+      /* take keyboard and screen-reader users there too, as a real jump does */
+      if (!target.hasAttribute("tabindex")) {
+        target.setAttribute("tabindex", "-1");
+        target.addEventListener("blur", () => target.removeAttribute("tabindex"), { once: true });
+      }
+      target.focus({ preventScroll: true });
+    });
+
+    /* Back and Forward: straight back to where the guest was, as the
+       browser itself would. */
+    window.addEventListener("popstate", e => {
+      const s = e.state || {};
+      const el = s.hppSection && document.getElementById(s.hppSection);
+      if (typeof s.hppY === "number") window.scrollTo({ top: s.hppY, behavior: "instant" });
+      else if (el) el.scrollIntoView({ block: "start", behavior: "instant" });
+      else window.scrollTo({ top: 0, behavior: "instant" });
+    });
+  }
+
   /* ------------------------------------------------------------ date fields
      Formatted from local parts, never toISOString(): Nepal is UTC+5:45, so
      converting to UTC rolls the date back a day.                          */
@@ -262,6 +308,7 @@ window.HPP = (function () {
     linkDates(fIn, fOut);
 
     const handOff = () => {
+      noteJump(target.id);                        /* so Back returns, as for any section link */
       target.scrollIntoView({ behavior: calm ? "auto" : "smooth", block: "start" });
       window.setTimeout(() => {
         const first = [fName, fIn, fOut].find(el => el && !el.value);
@@ -441,6 +488,7 @@ window.HPP = (function () {
   guardImages();
   wireMasthead();
   wireDrawer();
+  wireSectionLinks();
   wireAvailability();
   wireForm();
   wireLightbox();
