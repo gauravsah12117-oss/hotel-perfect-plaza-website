@@ -268,19 +268,13 @@ main > section { position: relative; overflow-x: clip; }
   background: var(--night); color: rgba(255, 255, 255, .84);
 }
 
-/* The photograph, graded twice: once in the file (warmer, a little less
-   saturated), and here — a deep navy wash from the left under the words, a
-   floor of shade under the booking bar, and a faint warm bloom where the
+/* The grade laid over whatever is behind the words — the photograph, or the
+   film once it plays. One definition for both, so the words are exactly as
+   legible either way: a deep navy wash from the left under the words, a
+   floor of shade under the booking bar, a faint warm bloom where the
    chandeliers are. */
-.hero__bg { position: absolute; inset: 0; z-index: -2; }
-.hero__bg img {
-  width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%;
-  animation: hero-drift 24s ease-in-out infinite alternate;
-}
-@keyframes hero-drift { from { transform: scale(1.02); } to { transform: scale(1.08); } }
-.hero__bg::after {
-  content: ""; position: absolute; inset: 0;
-  background:
+.hero {
+  --hero-grade:
     radial-gradient(60% 50% at 78% 22%, rgba(255, 196, 120, .16), transparent 70%),
     linear-gradient(90deg, rgba(10, 14, 26, .92) 0%, rgba(10, 14, 26, .74) 38%, rgba(10, 14, 26, .30) 70%, rgba(10, 14, 26, .18) 100%),
     linear-gradient(0deg, rgba(10, 14, 26, .88) 0%, rgba(10, 14, 26, .35) 30%, rgba(10, 14, 26, 0) 55%),
@@ -288,11 +282,41 @@ main > section { position: relative; overflow-x: clip; }
 }
 @media (max-width: 1023px) {
   /* stacked on phones: the whole frame darkens more evenly */
-  .hero__bg::after {
-    background:
+  .hero {
+    --hero-grade:
       linear-gradient(180deg, rgba(10, 14, 26, .78) 0%, rgba(10, 14, 26, .74) 45%, rgba(10, 14, 26, .9) 100%);
   }
 }
+
+/* The photograph, graded twice: once in the file (warmer, a little less
+   saturated), and again by --hero-grade. It is also what every visitor
+   sees before the film arrives, and all that visitors who ask for less
+   motion or are saving data ever see. */
+.hero__bg { position: absolute; inset: 0; z-index: -2; }
+.hero__bg img {
+  width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%;
+  animation: hero-drift 24s ease-in-out infinite alternate;
+}
+@keyframes hero-drift { from { transform: scale(1.02); } to { transform: scale(1.08); } }
+.hero__bg::after { content: ""; position: absolute; inset: 0; background: var(--hero-grade); }
+
+/* "Watch the hotel tour" — a glass play button under the main buttons. */
+.hero__tour {
+  display: inline-flex; align-items: center; gap: .75rem;
+  margin-top: 1.4rem;
+  color: #fff; font-size: .95rem; font-weight: 500;
+}
+.hero__tour-play {
+  display: grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .38);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  transition: background-color .2s, transform .2s var(--ease);
+}
+.hero__tour-play svg { width: 1.1rem; height: 1.1rem; margin-left: .15rem; }
+.hero__tour:hover .hero__tour-play { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
+.hero__tour-time { margin-left: .35rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
+@media (max-width: 1023px) { .hero__tour { justify-content: center; } }
 
 .hero__inner {
   position: relative; display: grid; align-items: end; gap: 2rem;
@@ -643,53 +667,56 @@ img[data-failed] { visibility: hidden; }
 .actionbar__btn svg { width: 1.05rem; height: 1.05rem; color: var(--accent); }
 .actionbar__btn--book { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* ------------------------------------------------------------ HERO PICTURE */
-
-/* The Lord Ram & Mata Sita picture is out of the hero for now. When it
-   comes back, its styles are in git history (commit "Use the real hotel
-   logo…" and earlier). --scene-h is still read by the hero film's scrim on
-   narrow screens. */
-.hero { --scene-h: 0px; }
-
 /* ----------------------------------------------------------------- HERO FILM */
 
-/* Dormant until film.js finds a film and adds .has-film to the hero. */
+/* Hidden until film.js has the loop actually playing, then faded in over
+   the photograph, which fades out beneath it. The film is 16:9 and centred:
+   on an upright phone the middle of each shot stays in frame. */
 .hero__film {
   position: absolute; inset: 0; z-index: -1; pointer-events: none;
   opacity: 0; transition: opacity 1.8s var(--ease);
 }
 .hero.has-film .hero__film { opacity: 1; }
 .hero__film video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
-/* A 16:9 film on an upright phone keeps about a quarter of its width; the
-   brief frames Ram on the right third, so crop toward him. */
-@media (max-aspect-ratio: 3/4) { .hero__film video { object-position: 74% 50%; } }
-.hero.film-portrait .hero__film video { object-position: 50% 30%; }
 
 .hero__bg { transition: opacity 1.2s var(--ease); }
 .hero.has-film .hero__bg { opacity: 0; }
 
-/* The scrim keeps the words legible whatever the film contains. Wide
-   screens: the words are on the left, so the left falls to near-black and
-   the right stays open for the subject. */
-.hero__scrim {
-  position: absolute; inset: 0;
-  background:
-    linear-gradient(0deg, rgba(11, 15, 25, .84) 0%, rgba(11, 15, 25, .5) 16%, rgba(11, 15, 25, 0) 34%),
-    linear-gradient(90deg, rgba(11, 15, 25, .93) 0%, rgba(11, 15, 25, .88) 42%, rgba(11, 15, 25, .6) 55%,
-                           rgba(11, 15, 25, .2) 72%, rgba(11, 15, 25, 0) 90%);
+/* The same grade as the photograph's, so nothing about the words changes
+   when the film fades in. */
+.hero__scrim { position: absolute; inset: 0; background: var(--hero-grade); }
+
+/* -------------------------------------------------------------- TOUR PLAYER */
+
+/* The full tour, in a native <dialog>: it traps focus, closes on Escape, and
+   returns focus to "Watch the hotel tour" (film.js). */
+.tour {
+  width: min(100% - 2rem, 70rem); max-width: none; max-height: none;
+  padding: 0; margin: auto; border: 0; background: transparent; color: #fff;
+  overflow: visible;
 }
-/* Narrow screens stack the words below the picture. The scrim is placed from
-   the LAYOUT — clear through the picture area (--scene-h), dark from just
-   above the first line of text. 5.5rem is the hero's top padding here. */
-@media (max-width: 1023px) {
-  .hero__scrim {
-    background: linear-gradient(180deg,
-      rgba(11, 15, 25, 0) 0,
-      rgba(11, 15, 25, 0) calc(5.5rem + var(--scene-h) - 5rem),
-      rgba(11, 15, 25, .9) calc(5.5rem + var(--scene-h) + .5rem),
-      rgba(11, 15, 25, .94) 100%);
-  }
+.tour::backdrop { background: rgba(8, 11, 20, .86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.tour__box { display: grid; gap: .75rem; }
+.tour__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.tour__title { font-family: var(--display); font-weight: 500; font-size: clamp(1.3rem, 1rem + 1vw, 1.7rem); }
+.tour__close {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex: none;
+  border-radius: 50%; border: 1px solid rgba(255, 255, 255, .35);
+  background: rgba(255, 255, 255, .1); color: #fff; cursor: pointer;
+  transition: background-color .2s;
 }
+.tour__close:hover { background: rgba(255, 255, 255, .22); }
+.tour__close svg { width: 1.2rem; height: 1.2rem; }
+.tour__video {
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 9;
+  max-height: calc(100svh - 7rem);
+  border-radius: 12px; background: #000;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, .8);
+}
+/* the page behind stays put while the tour is open */
+html.tour-open { overflow: hidden; }
+/* the red ring is too faint on the dark backdrop */
+.tour :focus-visible { outline-color: #fff; }
 /* The header's own shade over the film, until the page scrolls and the
    white bar takes over. */
 .masthead::before {

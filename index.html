@@ -70,6 +70,8 @@
   <symbol id="i-border" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M4 6h5v4H4zM15 12h5v4h-5z"/></g></symbol>
   <symbol id="i-dish" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 16h18M5 16a7 7 0 0 1 14 0"/><path d="M12 7V5M2 19h20"/></g></symbol>
   <symbol id="i-concierge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 17h16M6 17a6 6 0 0 1 12 0"/><path d="M12 11V9M10 9h4M3 20h18"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8.5 5.8v12.4a.8.8 0 0 0 1.2.7l9.6-6.2a.8.8 0 0 0 0-1.4L9.7 5.1a.8.8 0 0 0-1.2.7Z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
 <!-- ============================================================ MASTHEAD -->
@@ -128,10 +130,13 @@
     <img src="assets/images/hero-lobby.jpg" alt="" width="2400" height="1600" fetchpriority="high" decoding="async">
   </div>
 
-  <!-- The hero film. Dormant until assets/video/ram-hero.mp4 exists; then
-       film.js fades it in over the photograph. See VIDEO-BRIEF.md. -->
+  <!-- The hero film: a 12.6-second silent loop cut from the hotel's own
+       promotional video (caption-free shots only). film.js fades it in over
+       the photograph; visitors who ask for less motion or are saving data
+       keep the photograph and never download it. See VIDEO-BRIEF.md. -->
   <div class="hero__film" data-film aria-hidden="true">
-    <video muted loop playsinline preload="none" disablepictureinpicture disableremoteplayback></video>
+    <video muted loop playsinline preload="none" disablepictureinpicture disableremoteplayback
+           data-src="assets/video/hotel-hero.mp4"></video>
     <div class="hero__scrim"></div>
   </div>
 
@@ -150,11 +155,17 @@
       </p>
       <div class="hero__actions hero-in hero-in--4">
         <a class="btn btn--lg" href="#rooms">View rooms</a>
-        <a class="btn btn--lg btn--glass" data-tel href="#">
+        <a class="btn btn--lg btn--glass" data-tel href="tel:+97741590911">
           <svg aria-hidden="true"><use href="#i-phone"/></svg>
           Call reception
         </a>
       </div>
+      <!-- Opens the full tour, with sound (film.js). Without script, the
+           link simply opens the video file in the browser's own player. -->
+      <a class="hero__tour hero-in hero-in--5" href="assets/video/hotel-tour.mp4" data-tour-open>
+        <span class="hero__tour-play" aria-hidden="true"><svg><use href="#i-play"/></svg></span>
+        <span>Watch the hotel tour <span class="hero__tour-time">1:12</span></span>
+      </a>
     </div>
 
     <!-- A glass card of the practical facts. -->
@@ -577,6 +588,22 @@
   <a class="actionbar__btn" data-whatsapp href="#"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg>WhatsApp</a>
   <a class="actionbar__btn actionbar__btn--book" href="#enquire">Book now</a>
 </nav>
+
+<!-- The full hotel tour, with sound, opened by "Watch the hotel tour" in the
+     hero. The video's src is only set when it is opened, so nothing
+     downloads for visitors who never press play. -->
+<dialog class="tour" data-tour aria-labelledby="tour-title">
+  <div class="tour__box">
+    <div class="tour__head">
+      <h2 class="tour__title" id="tour-title">A tour of Hotel Perfect Plaza</h2>
+      <button type="button" class="tour__close" data-tour-close aria-label="Close the video">
+        <svg aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <video class="tour__video" controls playsinline preload="none" width="1280" height="720"
+           poster="assets/video/hotel-tour-poster.jpg" data-src="assets/video/hotel-tour.mp4"></video>
+  </div>
+</dialog>
 
 <script src="assets/js/main.js" defer></script>
 <script src="assets/js/ui.js" defer></script>

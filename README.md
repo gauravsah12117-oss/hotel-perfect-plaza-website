@@ -34,10 +34,11 @@ hotel's own photographs matter most.
 | `assets/images/janaki-mandir-night.jpg`, `mithila-art.jpg`, `ponds.jpg` | Real photographs of Janakpur from Wikimedia Commons — see *Photo credits* below |
 | `assets/images/ram-sita-turntable.png` / `.webp` | The original 12-frame sheet, kept as the source. The page does not load it |
 | `assets/images/hotel-logo.png` | The real logo, on a white card — used in the header, the footer, and (cropped) as the home-screen icon |
-| `assets/js/film.js` | The hero film — plays `assets/video/ram-hero.mp4` once it exists |
+| `assets/js/film.js` | The hero's video loop, and the "Watch the hotel tour" player |
 | `assets/js/scene.js` | A 3D gold lotus — only used if the Ram & Sita picture is taken out of the hero |
-| `assets/video/` | Empty until the hero film is made — see VIDEO-BRIEF.md |
-| `VIDEO-BRIEF.md`, `3D-ASSETS.md` | Briefs for the optional hero film and 3D model |
+| `assets/video/` | The hero loop (2.5 MB), the full hotel tour (13.9 MB) and its cover, all cut from the hotel's promo film |
+| `VIDEO-BRIEF.md` | How the hero video was cut, who sees what, and how to replace it |
+| `3D-ASSETS.md` | How to put a 3D model in the hero (not used at present) |
 
 ---
 
@@ -117,13 +118,19 @@ Each of these was a real bug found while building the page. They are commented i
 4. **The default icon size uses `:where()`.** An unsized inline SVG balloons to 300×150, so
    `site.css` gives SVGs a floor — at zero specificity, so any class still wins.
 5. **"Wi‑Fi" uses a non-breaking hyphen** (`&#8209;`), or it splits across lines as "Wi- / Fi".
-6. **The film's `<video>` has `preload="none"` and no `src` in the markup.** `film.js` decides
-   first, so visitors who asked for less motion or are saving data never download the film.
-7. **On narrow screens the film's scrim is positioned from `--scene-h`,** the same value that
-   sizes the picture area above the headline. Change one and the other follows; hard-code
-   either and the headline can end up over undarkened film.
-8. **The Ram & Sita picture is feathered at its edges by a mask, not clipped.** A hard edge
-   shows as a box where the render's dark ground meets the hero.
+6. **Both `<video>` tags have `preload="none"` and their file in `data-src`, not `src`.**
+   `film.js` decides first: visitors who asked for less motion or are saving data never
+   download the hero loop, and nobody downloads the 14 MB tour until they press "Watch the
+   hotel tour". Putting the file back in `src`, or adding `autoplay`, would download both for
+   everyone.
+7. **The photograph and the video share one colour grade, `--hero-grade`** (on `.hero` in
+   `site.css`), used by `.hero__bg::after` and `.hero__scrim` alike. Change it in one place and
+   the words stay equally legible over both; give the scrim its own gradient and the headline
+   can end up over undarkened video when it fades in.
+8. **The hero loop contains only caption-free shots.** The promo film has captions burned into
+   most shots, and behind the site's own headline they clash. If you re-cut it, check the first
+   and last frame of every shot — captions fade in and out over half a second (see
+   VIDEO-BRIEF.md).
 
 ---
 

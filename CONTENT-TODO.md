@@ -109,25 +109,19 @@ dress changes from one to the next — so no rotation built from them could look
   `#0B0F19` background, with no caption — would look noticeably crisper. Save it as
   `assets/images/ram-sita.jpg` and update the `width` and `height` on its `<img>` in
   `index.html` to match.
-- **Want real movement?** Use the hero film in section 5b: a short looping video of Ram and
-  Sita plays behind the headline and takes over from the picture automatically.
-
 ---
 
-## 5b. The hero film (optional)
+## 5b. The hero video — done, from your promo film
 
-A short looping film of Lord Ram before the Janaki Mandir can play behind the headline. The
-site is already built for it: save the file as **`assets/video/ram-hero.mp4`** and it plays by
-itself. Until then the picture of Ram and Sita fills the hero, so nothing is waiting on this.
+The hero now plays a **12.6-second silent loop** cut from `hero page video.mp4` — the drone shot
+of the building, the lobby, reception and two rooms — and **"Watch the hotel tour"** opens the full
+73-second film with its music. How it was cut, and how to replace it: **[VIDEO-BRIEF.md](VIDEO-BRIEF.md)**.
 
-Everything needed to make it — the prompt for an AI video tool, the phone version, sizes, how
-to make the file small — is in **[VIDEO-BRIEF.md](VIDEO-BRIEF.md)**.
-
-| File | |
-|---|---|
-| `assets/video/ram-hero.mp4` | The film, 16:9, 1920 × 1080, 8–10 seconds, no sound, under 6 MB |
-| `assets/video/ram-hero-portrait.mp4` | *Optional* — an upright 9:16 version for phones |
-| `assets/video/ram-hero-poster.jpg` | *Optional* — one still frame, shown to visitors saving data or asking for less motion |
+- [ ] **Music rights.** The tour plays the film's soundtrack. If the music was licensed by the
+      company that made the film, check the licence covers the hotel's own website.
+- [ ] **A 1080p copy, if the video maker has one.** The film supplied is 720p, which is fine
+      behind the darkened hero but a little soft on large screens. Ask whoever made it for the
+      1920 × 1080 export and I'll re-cut both videos from it.
 
 ---
 
@@ -237,5 +231,5 @@ These are placeholders written to sound right. Confirm each against reality.
 - [ ] Open the site on a real phone and press Call and WhatsApp
 - [ ] Look through the whole page on a real phone: Lord Ram and Mata Sita appear in the hero,
       the booking bar sits under them, and nothing stutters while you scroll
-- [ ] If you added the hero film, watch it on a real phone for a minute: it plays, the loop is
-      smooth, and Ram is not cut off
+- [ ] Watch the hero video on a real phone for a minute: it plays, the loop is
+      smooth, and "Watch the hotel tour" plays with sound

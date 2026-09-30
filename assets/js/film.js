@@ -1,119 +1,117 @@
 /* ==========================================================================
-   Hotel Perfect Plaza — the hero film
+   Hotel Perfect Plaza — the hero film and the hotel tour
    --------------------------------------------------------------------------
-   Plays a looping background film behind the hero once one exists. Until
-   then it does nothing at all and the golden lotus carries the hero; there
-   is no setting to change, the file simply has to be there.
+   Two videos, both cut from the hotel's own promotional film:
 
-     assets/video/ram-hero.mp4            the film, 16:9            required
-     assets/video/ram-hero-portrait.mp4   a 9:16 cut for phones     optional
-     assets/video/ram-hero-poster.jpg     one still frame           optional
+     assets/video/hotel-hero.mp4          12.6 s silent loop behind the hero
+     assets/video/hotel-tour.mp4          the full 73 s film, with its music
+     assets/video/hotel-tour-poster.jpg   the tour's cover frame
 
-   Who gets what:
-     • most visitors             the film, faded in over the lotus
-     • phones held upright       the portrait cut if there is one, else the
-                                 16:9 film cropped to its right-hand subject
-     • "reduce motion" / data    the still frame and no film download at
-       saver / a 2G connection   all — or, with no still, the lotus as before
-     • autoplay refused          the still frame (an iPhone in Low Power Mode
-                                 refuses to autoplay even muted video)
+   THE HERO LOOP
+     • most visitors             the loop, faded in over the lobby photograph
+     • "reduce motion" / data    no download at all — the photograph stays,
+       saver / a 2G connection   and it is already the right picture
+     • autoplay refused          the photograph stays (an iPhone in Low Power
+                                 Mode refuses to autoplay even muted video)
+   It pauses whenever the hero is scrolled away, the tab is hidden, or the
+   tour is open.
 
-   The film pauses whenever the hero is scrolled away or the tab is hidden.
-   See VIDEO-BRIEF.md for how to make the film.
+   THE TOUR
+   "Watch the hotel tour" opens the full film in a dialog, with sound — a
+   click is what lets a browser play sound. Nothing downloads until then.
+   Without script, the same link simply opens the video file.
    ========================================================================== */
 
 (function () {
   "use strict";
 
-  const box = document.querySelector("[data-film]");
-  if (!box) return;
+  const hero = document.querySelector(".hero");
+  const heroVideo = document.querySelector("[data-film] video");
+  let tourOpen = false;
+  let heroPlaying = false;       /* set once the loop has actually started */
+  let heroOnScreen = true;
 
-  const hero  = box.closest(".hero") || document.body;
-  const video = box.querySelector("video");
-  const DIR   = "assets/video/";
-  const STILL = DIR + "ram-hero-poster.jpg";
-
-  const calm   = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const net    = navigator.connection || {};
-  const frugal = !!net.saveData || /(^|-)2g$/.test(net.effectiveType || "");
-  const upright = window.matchMedia("(max-aspect-ratio: 3/4)").matches;
-
-  /* Does this image exist? Asked with an <img> rather than fetch(), which
-     would be refused outright on a page opened straight from disk. */
-  const exists = src => new Promise(done => {
-    const probe = new Image();
-    probe.onload = () => done(true);
-    probe.onerror = () => done(false);
-    probe.src = src;
-  });
-
-  const reveal = still => {
-    hero.classList.add("has-film");
-    hero.classList.toggle("film-still", still);
-    /* on <html> as well, for the header, which sits outside the hero */
-    document.documentElement.classList.add("film-on");
-    /* scene.js listens for this and stops drawing the lotus */
-    document.dispatchEvent(new CustomEvent("hpp:film"));
+  const syncHero = () => {
+    if (!heroPlaying) return;
+    if (heroOnScreen && !document.hidden && !tourOpen) heroVideo.play().catch(() => {});
+    else heroVideo.pause();
   };
 
-  const showStill = () => exists(STILL).then(ok => {
-    if (!ok) return;                         /* no still either: the lotus stays */
-    video.poster = STILL;
-    reveal(true);
-  });
+  /* ----------------------------------------------------------- the loop */
 
-  /* Reduced motion, a data saver or a very slow line: never download the
-     film. A still frame is a few kilobytes; the film is several megabytes. */
-  if (calm || frugal) { showStill(); return; }
+  (function startLoop() {
+    if (!hero || !heroVideo) return;
 
-  video.muted = true;                        /* the property as well as the
-                                                attribute, or some browsers
-                                                refuse to autoplay */
-  const candidates = (upright ? ["ram-hero-portrait.mp4"] : []).concat("ram-hero.mp4");
+    const calm   = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const net    = navigator.connection || {};
+    const frugal = !!net.saveData || /(^|-)2g$/.test(net.effectiveType || "");
+    /* The photograph is already in place; these visitors keep it and never
+       download the few megabytes of film. */
+    if (calm || frugal) return;
 
-  const tryNext = i => {
-    if (i >= candidates.length) return;      /* nothing there yet: the lotus stays */
-    const name = candidates[i];
-
-    const onError = () => { off(); tryNext(i + 1); };
-    const onReady = () => { off(); start(name); };
-    const off = () => {
-      video.removeEventListener("error", onError);
-      video.removeEventListener("loadeddata", onReady);
+    heroVideo.muted = true;          /* the property as well as the attribute,
+                                        or some browsers refuse to autoplay */
+    const onReady = () => {
+      heroVideo.removeEventListener("loadeddata", onReady);
+      heroVideo.play()
+        .then(() => {
+          heroPlaying = true;
+          hero.classList.add("has-film");
+          /* on <html> too, for the header, which sits outside the hero */
+          document.documentElement.classList.add("film-on");
+          if ("IntersectionObserver" in window) {
+            new IntersectionObserver(([entry]) => { heroOnScreen = entry.isIntersecting; syncHero(); })
+              .observe(hero);
+          }
+          document.addEventListener("visibilitychange", syncHero);
+        })
+        .catch(() => { /* autoplay refused: the photograph stays */ });
     };
-    video.addEventListener("error", onError);
-    video.addEventListener("loadeddata", onReady);
-
-    /* preload is "none" in the markup so nothing downloads before this
+    heroVideo.addEventListener("loadeddata", onReady);
+    /* preload is "none" in the markup, so nothing downloads before this
        script has decided the visitor should get the film at all */
-    video.preload = "auto";
-    video.src = DIR + name;
-    video.load();
-  };
+    heroVideo.preload = "auto";
+    heroVideo.src = heroVideo.dataset.src;
+    heroVideo.load();
+  })();
 
-  const start = name => {
-    hero.classList.toggle("film-portrait", name.includes("portrait"));
-    exists(STILL).then(ok => { if (ok) video.poster = STILL; });
+  /* ----------------------------------------------------------- the tour */
 
-    video.play()
-      .then(() => { reveal(false); keepInView(); })
-      .catch(() => showStill());
-  };
+  (function wireTour() {
+    const dialog = document.querySelector("[data-tour]");
+    const opens = document.querySelectorAll("[data-tour-open]");
+    if (!dialog || !opens.length || typeof dialog.showModal !== "function") return;
+    const video = dialog.querySelector("video");
+    let opener = null;
 
-  /* Pause when nobody can see it: scrolled away, or the tab in the
-     background. A film left running costs battery and data for nothing. */
-  const keepInView = () => {
-    let onScreen = true;
-    const sync = () => {
-      if (onScreen && !document.hidden) video.play().catch(() => {});
-      else video.pause();
-    };
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; sync(); })
-        .observe(hero);
-    }
-    document.addEventListener("visibilitychange", sync);
-  };
+    opens.forEach(link => link.addEventListener("click", e => {
+      e.preventDefault();
+      opener = link;
+      if (!video.getAttribute("src")) {
+        /* load now, whatever happens to play(): if a browser refuses to
+           start it with sound, the guest still gets a ready player with its
+           first frame and length, rather than a blank box */
+        video.preload = "auto";
+        video.src = video.dataset.src;
+      }
+      tourOpen = true;
+      syncHero();
+      document.documentElement.classList.add("tour-open");
+      dialog.showModal();
+      video.play().catch(() => { /* the controls are there to press play */ });
+    }));
 
-  tryNext(0);
+    dialog.querySelectorAll("[data-tour-close]").forEach(b =>
+      b.addEventListener("click", () => dialog.close()));
+    /* a click on the dimmed backdrop — the dialog itself, not its contents */
+    dialog.addEventListener("click", e => { if (e.target === dialog) dialog.close(); });
+
+    dialog.addEventListener("close", () => {
+      video.pause();
+      tourOpen = false;
+      document.documentElement.classList.remove("tour-open");
+      syncHero();
+      if (opener) opener.focus();
+    });
+  })();
 })();
