@@ -60,6 +60,11 @@ there is a real photograph behind it to frost.
   lotus under each heading, and the paired Mithila fish (a sign of good fortune at weddings)
   either side of it for Janakpur. All of it is inline SVG and CSS — nothing extra downloads.
   The lobby photo and the enquiry form sit in double gold-and-red frames, like a painted border.
+  A second layer adds a marigold toran (garland) hung across the top of the welcome, Mithila
+  sun mandalas as faint gold watermarks, a row of lit diyas at the foot of the Janakpur dusk
+  (their flicker stops for visitors who ask for less motion), gold corner flourishes on the
+  lobby and temple pictures, festival bunting on the place cards, gold diamonds either side of
+  each label, and a fine double gold frame inside the red and dusk bands.
 - **The hero** is a glass window over the hotel's own film, after the "Voyago" travel-site
   design. The film fills the hero; a pane of azure glass sits inset from the screen's edges, so
   the film shows through it and around it. Inside the frame, top to bottom: the header (its links in the

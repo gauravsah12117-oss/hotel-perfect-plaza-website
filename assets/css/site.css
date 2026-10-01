@@ -1132,7 +1132,7 @@ img[data-failed] { visibility: hidden; }
 .section--sindoor .section__head { margin-inline: auto; text-align: center; }
 .section--sindoor .ornament { justify-content: center; color: var(--gold-bright); }
 .section--sindoor .ornament::before, .section--dusk .ornament::before { content: ""; flex: 0 1 4.5rem; height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
-.section--sindoor .label, .section--dusk .label { color: var(--marigold-ink); }
+.section--sindoor .label, .section--dusk .label { color: var(--marigold-ink); text-shadow: 0 1px 3px rgba(50, 8, 14, .55); }
 .section--sindoor .h2, .section--dusk .h2 { color: #FFF6E8; }
 
 /* the switch on the red: ivory type, marigold for the open tab, centred */
@@ -1238,6 +1238,118 @@ img[data-failed] { visibility: hidden; }
 .footer__addr .deva { color: var(--marigold-ink); }
 .footer__tag { color: var(--marigold-ink); letter-spacing: .02em; }
 .footer__legal { border-top-color: rgba(212, 174, 90, .25); }
+
+
+/* ............................................ more ornament, Mithila way
+   The second layer of decoration: a marigold toran hung across the top of
+   the welcome, Mithila sun mandalas as faint watermarks, a row of lit
+   diyas at the foot of the Janakpur dusk, gold corner flourishes on the two
+   framed pictures, festival bunting on the place cards, gold diamonds
+   either side of each label, and a fine double gold frame inside the two
+   dark bands. All drawn here; the diyas' flicker stops for visitors who ask
+   for less motion. */
+
+:root {
+  --toran: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='66' viewBox='0 0 120 66'%3E%3Cpath d='M0 5Q30 15 60 5T120 5' fill='none' stroke='%23D4AE5A' stroke-width='1.6'/%3E%3Cpath d='M30 10V57.0' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M30 11c-6 1-9 5-10 9 6-1 9-4 10-9Z' fill='%233F7D4E'/%3E%3Cpath d='M30 11c6 1 9 5 10 9-6-1-9-4-10-9Z' fill='%232F6B41'/%3E%3Ccircle cx='30' cy='19.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='30' cy='19.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='30' cy='29.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='30' cy='29.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='30' cy='40.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='30' cy='40.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='30' cy='50.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='30' cy='50.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='30' cy='57.5' r='2.1' fill='%23BB3E3B'/%3E%3Cpath d='M30 59.5v4' stroke='%23BB3E3B' stroke-width='1.2'/%3E%3Cpath d='M90 10V57.0' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M90 11c-6 1-9 5-10 9 6-1 9-4 10-9Z' fill='%233F7D4E'/%3E%3Cpath d='M90 11c6 1 9 5 10 9-6-1-9-4-10-9Z' fill='%232F6B41'/%3E%3Ccircle cx='90' cy='19.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='90' cy='19.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='90' cy='29.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='90' cy='29.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='90' cy='40.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='90' cy='40.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='90' cy='50.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='90' cy='50.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='90' cy='57.5' r='2.1' fill='%23BB3E3B'/%3E%3Cpath d='M90 59.5v4' stroke='%23BB3E3B' stroke-width='1.2'/%3E%3Cpath d='M0 5V31.0' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M0 6c-6 1-9 5-10 9 6-1 9-4 10-9Z' fill='%233F7D4E'/%3E%3Cpath d='M0 6c6 1 9 5 10 9-6-1-9-4-10-9Z' fill='%232F6B41'/%3E%3Ccircle cx='0' cy='14.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='0' cy='14.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='0' cy='24.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='0' cy='24.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='0' cy='31.5' r='2.1' fill='%23BB3E3B'/%3E%3Cpath d='M0 33.5v4' stroke='%23BB3E3B' stroke-width='1.2'/%3E%3Cpath d='M60 5V31.0' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M60 6c-6 1-9 5-10 9 6-1 9-4 10-9Z' fill='%233F7D4E'/%3E%3Cpath d='M60 6c6 1 9 5 10 9-6-1-9-4-10-9Z' fill='%232F6B41'/%3E%3Ccircle cx='60' cy='14.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='60' cy='14.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='60' cy='24.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='60' cy='24.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='60' cy='31.5' r='2.1' fill='%23BB3E3B'/%3E%3Cpath d='M60 33.5v4' stroke='%23BB3E3B' stroke-width='1.2'/%3E%3Cpath d='M120 5V31.0' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M120 6c-6 1-9 5-10 9 6-1 9-4 10-9Z' fill='%233F7D4E'/%3E%3Cpath d='M120 6c6 1 9 5 10 9-6-1-9-4-10-9Z' fill='%232F6B41'/%3E%3Ccircle cx='120' cy='14.0' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='120' cy='14.0' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='120' cy='24.5' r='4.6' fill='%23F2A93B' stroke='%23E07B24' stroke-width='1.7' stroke-dasharray='1.5 1.1'/%3E%3Ccircle cx='120' cy='24.5' r='1.93' fill='%23C9561E'/%3E%3Ccircle cx='120' cy='31.5' r='2.1' fill='%23BB3E3B'/%3E%3Cpath d='M120 33.5v4' stroke='%23BB3E3B' stroke-width='1.2'/%3E%3C/svg%3E");
+  --mandala-gold: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23B08D3C' stroke-width='1.3' stroke-linejoin='round'%3E%3Cpath d='M194.0 100.0 L165.5 92.0 L165.5 108.0Z'/%3E%3Cpath d='M186.8 136.0 L163.6 117.6 L157.4 132.5Z'/%3E%3Cpath d='M166.5 166.5 L152.0 140.6 L140.6 152.0Z'/%3E%3Cpath d='M136.0 186.8 L132.5 157.4 L117.6 163.6Z'/%3E%3Cpath d='M100.0 194.0 L108.0 165.5 L92.0 165.5Z'/%3E%3Cpath d='M64.0 186.8 L82.4 163.6 L67.5 157.4Z'/%3E%3Cpath d='M33.5 166.5 L59.4 152.0 L48.0 140.6Z'/%3E%3Cpath d='M13.2 136.0 L42.6 132.5 L36.4 117.6Z'/%3E%3Cpath d='M6.0 100.0 L34.5 108.0 L34.5 92.0Z'/%3E%3Cpath d='M13.2 64.0 L36.4 82.4 L42.6 67.5Z'/%3E%3Cpath d='M33.5 33.5 L48.0 59.4 L59.4 48.0Z'/%3E%3Cpath d='M64.0 13.2 L67.5 42.6 L82.4 36.4Z'/%3E%3Cpath d='M100.0 6.0 L92.0 34.5 L108.0 34.5Z'/%3E%3Cpath d='M136.0 13.2 L117.6 36.4 L132.5 42.6Z'/%3E%3Cpath d='M166.5 33.5 L140.6 48.0 L152.0 59.4Z'/%3E%3Cpath d='M186.8 64.0 L157.4 67.5 L163.6 82.4Z'/%3E%3Ccircle cx='100' cy='100' r='64'/%3E%3Ccircle cx='100' cy='100' r='51'/%3E%3Ccircle cx='158.0' cy='100.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='156.0' cy='115.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='150.2' cy='129.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='141.0' cy='141.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='129.0' cy='150.2' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='115.0' cy='156.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='100.0' cy='158.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='85.0' cy='156.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='71.0' cy='150.2' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='59.0' cy='141.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='49.8' cy='129.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='44.0' cy='115.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='42.0' cy='100.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='44.0' cy='85.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='49.8' cy='71.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='59.0' cy='59.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='71.0' cy='49.8' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='85.0' cy='44.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='100.0' cy='42.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='115.0' cy='44.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='129.0' cy='49.8' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='141.0' cy='59.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='150.2' cy='71.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Ccircle cx='156.0' cy='85.0' r='1.7' fill='%23B08D3C' stroke='none'/%3E%3Cpath d='M122.0 100.0Q137.0 91.5 147.0 100.0Q137.0 108.5 122.0 100.0Z'/%3E%3Cpath d='M119.1 111.0Q136.3 111.1 140.7 123.5Q127.8 125.9 119.1 111.0Z'/%3E%3Cpath d='M111.0 119.1Q125.9 127.8 123.5 140.7Q111.1 136.3 111.0 119.1Z'/%3E%3Cpath d='M100.0 122.0Q108.5 137.0 100.0 147.0Q91.5 137.0 100.0 122.0Z'/%3E%3Cpath d='M89.0 119.1Q88.9 136.3 76.5 140.7Q74.1 127.8 89.0 119.1Z'/%3E%3Cpath d='M80.9 111.0Q72.2 125.9 59.3 123.5Q63.7 111.1 80.9 111.0Z'/%3E%3Cpath d='M78.0 100.0Q63.0 108.5 53.0 100.0Q63.0 91.5 78.0 100.0Z'/%3E%3Cpath d='M80.9 89.0Q63.7 88.9 59.3 76.5Q72.2 74.1 80.9 89.0Z'/%3E%3Cpath d='M89.0 80.9Q74.1 72.2 76.5 59.3Q88.9 63.7 89.0 80.9Z'/%3E%3Cpath d='M100.0 78.0Q91.5 63.0 100.0 53.0Q108.5 63.0 100.0 78.0Z'/%3E%3Cpath d='M111.0 80.9Q111.1 63.7 123.5 59.3Q125.9 72.2 111.0 80.9Z'/%3E%3Cpath d='M119.1 89.0Q127.8 74.1 140.7 76.5Q136.3 88.9 119.1 89.0Z'/%3E%3Ccircle cx='100' cy='100' r='14'/%3E%3Ccircle cx='100' cy='100' r='5' fill='%23B08D3C'/%3E%3C/g%3E%3C/svg%3E");
+  --mandala-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23F2C46B' stroke-width='1.3' stroke-linejoin='round'%3E%3Cpath d='M194.0 100.0 L165.5 92.0 L165.5 108.0Z'/%3E%3Cpath d='M186.8 136.0 L163.6 117.6 L157.4 132.5Z'/%3E%3Cpath d='M166.5 166.5 L152.0 140.6 L140.6 152.0Z'/%3E%3Cpath d='M136.0 186.8 L132.5 157.4 L117.6 163.6Z'/%3E%3Cpath d='M100.0 194.0 L108.0 165.5 L92.0 165.5Z'/%3E%3Cpath d='M64.0 186.8 L82.4 163.6 L67.5 157.4Z'/%3E%3Cpath d='M33.5 166.5 L59.4 152.0 L48.0 140.6Z'/%3E%3Cpath d='M13.2 136.0 L42.6 132.5 L36.4 117.6Z'/%3E%3Cpath d='M6.0 100.0 L34.5 108.0 L34.5 92.0Z'/%3E%3Cpath d='M13.2 64.0 L36.4 82.4 L42.6 67.5Z'/%3E%3Cpath d='M33.5 33.5 L48.0 59.4 L59.4 48.0Z'/%3E%3Cpath d='M64.0 13.2 L67.5 42.6 L82.4 36.4Z'/%3E%3Cpath d='M100.0 6.0 L92.0 34.5 L108.0 34.5Z'/%3E%3Cpath d='M136.0 13.2 L117.6 36.4 L132.5 42.6Z'/%3E%3Cpath d='M166.5 33.5 L140.6 48.0 L152.0 59.4Z'/%3E%3Cpath d='M186.8 64.0 L157.4 67.5 L163.6 82.4Z'/%3E%3Ccircle cx='100' cy='100' r='64'/%3E%3Ccircle cx='100' cy='100' r='51'/%3E%3Ccircle cx='158.0' cy='100.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='156.0' cy='115.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='150.2' cy='129.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='141.0' cy='141.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='129.0' cy='150.2' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='115.0' cy='156.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='100.0' cy='158.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='85.0' cy='156.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='71.0' cy='150.2' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='59.0' cy='141.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='49.8' cy='129.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='44.0' cy='115.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='42.0' cy='100.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='44.0' cy='85.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='49.8' cy='71.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='59.0' cy='59.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='71.0' cy='49.8' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='85.0' cy='44.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='100.0' cy='42.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='115.0' cy='44.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='129.0' cy='49.8' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='141.0' cy='59.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='150.2' cy='71.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Ccircle cx='156.0' cy='85.0' r='1.7' fill='%23F2C46B' stroke='none'/%3E%3Cpath d='M122.0 100.0Q137.0 91.5 147.0 100.0Q137.0 108.5 122.0 100.0Z'/%3E%3Cpath d='M119.1 111.0Q136.3 111.1 140.7 123.5Q127.8 125.9 119.1 111.0Z'/%3E%3Cpath d='M111.0 119.1Q125.9 127.8 123.5 140.7Q111.1 136.3 111.0 119.1Z'/%3E%3Cpath d='M100.0 122.0Q108.5 137.0 100.0 147.0Q91.5 137.0 100.0 122.0Z'/%3E%3Cpath d='M89.0 119.1Q88.9 136.3 76.5 140.7Q74.1 127.8 89.0 119.1Z'/%3E%3Cpath d='M80.9 111.0Q72.2 125.9 59.3 123.5Q63.7 111.1 80.9 111.0Z'/%3E%3Cpath d='M78.0 100.0Q63.0 108.5 53.0 100.0Q63.0 91.5 78.0 100.0Z'/%3E%3Cpath d='M80.9 89.0Q63.7 88.9 59.3 76.5Q72.2 74.1 80.9 89.0Z'/%3E%3Cpath d='M89.0 80.9Q74.1 72.2 76.5 59.3Q88.9 63.7 89.0 80.9Z'/%3E%3Cpath d='M100.0 78.0Q91.5 63.0 100.0 53.0Q108.5 63.0 100.0 78.0Z'/%3E%3Cpath d='M111.0 80.9Q111.1 63.7 123.5 59.3Q125.9 72.2 111.0 80.9Z'/%3E%3Cpath d='M119.1 89.0Q127.8 74.1 140.7 76.5Q136.3 88.9 119.1 89.0Z'/%3E%3Ccircle cx='100' cy='100' r='14'/%3E%3Ccircle cx='100' cy='100' r='5' fill='%23F2C46B'/%3E%3C/g%3E%3C/svg%3E");
+  --diya: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='.5' cy='.5' r='.5'%3E%3Cstop offset='0' stop-color='%23FFD27A' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23FFD27A' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='f' cx='.5' cy='.7' r='.6'%3E%3Cstop offset='0' stop-color='%23FFF6C8'/%3E%3Cstop offset='.5' stop-color='%23FFC23D'/%3E%3Cstop offset='1' stop-color='%23F07A1A'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='28' r='22' fill='url%28%23g%29'/%3E%3Cpath d='M32 12C37 21 38 28 32 34 26 28 27 21 32 12Z' fill='url%28%23f%29'/%3E%3Cpath d='M9 38Q32 60 55 38Z' fill='%23C9561E'/%3E%3Cpath d='M9 38H55' stroke='%23D4AE5A' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M17 45Q32 54 47 45' fill='none' stroke='%23F2A93B' stroke-width='1.2' stroke-dasharray='2 2'/%3E%3Cellipse cx='32' cy='54' rx='9' ry='2.2' fill='%238E2A27'/%3E%3C/svg%3E");
+}
+.section--welcome, .section--sindoor, .section--dusk, .section--marigold, .footer { isolation: isolate; }
+/* the sections clip their sides already (main > section); the footer has to
+   as well, or its mandala widens the page on a phone */
+.footer { overflow-x: hidden; overflow-x: clip; }
+
+/* the label between two gold diamonds */
+:is(.section--welcome, .section--sindoor, .section--dusk, .section--marigold) .label {
+  display: inline-flex; align-items: center; gap: .65rem;
+}
+:is(.section--welcome, .section--sindoor, .section--dusk, .section--marigold) .label::before,
+:is(.section--welcome, .section--sindoor, .section--dusk, .section--marigold) .label::after {
+  content: ""; width: .42rem; height: .42rem; rotate: 45deg; background: var(--gold-bright); flex: none;
+}
+
+/* the marigold toran, hung just under the border band */
+.section--welcome::after {
+  content: ""; position: absolute; top: 20px; left: 0; right: 0; height: 66px; pointer-events: none;
+  background: var(--toran) repeat-x center top / 120px 66px;
+  filter: drop-shadow(0 3px 3px rgba(90, 26, 34, .18));
+}
+.section--welcome { padding-top: calc(clamp(3.75rem, 2.75rem + 4vw, 6.5rem) + 3.5rem); }
+
+/* Mithila sun mandalas, faint, behind the content */
+.section--welcome .split, .section--marigold .contact-grid, .section--sindoor .section__head, .footer__grid { position: relative; }
+.section--welcome .split::before, .section--marigold .contact-grid::before,
+.section--sindoor .section__head::before, .footer__grid::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; aspect-ratio: 1;
+  background: var(--mandala-gold) center / contain no-repeat;
+}
+.section--welcome .split::before { width: min(30rem, 70vw); right: -9rem; bottom: -9rem; opacity: .16; }
+.section--marigold .contact-grid::before { width: min(26rem, 70vw); right: -10rem; top: -8rem; opacity: .18; }
+.section--sindoor .section__head::before {
+  width: 19rem; left: 50%; top: 50%; translate: -50% -50%; opacity: .1;
+  background-image: var(--mandala-light);
+}
+.footer__grid::before { width: 22rem; right: -6rem; top: -2rem; opacity: .08; background-image: var(--mandala-light); }
+
+/* gold corner flourishes over the two framed pictures */
+.section--welcome .split__media::before, .section--dusk .feature__media::before {
+  content: ""; position: absolute; inset: 12px; z-index: 1; pointer-events: none;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg transform=''%3E%3Cg fill='none' stroke='%23D4AE5A' stroke-linecap='round'%3E%3Cpath d='M3 45V12Q3 3 12 3H45' stroke-width='1.8'/%3E%3Cpath d='M9 45V17Q9 9 17 9H45' stroke-width='1'/%3E%3Cpath d='M17 17c7 0 12 4 13 10M17 17c0 7 4 12 10 13' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='17' cy='17' r='2.6' fill='%23D4AE5A'/%3E%3Ccircle cx='45' cy='3' r='1.6' fill='%23D4AE5A'/%3E%3Ccircle cx='3' cy='45' r='1.6' fill='%23D4AE5A'/%3E%3C/g%3E%3C/svg%3E") left top / 44px 44px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg transform='translate%2848 0%29 scale%28-1 1%29'%3E%3Cg fill='none' stroke='%23D4AE5A' stroke-linecap='round'%3E%3Cpath d='M3 45V12Q3 3 12 3H45' stroke-width='1.8'/%3E%3Cpath d='M9 45V17Q9 9 17 9H45' stroke-width='1'/%3E%3Cpath d='M17 17c7 0 12 4 13 10M17 17c0 7 4 12 10 13' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='17' cy='17' r='2.6' fill='%23D4AE5A'/%3E%3Ccircle cx='45' cy='3' r='1.6' fill='%23D4AE5A'/%3E%3Ccircle cx='3' cy='45' r='1.6' fill='%23D4AE5A'/%3E%3C/g%3E%3C/svg%3E") right top / 44px 44px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg transform='translate%280 48%29 scale%281 -1%29'%3E%3Cg fill='none' stroke='%23D4AE5A' stroke-linecap='round'%3E%3Cpath d='M3 45V12Q3 3 12 3H45' stroke-width='1.8'/%3E%3Cpath d='M9 45V17Q9 9 17 9H45' stroke-width='1'/%3E%3Cpath d='M17 17c7 0 12 4 13 10M17 17c0 7 4 12 10 13' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='17' cy='17' r='2.6' fill='%23D4AE5A'/%3E%3Ccircle cx='45' cy='3' r='1.6' fill='%23D4AE5A'/%3E%3Ccircle cx='3' cy='45' r='1.6' fill='%23D4AE5A'/%3E%3C/g%3E%3C/svg%3E") left bottom / 44px 44px no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg transform='translate%2848 48%29 scale%28-1 -1%29'%3E%3Cg fill='none' stroke='%23D4AE5A' stroke-linecap='round'%3E%3Cpath d='M3 45V12Q3 3 12 3H45' stroke-width='1.8'/%3E%3Cpath d='M9 45V17Q9 9 17 9H45' stroke-width='1'/%3E%3Cpath d='M17 17c7 0 12 4 13 10M17 17c0 7 4 12 10 13' stroke-width='1'/%3E%3C/g%3E%3Ccircle cx='17' cy='17' r='2.6' fill='%23D4AE5A'/%3E%3Ccircle cx='45' cy='3' r='1.6' fill='%23D4AE5A'/%3E%3Ccircle cx='3' cy='45' r='1.6' fill='%23D4AE5A'/%3E%3C/g%3E%3C/svg%3E") right bottom / 44px 44px no-repeat;
+  filter: drop-shadow(0 1px 1.5px rgba(30, 10, 10, .55));
+}
+
+/* festival bunting across each place card, in its Mithila colour */
+.section--dusk .place { border-top: 0; }
+.section--dusk .place__media::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 14px; z-index: 1; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='14' viewBox='0 0 22 14'%3E%3Cpath d='M0 1.2H22' stroke='%23D4AE5A' stroke-width='1.4'/%3E%3Cpath d='M2 1.5H20L11 13Z' fill='%23BB3E3B'/%3E%3Ccircle cx='11' cy='5' r='1.4' fill='%23FFF3DF'/%3E%3C/svg%3E") repeat-x left top / 22px 14px;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35));
+}
+.section--dusk .place:nth-child(2) .place__media::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='14' viewBox='0 0 22 14'%3E%3Cpath d='M0 1.2H22' stroke='%23D4AE5A' stroke-width='1.4'/%3E%3Cpath d='M2 1.5H20L11 13Z' fill='%23F2A93B'/%3E%3Ccircle cx='11' cy='5' r='1.4' fill='%23FFF3DF'/%3E%3C/svg%3E"); }
+.section--dusk .place:nth-child(3) .place__media::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='14' viewBox='0 0 22 14'%3E%3Cpath d='M0 1.2H22' stroke='%23D4AE5A' stroke-width='1.4'/%3E%3Cpath d='M2 1.5H20L11 13Z' fill='%232F7A55'/%3E%3Ccircle cx='11' cy='5' r='1.4' fill='%23FFF3DF'/%3E%3C/svg%3E"); }
+/* and a fine triple gold rule along the top of the temple's card */
+.section--dusk .feature__body {
+  background:
+    linear-gradient(var(--gold-bright), var(--gold-bright)) top / 100% 3px no-repeat,
+    linear-gradient(var(--gold-bright), var(--gold-bright)) 0 6px / 100% 1px no-repeat,
+    #fff;
+}
+
+/* a fine double gold frame inside the two dark bands, like a painting's border */
+@media (min-width: 1024px) {
+  .section--sindoor > .wrap, .section--dusk > .wrap { position: relative; }
+  .section--sindoor > .wrap::before, .section--dusk > .wrap::before {
+    content: ""; position: absolute; z-index: -1; pointer-events: none;
+    inset: -2.75rem -1.25rem -2.75rem;
+    border: 1px solid rgba(212, 174, 90, .38); border-radius: 22px;
+    outline: 1px solid rgba(212, 174, 90, .2); outline-offset: 6px;
+  }
+}
+
+/* a row of lit diyas at the foot of the dusk, just above the scalloped edge */
+.section--dusk { padding-bottom: calc(clamp(3.75rem, 2.75rem + 4vw, 6.5rem) + 4.5rem); }
+.section--dusk::after {
+  content: ""; position: absolute; left: 50%; bottom: 1.75rem; translate: -50% 0; pointer-events: none;
+  width: min(44rem, calc(100% - 2.5rem)); height: 64px;
+  background: var(--diya) space center / 64px 64px;
+  animation: diya-flicker 3.2s ease-in-out infinite;
+}
+@keyframes diya-flicker { 0%, 100% { opacity: 1; } 35% { opacity: .82; } 60% { opacity: .95; } 80% { opacity: .86; } }
+
+/* a small sun mandala over the footer's last line */
+.footer__legal { position: relative; padding-top: 2.4rem; }
+.footer__legal::before {
+  content: ""; position: absolute; top: .55rem; left: 50%; translate: -50% 0; width: 9rem; height: 1.4rem;
+  background: var(--mandala-light) center / 1.4rem 1.4rem no-repeat;
+  opacity: .7;
+}
+
+@media (prefers-reduced-motion: reduce) { .section--dusk::after { animation: none; } }
 
 /* ---------------------------------------------------------- PHONE ACTION BAR */
 
