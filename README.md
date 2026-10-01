@@ -35,7 +35,8 @@ hotel's own photographs matter most.
 | `assets/images/ram-sita-turntable.png` / `.webp` | The original 12-frame sheet, kept as the source. The page does not load it |
 | `assets/images/hotel-logo.png` | The real logo, on a white card — used in the header, the footer, and (cropped) as the home-screen icon |
 | `assets/js/film.js` | The hero's video loop, and the "Watch the hotel tour" player |
-| `assets/images/dining-room.jpg`, `banquet.jpg`, `meeting-room.jpg` | Stills from the hotel's promo film (the dining hall, its buffet counter, the meeting room), taken between the film's captions |
+| `assets/images/dining-room.jpg`, `restaurant-thali.jpg`, `restaurant-meal.jpg` | The restaurant and two of its meals (a Nepali thali, a set meal) — the hotel's own photographs, shown together in the Restaurant tab |
+| `assets/images/banquet.jpg`, `meeting-room.jpg` | Stills from the hotel's promo film (the buffet counter in the dining hall, the meeting room), taken between the film's captions |
 | `assets/js/scene.js` | A 3D gold lotus — only used if the Ram & Sita picture is taken out of the hero |
 | `assets/video/` | The hero loop (2.5 MB), the full hotel tour (13.9 MB) and its cover, all cut from the hotel's promo film |
 | `VIDEO-BRIEF.md` | How the hero video was cut, who sees what, and how to replace it |

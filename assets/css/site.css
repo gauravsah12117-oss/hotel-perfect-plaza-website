@@ -920,6 +920,24 @@ img[data-failed] { visibility: hidden; }
 @media (min-width: 1024px) { .panel { grid-template-columns: 1fr 1fr; } }
 .panel__media { min-height: 240px; }
 @media (min-width: 1024px) { .panel__media { min-height: 440px; } }
+/* The restaurant's three photographs: the room across the top, two plates
+   below, parted by fine gold lines. On phones it keeps a near-square shape,
+   so the plates are not squeezed into slivers. */
+.panel__mosaic {
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 3fr 2fr; gap: 3px;
+  background: var(--gold-bright, #D4AE5A);
+}
+.panel__mosaic .frame__media { min-height: 0; }
+/* the photographs fill their tiles without setting the mosaic's height:
+   the panel's text does, as it did for the single picture */
+.panel__mosaic .frame__media img { position: absolute; inset: 0; }
+.panel__mosaic-main { grid-column: 1 / -1; }
+@media (max-width: 1023px) { .panel__mosaic { aspect-ratio: 1 / 1.05; min-height: 0; } }
+@media (hover: hover) {
+  .panel__mosaic .frame__media img { transition: transform .8s var(--ease); }
+  .panel__mosaic .frame__media:hover img { transform: scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) { .panel__mosaic .frame__media img { transition: none; } }
 .panel__body { display: flex; flex-direction: column; justify-content: center; gap: 1.1rem; padding: 1.6rem; }
 @media (min-width: 640px) { .panel__body { padding: 2.5rem; } }
 .panel__cta { align-self: flex-start; }

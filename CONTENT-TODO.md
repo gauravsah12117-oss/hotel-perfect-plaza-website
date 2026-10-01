@@ -152,10 +152,16 @@ therefore now shows the **lobby**, not the front of the building (the `<img>` wa
 "front," so nothing on the page overclaims). If you'd like the actual building front there
 instead, send me a daylight photo of the entrance and I'll swap it in — same spot, one file.
 
+**The restaurant — done, from your photos:** `dining-room.jpg` (the restaurant), plus
+`restaurant-thali.jpg` and `restaurant-meal.jpg` (two meals), shown together in the Restaurant
+tab; the room is also on the restaurant card at the top of the page.
+- [ ] If any of these three came from the internet rather than from the hotel, check you have
+      permission to use it — a hotel website is commercial use. The thali photo in particular
+      looks like it may be a stock picture.
+
 **Stand-ins from your promo film, until there are photographs.** The folder had no photo of
-the restaurant, the function space or the meeting room, so these three are single frames of the
-film, taken where no caption is on screen (see VIDEO-BRIEF.md, *Stills from the film*):
-- `dining-room.jpg` — the dining hall
+the function space or the meeting room, so these two are single frames of the film, taken
+where no caption is on screen (see VIDEO-BRIEF.md, *Stills from the film*):
 - `banquet.jpg` — the buffet counter in the dining hall, draped in red and gold. If functions
   are held somewhere else (a hall, a lawn), a photo of that place is better
 - `meeting-room.jpg` — the meeting room

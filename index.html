@@ -336,7 +336,7 @@
         <div class="deck__track" data-deck-track>
           <article class="tcard">
             <div class="tcard__media frame__media">
-              <img src="assets/images/dining-room.jpg" alt="The dining hall, with long tables, wooden chairs and a buffet counter at the far end" width="816" height="560" loading="lazy" decoding="async" data-img>
+              <img src="assets/images/dining-room.jpg" alt="The hotel restaurant: wooden tables, cream upholstered chairs and a sofa along the wall" width="680" height="453" loading="lazy" decoding="async" data-img>
             </div>
             <span class="tcard__tag"><svg aria-hidden="true"><use href="#i-dish"/></svg>Restaurant</span>
             <span class="tcard__go" aria-hidden="true"><svg><use href="#i-arrow"/></svg></span>
@@ -538,8 +538,19 @@
       </div>
 
       <div class="card panel" role="tabpanel" id="panel-dining" aria-labelledby="tab-dining" tabindex="0">
-        <div class="frame__media panel__media">
-          <img src="assets/images/dining-room.jpg" alt="The dining hall, with long tables, wooden chairs and a buffet counter at the far end" width="816" height="560" loading="lazy" decoding="async" data-img>
+        <!-- The restaurant and two of its meals: the room across the top, the
+             plates below. Each picture in its own frame, so a missing one
+             shows the lotus, not a broken image. -->
+        <div class="panel__media panel__mosaic">
+          <div class="frame__media panel__mosaic-main">
+            <img src="assets/images/dining-room.jpg" alt="The hotel restaurant: wooden tables, cream upholstered chairs and a sofa along the wall" width="680" height="453" loading="lazy" decoding="async" data-img>
+          </div>
+          <div class="frame__media">
+            <img src="assets/images/restaurant-thali.jpg" alt="A Nepali thali on a brass plate: rice, dal, a meat curry, greens, potatoes, pickles and momos" width="541" height="450" loading="lazy" decoding="async" data-img>
+          </div>
+          <div class="frame__media">
+            <img src="assets/images/restaurant-meal.jpg" alt="A set meal: rice with greens and a spiced stir-fry, with soup, a vegetable curry, chutney and papad" width="510" height="510" loading="lazy" decoding="async" data-img>
+          </div>
         </div>
         <div class="panel__body">
           <h3 class="h3">The restaurant</h3>

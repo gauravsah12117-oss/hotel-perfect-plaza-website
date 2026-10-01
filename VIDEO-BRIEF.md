@@ -61,18 +61,17 @@ The hero is a glass frame over the film (see README, *The design*):
 
 ## Stills from the film
 
-Three photographs on the site are single frames of the promo film, because there are no photos
-of these rooms yet. Each is taken from a moment with no caption on screen, and cropped above
+Two photographs on the site are single frames of the promo film, because there are no photos
+of these rooms yet. (A third, the dining hall, has since been replaced by the hotel's own photo
+of the restaurant.) Each is taken from a moment with no caption on screen, and cropped above
 where the captions sit:
 
 | File | From the film | Shows | Used in |
 |---|---|---|---|
-| `assets/images/dining-room.jpg` | 29.50 s | The dining hall | The restaurant card and tab |
 | `assets/images/banquet.jpg` | 27.40 s | The buffet counter in the dining hall | The weddings card and tab |
 | `assets/images/meeting-room.jpg` | 27.00 s | The meeting room | The meeting-room card |
 
 ```
-ffmpeg -ss 29.50 -i hotel-tour.mp4 -frames:v 1 -vf "crop=816:560:440:36,eq=saturation=0.95" -q:v 3 dining-room.jpg
 ffmpeg -ss 27.40 -i hotel-tour.mp4 -frames:v 1 -vf "crop=746:512:330:208,eq=saturation=0.95" -q:v 3 banquet.jpg
 ffmpeg -ss 27.00 -i hotel-tour.mp4 -frames:v 1 -vf "crop=930:640:300:70,eq=saturation=0.95" -q:v 3 meeting-room.jpg
 ```
