@@ -857,6 +857,7 @@ main:focus, main > section:focus { outline: none; }
 .card {
   display: flex; flex-direction: column; overflow: hidden;
   background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius);
+  color: var(--ink-2);   /* its own ink: it also sits on the coloured bands */
   box-shadow: 0 1px 2px rgba(31, 27, 23, .04), 0 12px 32px -20px rgba(31, 27, 23, .22);
   transition: box-shadow .3s var(--ease), translate .3s var(--ease);
 }
@@ -1060,6 +1061,183 @@ img[data-failed] { visibility: hidden; }
   padding: 1.25rem; border-top: 1px solid rgba(255, 255, 255, .1);
   text-align: center; font-size: .82rem;
 }
+
+/* ------------------------------------------------- COLOUR BELOW THE HERO
+   The hotel's own colours, section by section: warm ivory with a marigold
+   glow for the welcome; the logo's sindoor red as a rich band for the
+   restaurant and events; a dusk sky — the hero's azure deepening into
+   temple wine — for Janakpur; marigold for the contact section; and deep
+   indigo for the footer. Ornament is drawn from Mithila painting, the
+   city's own art: a border band of triangles and dots, the scalloped edge,
+   the lotus and the paired fish — fine line-work in temple gold, never
+   pictures. All of it is CSS and inline SVG: nothing extra to download. */
+
+:root {
+  --sindoor-deep: #7E2226;
+  --wine:         #5A1A22;
+  --marigold:     #F2A93B;
+  --marigold-ink: #FFD98F;  /* marigold for type on the dark bands — 4.8:1 or better there, even on the glow */
+  --gold-bright:  #D4AE5A;
+  --ivory:        #FFF8EC;
+  --leaf:         #2F7A55;
+  --indigo:       #13214A;
+  --mithila-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='20' viewBox='0 0 40 20'%3E%3Crect width='40' height='20' fill='%235A1A22'/%3E%3Cpath d='M0 2.5h40M0 17.5h40' stroke='%23D4AE5A' stroke-width='1'/%3E%3Cpath d='M0 15.5 10 5.5 20 15.5Z' fill='%23F2A93B'/%3E%3Cpath d='M20 15.5 30 5.5 40 15.5Z' fill='%23FFF3DF'/%3E%3Ccircle cx='10' cy='12' r='1.7' fill='%23BB3E3B'/%3E%3Ccircle cx='30' cy='12' r='1.7' fill='%23BB3E3B'/%3E%3Ccircle cx='20' cy='6.2' r='1.2' fill='%23D4AE5A'/%3E%3Ccircle cx='0' cy='6.2' r='1.2' fill='%23D4AE5A'/%3E%3Ccircle cx='40' cy='6.2' r='1.2' fill='%23D4AE5A'/%3E%3C/svg%3E");
+}
+
+/* The lotus and a hairline, under a section's heading; on the two centred
+   heads (the red and the dusk bands), a hairline either side. */
+.ornament { display: flex; align-items: center; gap: .75rem; margin-top: 1rem; color: var(--gold); }
+.ornament::after { content: ""; flex: 0 1 4.5rem; height: 1px; background: linear-gradient(90deg, currentColor, transparent); }
+.ornament svg { width: 2.6rem; height: 1.6rem; }
+/* the paired fish of Mithila wedding painting, either side of the lotus */
+.ornament--fish { gap: .55rem; }
+.ornament .ornament__fish { width: 3rem; height: 1.3rem; }
+.ornament__fish--r { transform: scaleX(-1); }
+
+/* A Mithila border band along a section's edge. */
+.section--welcome::before, .section--sindoor::before, .section--sindoor::after, .footer::before {
+  content: ""; position: absolute; left: 0; right: 0; height: 20px;
+  background: var(--mithila-band) repeat-x center / auto 20px;
+}
+.section--welcome::before, .section--sindoor::before, .footer::before { top: 0; }
+.section--sindoor::after { bottom: 0; }
+
+/* ...................................................... welcome */
+
+.section--welcome {
+  background:
+    radial-gradient(56rem 30rem at 92% 0%, rgba(242, 169, 59, .2), transparent 70%),
+    radial-gradient(40rem 26rem at 0% 100%, rgba(187, 62, 59, .08), transparent 70%),
+    var(--ivory);
+}
+/* the lobby in a double frame — gold, then sindoor — like a painted border */
+.section--welcome .split__media {
+  box-shadow:
+    0 0 0 8px var(--ivory), 0 0 0 9px var(--gold-bright),
+    0 0 0 15px var(--ivory), 0 0 0 16px rgba(187, 62, 59, .55),
+    0 36px 70px -30px rgba(90, 26, 34, .45);
+}
+@media (max-width: 1023px) { .section--welcome .split__media { margin-inline: 16px; } }
+
+/* ............................................... restaurant & events */
+
+.section--sindoor {
+  color: rgba(255, 244, 228, .86);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M14 4 18 14 14 24 10 14Z' fill='none' stroke='%23F2C46B' stroke-width='.7' opacity='.5'/%3E%3Ccircle cx='0' cy='0' r='1' fill='%23F2C46B' opacity='.55'/%3E%3Ccircle cx='28' cy='0' r='1' fill='%23F2C46B' opacity='.55'/%3E%3Ccircle cx='0' cy='28' r='1' fill='%23F2C46B' opacity='.55'/%3E%3Ccircle cx='28' cy='28' r='1' fill='%23F2C46B' opacity='.55'/%3E%3C/svg%3E") center / 28px 28px,
+    radial-gradient(64rem 36rem at 12% 0%, rgba(242, 169, 59, .18), transparent 62%),
+    radial-gradient(56rem 36rem at 100% 100%, rgba(19, 33, 74, .4), transparent 62%),
+    linear-gradient(160deg, #8E2A27 0%, #742126 52%, #571A24 100%);
+}
+.section--sindoor .section__head { margin-inline: auto; text-align: center; }
+.section--sindoor .ornament { justify-content: center; color: var(--gold-bright); }
+.section--sindoor .ornament::before, .section--dusk .ornament::before { content: ""; flex: 0 1 4.5rem; height: 1px; background: linear-gradient(90deg, transparent, currentColor); }
+.section--sindoor .label, .section--dusk .label { color: var(--marigold-ink); }
+.section--sindoor .h2, .section--dusk .h2 { color: #FFF6E8; }
+
+/* the switch on the red: ivory type, marigold for the open tab, centred */
+.ui-ready .section--sindoor .tablist { justify-content: center; border-bottom-color: rgba(255, 236, 205, .22); }
+.section--sindoor .tab { color: rgba(255, 244, 228, .8); }
+.section--sindoor .tab:hover { color: #fff; }
+.section--sindoor .tab[aria-selected="true"] { color: #fff; border-bottom-color: var(--marigold); }
+@media (max-width: 639px) {
+  .ui-ready .section--sindoor .tablist { justify-content: flex-start; }
+  .section--sindoor .tab { border-color: rgba(255, 236, 205, .4); color: #FFF4E4; }
+  .section--sindoor .tab[aria-selected="true"] { background: var(--marigold); border-color: var(--marigold); color: #3B1212; }
+}
+/* the panel: a white card floating on the red, edged in gold */
+.section--sindoor .panel {
+  border: 0;
+  box-shadow: 0 0 0 1px rgba(212, 174, 90, .55), 0 0 0 7px rgba(255, 236, 205, .07), 0 40px 80px -36px rgba(20, 4, 8, .7);
+}
+.section--sindoor .ticks li::before { background: var(--marigold); box-shadow: 0 0 0 2px rgba(242, 169, 59, .25); }
+
+/* ............................................................ janakpur */
+
+/* Dusk over the Janaki Mandir: the hero's azure at the top, deepening
+   through indigo and plum into temple wine, with a few early stars. */
+.section--dusk {
+  color: rgba(255, 244, 228, .86);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='160' viewBox='0 0 220 160'%3E%3Cg fill='%23FFE7B0'%3E%3Ccircle cx='18' cy='22' r='1.1' opacity='.7'/%3E%3Ccircle cx='96' cy='12' r='.8' opacity='.5'/%3E%3Ccircle cx='160' cy='40' r='1.2' opacity='.6'/%3E%3Ccircle cx='60' cy='78' r='.7' opacity='.45'/%3E%3Ccircle cx='200' cy='96' r='.9' opacity='.5'/%3E%3Ccircle cx='128' cy='132' r='.7' opacity='.4'/%3E%3Ccircle cx='30' cy='140' r='.9' opacity='.45'/%3E%3C/g%3E%3C/svg%3E") top center / 220px 160px no-repeat,
+    radial-gradient(60rem 28rem at 50% 0%, rgba(27, 91, 207, .38), transparent 70%),
+    radial-gradient(50rem 30rem at 50% 100%, rgba(242, 169, 59, .16), transparent 70%),
+    linear-gradient(180deg, #0F2352 0%, #1A2B66 26%, #33215E 58%, #561C3E 86%, #5E1D33 100%);
+}
+.section--dusk .section__head { margin-inline: auto; text-align: center; }
+.section--dusk .ornament { justify-content: center; color: var(--gold-bright); }
+.section--dusk .section__intro { color: rgba(255, 244, 228, .88); }
+.section--dusk .feature {
+  border: 0;
+  box-shadow: 0 0 0 1px rgba(212, 174, 90, .7), 0 0 0 7px rgba(212, 174, 90, .1), 0 50px 90px -40px rgba(6, 4, 20, .8);
+}
+.section--dusk .feature__quote { border-left-color: var(--accent); }
+/* each place card tipped in a colour of Mithila painting */
+.section--dusk .place { border: 0; border-top: 4px solid var(--accent); box-shadow: 0 30px 60px -32px rgba(6, 4, 20, .75); }
+.section--dusk .place:nth-child(2) { border-top-color: var(--marigold); }
+.section--dusk .place:nth-child(3) { border-top-color: var(--leaf); }
+.section--dusk .credits { color: rgba(255, 244, 228, .8); }
+.section--dusk .credits a:hover { color: var(--marigold-ink); }
+
+/* on the two dark bands the page's red ring would vanish: a light one —
+   but the page's own red again on the white cards */
+.section--sindoor :focus-visible, .section--dusk :focus-visible { outline-color: #FFE2A8; }
+.section--sindoor .card :focus-visible, .section--dusk .card :focus-visible { outline-color: var(--accent); }
+
+/* ............................................................. contact */
+
+/* Marigold, with the dusk's lace edge hanging into it. */
+.section--marigold {
+  background:
+    radial-gradient(50rem 28rem at 0% 8%, rgba(255, 255, 255, .7), transparent 62%),
+    radial-gradient(46rem 30rem at 100% 100%, rgba(187, 62, 59, .1), transparent 62%),
+    linear-gradient(180deg, #FEF2DA 0%, #FBE4BA 100%);
+}
+.section--marigold::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 13px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='13' viewBox='0 0 24 13'%3E%3Cpath d='M0 0H24V1C24 7.6 18.6 12 12 12S0 7.6 0 1Z' fill='%235E1D33'/%3E%3Cpath d='M0 1C0 7.6 5.4 12 12 12S24 7.6 24 1' fill='none' stroke='%23D4AE5A' stroke-width='.9'/%3E%3Ccircle cx='12' cy='5.5' r='1.4' fill='%23D4AE5A'/%3E%3C/svg%3E") repeat-x left top / 24px 13px;
+}
+.section--marigold .label, .section--marigold .textlink { color: var(--sindoor-deep); }
+.section--marigold .section__intro, .section--marigold .routes li { color: #3F362D; }
+.section--marigold .contact-list,
+.section--marigold .contact,
+.section--marigold .hours > div { border-color: rgba(126, 34, 38, .18); }
+.section--marigold .contact__detail, .section--marigold .contact__nums,
+.section--marigold .hours dt { color: #5A4E42; }
+/* each way to reach the hotel in its own colour */
+.section--marigold .contact svg {
+  width: 2.4rem; height: 2.4rem; padding: .55rem; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(126, 34, 38, .6);
+}
+.section--marigold .contact--multi svg { background: var(--sindoor-deep); }
+.section--marigold .contact[data-whatsapp] svg { background: #1E7F4E; box-shadow: 0 6px 14px -6px rgba(30, 127, 78, .6); }
+.section--marigold .contact[data-email] svg { background: var(--sky-blue); box-shadow: 0 6px 14px -6px rgba(27, 91, 207, .6); }
+@media (max-width: 479px) { .section--marigold .contact svg { margin-top: 0; } }
+.section--marigold .routes svg {
+  width: 2rem; height: 2rem; margin-top: 0; padding: .4rem; border-radius: 50%;
+  background: #fff; color: var(--accent); box-shadow: 0 4px 10px -4px rgba(126, 34, 38, .35);
+}
+/* the form: a white card in a double frame, red along its top */
+.section--marigold .enquiry {
+  border: 0; border-top: 5px solid var(--accent);
+  box-shadow:
+    0 0 0 7px rgba(255, 255, 255, .5), 0 0 0 8px var(--gold-bright),
+    0 40px 80px -36px rgba(110, 40, 20, .45);
+}
+
+/* ............................................................. footer */
+
+.footer {
+  position: relative; padding-top: 20px;
+  background:
+    radial-gradient(50rem 20rem at 85% 0%, rgba(27, 91, 207, .25), transparent 70%),
+    linear-gradient(180deg, #16244F 0%, var(--indigo) 60%, #0D1736 100%);
+  color: rgba(232, 236, 252, .8);
+}
+.footer__addr .deva { color: var(--marigold-ink); }
+.footer__tag { color: var(--marigold-ink); letter-spacing: .02em; }
+.footer__legal { border-top-color: rgba(212, 174, 90, .25); }
 
 /* ---------------------------------------------------------- PHONE ACTION BAR */
 

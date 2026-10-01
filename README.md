@@ -49,8 +49,17 @@ Professional and photo-led, with glass used sparingly. An earlier version put gl
 gradients and glowing "orbs" everywhere and looked like a template; now glass appears only where
 there is a real photograph behind it to frost.
 
-- **Palette.** A warm light page (`#FAF7F2`), dark type, and one accent — the logo's own red
-  (`#BB3E3B`) for buttons and links, so the site and the signage match.
+- **Palette.** The hotel's own colours, one per section below the hero: warm ivory with a
+  marigold glow for the welcome; the logo's sindoor red (`#BB3E3B`) as a rich patterned band for
+  the restaurant and events; a dusk sky — the hero's azure deepening into temple wine — for
+  Janakpur; marigold for the contact section; deep indigo for the footer. Buttons and links stay
+  the logo's red, so the site and the signage match. The tokens are at the top of the
+  *COLOUR BELOW THE HERO* block in `site.css`.
+- **Ornament comes from Mithila painting**, the city's own art: a border band of triangles and
+  dots along the section edges, the dusk's scalloped edge hanging into the contact section, the
+  lotus under each heading, and the paired Mithila fish (a sign of good fortune at weddings)
+  either side of it for Janakpur. All of it is inline SVG and CSS — nothing extra downloads.
+  The lobby photo and the enquiry form sit in double gold-and-red frames, like a painted border.
 - **The hero** is a glass window over the hotel's own film, after the "Voyago" travel-site
   design. The film fills the hero; a pane of azure glass sits inset from the screen's edges, so
   the film shows through it and around it. Inside the frame, top to bottom: the header (its links in the
