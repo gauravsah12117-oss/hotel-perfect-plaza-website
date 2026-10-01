@@ -52,12 +52,21 @@ there is a real photograph behind it to frost.
 - **Palette.** A warm light page (`#FAF7F2`), dark type, and one accent — the logo's own red
   (`#BB3E3B`) for buttons and links, so the site and the signage match.
 - **The hero** is a glass window over the hotel's own film, after the "Voyago" travel-site
-  design. The film fills the hero; a tinted frame sits inset from the screen's edges, so the film
-  shows through it and around it. Inside the frame, top to bottom: the header (its links in the
+  design. The film fills the hero; a pane of azure glass sits inset from the screen's edges, so
+  the film shows through it and around it. Inside the frame, top to bottom: the header (its links in the
   middle, the phone and a white "Book now" pill on the right), "Watch the hotel tour", the
   headline, the availability bar, a three-way switch — **Rooms**, **Dining & events**,
   **Janakpur** — over a row of cards, and the facts guests ask first along the foot.
-- **The cards** are smoked glass: a photograph fading into the card, a pill and an arrow over it,
+- **The glass is bright and blue.** The frame is one even, light azure wash (`--tint` in
+  `site.css`) with a white rim and a soft cyan glow, a little deeper along the top edge where the
+  links sit. Behind the other white type — the headline and paragraph, the row's label, the facts
+  — soft-edged panels of a deeper azure (`--tint-deep`) are attached to the type itself, so
+  everywhere else the film reads clearly. The tour pill, the availability bar, the switch and the
+  cards are light frost with a blue cast and navy type (`--sky-ink`), which stays legible whatever
+  the film is showing; the place pill is the one piece of deep-blue glass, with white type.
+  "Check availability" stays the brand red: the one warm thing in the blue.
+- **The cards** are that frost, with an ice rim and a faint cyan halo: a photograph fading into
+  the card, a pill and an arrow over it,
   then the name, a line, small chips and the price (or the opening hours, or the walk). The whole
   card is one link. The row runs out to the frame's edge, so the last card is cut by the glass —
   the cue to swipe; on wide screens arrows appear when there is more.
@@ -65,10 +74,11 @@ there is a real photograph behind it to frost.
   name, sleeps, beds, size, line, price, "Check availability" — so that section is gone, and
   "Rooms" in the menu goes to the hero's row (and switches it back to Rooms).
 - **On phones and tablets** the film plays in a rounded band at the top of the frame instead
-  (4:3, 16:9 on tablets) — sharp and nearly whole — with the lobby photograph as a soft, dark
-  ground behind the frame.
+  (4:3, 16:9 on tablets) — sharp and nearly whole — with the lobby photograph as a soft,
+  blue-washed ground behind the frame.
 - **Glass** — only in the hero, where there is a moving picture behind it to frost — and the
-  header once the page scrolls. Each has a solid fallback for browsers without `backdrop-filter`.
+  header once the page scrolls. Each has a fallback for browsers without `backdrop-filter` that
+  stays legible on its own.
 - **Type.** Inter for the hero, as in the design it follows; Cormorant Garamond for the
   headings below it, Inter for everything else, Tiro Devanagari Hindi for जनकपुरधाम.
 - **Photographs carry the page**, in softly rounded frames with a light shadow; room and place
@@ -147,7 +157,16 @@ Each of these was a real bug found while building the page. They are commented i
    **The frame is tinted, never blurred:** a `backdrop-filter` on it — or an `opacity`,
    `filter` or `mask` on it or on `.deck` — would stop the cards inside frosting the film; they
    would only see the tint. That is also why the entrance fade sits on the glass pieces
-   themselves, not on their containers.
+   themselves, not on their containers. **The extra shade behind the white type is attached to
+   the type** (`.hero__head::before`, `.deck__head::before`, `.strip::before`), not painted on
+   the frame at fixed depths: the type's depth changes with the width and with the browser's
+   font size, and painted bands both missed it and striped the pane. Those panels sit with the
+   film (`z-index: -1`, under the frame's wash) and their soft edges are masks on the panels
+   alone. Add white type to the hero and give it the same; then check it over the film's
+   brightest rooms (around 8–12 s into the loop), where white type is hardest to read.
+   **The lobby photograph also carries `filter: brightness(.85)`** on `.hero__bg img` — at
+   every width (phones add a blur and drain its colour) — to bring it to the film's level. It is
+   not part of `--hero-grade` and must not be moved into it: that would darken the film too.
 8. **The hero loop contains only caption-free shots.** The promo film has captions burned into
    most shots, and behind the site's own headline they clash. If you re-cut it, check the first
    and last frame of every shot — captions fade in and out over half a second (see

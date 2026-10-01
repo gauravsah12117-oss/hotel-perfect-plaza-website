@@ -47,7 +47,8 @@ The hero is a glass frame over the film (see README, *The design*):
 
 - **Most visitors** — the lobby photograph first (on phones, the band's cover picture), then the
   loop fading in over it once it has loaded. The same colour grade (`--hero-grade` in
-  `site.css`) sits over both.
+  `site.css`) sits over both; the photograph is also dimmed a little on its own
+  (`brightness(.85)`), because the lobby is shot brighter than the film.
 - **Visitors who ask for less motion, or are saving data / on 2G** — the photograph (on phones,
   the cover picture) only; the loop is never downloaded.
 - **If a phone refuses to autoplay** (an iPhone in Low Power Mode does, even muted) — the same.

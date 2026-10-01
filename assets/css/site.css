@@ -6,10 +6,10 @@
    A warm light page, dark type, one accent colour (the logo's red) and
    softly rounded photographs — the way a real hotel presents itself.
 
-   The hero is the one dark place: the hotel's own film behind a glass
-   frame, with smoked-glass pills and cards on it. Glass is used only there,
-   where there is a moving picture behind it to frost; anywhere else it
-   reads as a flat grey box.
+   The hero is the one coloured place: the hotel's own film behind a pane
+   of sky-blue glass, with light frosted pills and cards on it. Glass is
+   used only there, where there is a moving picture behind it to frost;
+   anywhere else it reads as a flat grey box.
    ========================================================================== */
 
 /* ----------------------------------------------------------------- TOKENS */
@@ -28,9 +28,14 @@
   --accent-2: #9E302D;
   --gold:     #B08D3C;  /* the lotus mark and fine details only, never body text */
 
-  --night:     #0B0F19; /* the hero's ground under the photograph, and the footer's cousin */
+  --night:     #0C2850; /* the hero's ground under the photograph: deep ocean blue */
   --night-ink: #F3EEE6;
   --night-ink-2: rgba(243, 238, 230, .76);
+  --sky-ink:   #0E2747; /* navy type on the hero's light frost */
+  --sky-ink-2: #24426A; /* its quieter type — 4.8:1 or better on the frost at its darkest */
+  --sky-blue:  #1B5BCF; /* the hero's glowing blue: the chosen tab, the play button — white on it 6:1 */
+  --tint:      6 74 152; /* the hero glass's azure, as "r g b" for rgb(var(--tint) / alpha) */
+  --tint-deep: 4 52 128; /* the same azure, deeper: the bands behind white type */
 
   --display: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
   --sans:    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -100,7 +105,7 @@ main > section { position: relative; overflow-x: clip; }
 .skip:focus { translate: -50% 0; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-/* on the dark bands the red ring is too faint */
+/* on the hero's blue glass and the dark footer the red ring is too faint */
 .hero :focus-visible, .footer :focus-visible,
 .masthead:not(.is-stuck) :focus-visible { outline-color: var(--night-ink); }
 /* A section link (main.js) moves focus to the section itself, to take
@@ -169,7 +174,7 @@ main:focus, main > section:focus { outline: none; }
 .masthead {
   position: fixed; inset: 0 0 auto; z-index: 100;
   top: var(--frame-y);
-  color: var(--night-ink);
+  color: #fff;
   border-bottom: 1px solid transparent;
   transition: top .3s var(--ease), background-color .3s, color .3s, border-color .3s;
 }
@@ -197,18 +202,25 @@ main:focus, main > section:focus { outline: none; }
 }
 
 .brand { display: flex; align-items: center; gap: .65rem; margin-right: auto; }
-/* The real logo, on its own white card so it reads the same over the dark
+/* The real logo, on its own white card so it reads the same over the blue
    hero, the white scrolled header, and the drawer. alt="" here: the anchor
    already carries the accessible name, and the footer's copy repeats it
    for anyone who lands lower on the page first. */
 .brand__logo { height: 2.5rem; width: auto; display: block; border-radius: 6px; }
 .brand__tag { font-size: .72rem; opacity: .72; white-space: nowrap; }
-/* the links need the room between 1024 and 1280 */
-@media (min-width: 1024px) and (max-width: 1279px) { .brand__tag { display: none; } }
+:where(.masthead:not(.is-stuck)) .brand__tag { opacity: 1; text-shadow: 0 0 10px rgba(4, 30, 84, .7); }
+/* the links need the room between 1024 and 1280 — measured in em, so a
+   larger browser font hides it over a wider range, before it runs into
+   "Home" */
+@media (min-width: 1024px) and (max-width: 79.99em) { .brand__tag { display: none; } }
 
 .masthead__nav { display: none; gap: 1.9rem; font-size: .9rem; }
 @media (min-width: 1024px) { .masthead__nav { display: flex; } }
 .navlink { position: relative; padding: .3rem 0; opacity: .78; white-space: nowrap; transition: opacity .2s; }
+/* over the blue glass the links need a little more presence, and a halo */
+:where(.masthead:not(.is-stuck)) .navlink { opacity: .96; text-shadow: 0 0 10px rgba(4, 30, 84, .6), 0 1px 2px rgba(4, 30, 84, .45); }
+/* over the hero, the current link's bar is lit */
+.masthead:not(.is-stuck) .navlink::after { background: #BFE6FF; box-shadow: 0 0 10px rgba(120, 210, 255, .8); }
 .navlink:hover { opacity: 1; }
 /* The section in view (ui.js): a short bar under the link. */
 .navlink[aria-current="true"] { opacity: 1; }
@@ -225,21 +237,29 @@ main:focus, main > section:focus { outline: none; }
 .masthead__tel {
   display: none; align-items: center; gap: .45rem;
   padding: .5rem .95rem; border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .24); background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(214, 236, 255, .5); background: rgb(var(--tint) / .24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28);
   font-size: .86rem; white-space: nowrap;
+  text-shadow: 0 0 10px rgba(4, 30, 84, .6);
   transition: background-color .2s, border-color .2s;
 }
-.masthead__tel:hover { background: rgba(255, 255, 255, .16); }
+.masthead__tel:hover { background: rgb(var(--tint) / .36); border-color: #fff; }
 .masthead__tel svg { width: .95rem; height: .95rem; }
 @media (min-width: 1200px) { .masthead__tel { display: inline-flex; } }
-.is-stuck .masthead__tel { border-color: var(--rule-2); background: transparent; }
+.is-stuck .masthead__tel { border-color: var(--rule-2); background: transparent; box-shadow: none; text-shadow: none; }
 .is-stuck .masthead__tel:hover { border-color: var(--accent); color: var(--accent); }
 
 /* "Book now": a white pill over the hero, the red one on the white bar. */
 .masthead__book { display: none; border-radius: 999px; padding: .6rem 1.2rem; }
 @media (min-width: 640px) { .masthead__book { display: inline-flex; } }
-.masthead:not(.is-stuck) .masthead__book { background: #fff; border-color: #fff; color: var(--ink); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .6); }
+.masthead:not(.is-stuck) .masthead__book { background: #fff; border-color: #fff; color: var(--sky-ink); box-shadow: 0 10px 28px -12px rgba(110, 185, 255, .75); }
 .masthead:not(.is-stuck) .masthead__book:hover { background: rgba(255, 255, 255, .86); }
+/* With the phone menu open at the top of the page the masthead is the white
+   bar without being .is-stuck: none of the over-hero looks above apply. */
+.masthead:has([aria-expanded="true"]) .brand__tag { opacity: .72; text-shadow: none; }
+.masthead:has([aria-expanded="true"]) .masthead__book { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 8px 20px -10px rgba(187, 62, 59, .55); }
+.masthead:has([aria-expanded="true"]) .masthead__book:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.masthead:has([aria-expanded="true"]) :focus-visible { outline-color: var(--accent); }
 
 .burger {
   width: 44px; height: 44px; display: grid; place-items: center; flex: none;
@@ -287,11 +307,12 @@ main:focus, main > section:focus { outline: none; }
 
 /* The grade over the photograph and the film alike: one definition, so
    nothing about the frame changes when the film fades in. Light — the frame
-   carries most of the shade — and darker towards the edges. */
+   carries the shade — a cool cast and a soft blue vignette, so around the
+   frame the film looks nearly as it was shot. */
 .hero {
   --hero-grade:
-    radial-gradient(120% 90% at 50% 40%, rgba(9, 13, 24, .12) 0%, rgba(9, 13, 24, .5) 100%),
-    linear-gradient(rgba(9, 13, 24, .22), rgba(9, 13, 24, .22));
+    radial-gradient(120% 90% at 50% 40%, rgba(8, 36, 78, 0) 30%, rgba(8, 36, 78, .36) 100%),
+    linear-gradient(rgba(36, 104, 190, .1), rgba(36, 104, 190, .1));
 }
 
 /* The photograph and the film each hold one screen's height and stick to
@@ -303,6 +324,10 @@ main:focus, main > section:focus { outline: none; }
   position: sticky; top: 0;
   width: 100%; height: 100vh; object-fit: cover; object-position: 55% 50%;
   animation: hero-drift 24s ease-in-out infinite alternate;
+  /* The lobby is shot brighter than the film (its ceiling is all lights):
+     brought down to the film's level, so the light glass reads the same
+     over either — and stays legible for those who only ever see this. */
+  filter: brightness(.85);
 }
 @keyframes hero-drift { from { transform: scale(1.02); } to { transform: scale(1.08); } }
 .hero__bg::after { content: ""; position: absolute; inset: 0; background: var(--hero-grade); }
@@ -326,33 +351,145 @@ main:focus, main > section:focus { outline: none; }
 /* On wide screens the window takes no room; see HERO ON PHONES. */
 .hero__window { display: contents; }
 
-/* The frame. Tinted, not blurred: a backdrop blur here would also stop the
+/* The frame: a pane of sky-blue glass. A saturated blue rather than a grey
+   smoke, so the film keeps its colour and light behind it — blue has little
+   luminance of its own, so white type keeps its contrast even over the
+   film's brightest rooms. Azure rather than a violet blue, which turned
+   the warm cream rooms lavender. A light rim, a sheen at the top corner
+   and a cool glow round the edge. Tinted, not blurred: a backdrop blur here would also stop the
    cards inside it frosting the film (they would only see the tint). */
 .hero__frame {
   width: min(100% - 2 * var(--frame-x), var(--frame-max));
   margin-inline: auto;
   padding: calc(var(--nav-h) + clamp(1.75rem, 4vw, 3.5rem)) var(--frame-pad) clamp(1.5rem, 2.4vw, 2.25rem);
-  border: 1px solid rgba(255, 255, 255, .22);
+  border: 1px solid rgba(206, 232, 255, .5);
   border-radius: clamp(20px, 2.4vw, 32px);
+  /* One even wash, deeper only at the top edge where the links sit. The
+     extra shade behind the other white type is not painted here but
+     attached to that type (.hero__head::before and the two below it), so it
+     moves with it at any width or font size and never crosses the pane as a
+     stripe. */
   background:
-    radial-gradient(60% 34% at 50% 20%, rgba(9, 13, 24, .38), rgba(9, 13, 24, 0) 100%),
-    linear-gradient(180deg, rgba(9, 13, 24, .62) 0%, rgba(9, 13, 24, .44) 34%, rgba(9, 13, 24, .5) 62%, rgba(9, 13, 24, .74) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 40px 120px -40px rgba(0, 0, 0, .7);
+    linear-gradient(115deg, rgba(235, 245, 255, .1) 0%, rgba(235, 245, 255, 0) 22%),
+    linear-gradient(180deg,
+      rgb(var(--tint-deep) / .66) 0,
+      rgb(var(--tint-deep) / .63) 4.5rem,          /* the links */
+      rgb(var(--tint-deep) / .6) 6rem,
+      rgb(var(--tint-deep) / .55) 7.75rem,
+      rgb(var(--tint) / .52) 9.5rem,
+      rgb(var(--tint) / .48) 11.5rem,
+      rgb(var(--tint) / .46) 14rem,
+      rgb(var(--tint) / .46) calc(100% - 9rem),
+      rgb(var(--tint) / .5) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .55),
+    inset 0 0 70px rgba(130, 195, 255, .14),
+    0 0 0 1px rgba(120, 190, 255, .14),
+    0 0 50px -6px rgba(90, 170, 255, .35),
+    0 40px 120px -40px rgba(8, 44, 104, .7);
 }
 
-/* Smoked glass, for everything small that sits on the frame: the tour
-   button, the availability bar, the switch, the pills and the cards. A
-   solid fallback first, for browsers without backdrop-filter. */
-.hero__tour, .booking, .seg, .pill, .deck__btn, .tcard, .tcard__tag, .tcard__go {
-  background: rgba(14, 19, 31, .82);
-  border: 1px solid rgba(255, 255, 255, .14);
+/* Shade that follows the white type: behind the headline and lede, the
+   row's label and the facts, soft-edged panels of the deeper azure. They
+   sit with the film, under the frame's wash (z-index -1 in the hero, which
+   isolates), so the frosted pieces still see the film through them; and
+   they are anchored to the type itself, so they stay behind it at any
+   width or font size. Their soft edges are masks on the panels alone —
+   never on anything that holds glass. Phones and tablets do without: there
+   the type sits over the soft ground, not the film. */
+.hero__head, .deck__head, .strip { position: relative; }
+.hero__head::before, .deck__head::before, .strip::before {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  background: rgb(var(--tint-deep) / .45);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+/* Each panel's edges ease out over a long distance (a smooth curve, not a
+   straight ramp, whose ends would show as lines), so on a plain wall no
+   shape can be made out — only the glass deepening where the words are.
+   --fx and --fy are the fade lengths across and down. */
+
+/* behind the headline and the lede: the solid middle covers the lede (36rem
+   wide) even when a large browser font makes it nearly frame-wide */
+.hero__head::before {
+  --fx: clamp(2rem, (100% - 38rem) / 2, 16rem);
+  --fy: 8rem;
+  top: calc(5rem - var(--fy)); bottom: calc(0rem - var(--fy));
+  inset-inline: calc((100% - min(76rem, 100vw - 2 * var(--frame-x) - 3rem)) / 2);
+  -webkit-mask-image:
+      linear-gradient(90deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fx) * .2), rgb(0 0 0 / .35) calc(var(--fx) * .4), rgb(0 0 0 / .65) calc(var(--fx) * .6), rgb(0 0 0 / .9) calc(var(--fx) * .8), #000 var(--fx), #000 calc(100% - var(--fx)), rgb(0 0 0 / .9) calc(100% - var(--fx) * .8), rgb(0 0 0 / .65) calc(100% - var(--fx) * .6), rgb(0 0 0 / .35) calc(100% - var(--fx) * .4), rgb(0 0 0 / .1) calc(100% - var(--fx) * .2), transparent 100%),
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy), #000 calc(100% - var(--fy)), rgb(0 0 0 / .9) calc(100% - var(--fy) * .8), rgb(0 0 0 / .65) calc(100% - var(--fy) * .6), rgb(0 0 0 / .35) calc(100% - var(--fy) * .4), rgb(0 0 0 / .1) calc(100% - var(--fy) * .2), transparent 100%);
+          mask-image:
+      linear-gradient(90deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fx) * .2), rgb(0 0 0 / .35) calc(var(--fx) * .4), rgb(0 0 0 / .65) calc(var(--fx) * .6), rgb(0 0 0 / .9) calc(var(--fx) * .8), #000 var(--fx), #000 calc(100% - var(--fx)), rgb(0 0 0 / .9) calc(100% - var(--fx) * .8), rgb(0 0 0 / .65) calc(100% - var(--fx) * .6), rgb(0 0 0 / .35) calc(100% - var(--fx) * .4), rgb(0 0 0 / .1) calc(100% - var(--fx) * .2), transparent 100%),
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy), #000 calc(100% - var(--fy)), rgb(0 0 0 / .9) calc(100% - var(--fy) * .8), rgb(0 0 0 / .65) calc(100% - var(--fy) * .6), rgb(0 0 0 / .35) calc(100% - var(--fy) * .4), rgb(0 0 0 / .1) calc(100% - var(--fy) * .2), transparent 100%);
+}
+/* behind the row's label: deepest at the frame's left edge, easing away to
+   the right and up and down (under the switch and the cards, which are
+   frost). It never reaches past the frame's edge. */
+.deck__head::before {
+  --fy: 8rem;
+  top: calc(0rem - var(--fy)); bottom: calc(0rem - var(--fy));
+  left: calc(-1 * var(--frame-pad)); width: min(60rem, 90%);
+  -webkit-mask-image:
+      linear-gradient(90deg, #000 0, #000 30%, rgb(0 0 0 / .9) 44%, rgb(0 0 0 / .65) 58%, rgb(0 0 0 / .35) 72%, rgb(0 0 0 / .1) 86%, transparent 100%),
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy), #000 calc(100% - var(--fy)), rgb(0 0 0 / .9) calc(100% - var(--fy) * .8), rgb(0 0 0 / .65) calc(100% - var(--fy) * .6), rgb(0 0 0 / .35) calc(100% - var(--fy) * .4), rgb(0 0 0 / .1) calc(100% - var(--fy) * .2), transparent 100%);
+          mask-image:
+      linear-gradient(90deg, #000 0, #000 30%, rgb(0 0 0 / .9) 44%, rgb(0 0 0 / .65) 58%, rgb(0 0 0 / .35) 72%, rgb(0 0 0 / .1) 86%, transparent 100%),
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy), #000 calc(100% - var(--fy)), rgb(0 0 0 / .9) calc(100% - var(--fy) * .8), rgb(0 0 0 / .65) calc(100% - var(--fy) * .6), rgb(0 0 0 / .35) calc(100% - var(--fy) * .4), rgb(0 0 0 / .1) calc(100% - var(--fy) * .2), transparent 100%);
+}
+/* the facts: easing in well above them, down to the frame's rounded foot */
+.strip::before {
+  --fy: 7.5rem;
+  top: calc(-1.25rem - var(--fy)); bottom: calc(-1 * clamp(1.5rem, 2.4vw, 2.25rem)); inset-inline: calc(-1 * var(--frame-pad));
+  border-radius: 0 0 calc(clamp(20px, 2.4vw, 32px) - 1px) calc(clamp(20px, 2.4vw, 32px) - 1px);
+  background: rgb(var(--tint-deep) / .32);
+  -webkit-mask-image:
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy));
+          mask-image:
+      linear-gradient(180deg, transparent 0, rgb(0 0 0 / .1) calc(var(--fy) * .2), rgb(0 0 0 / .35) calc(var(--fy) * .4), rgb(0 0 0 / .65) calc(var(--fy) * .6), rgb(0 0 0 / .9) calc(var(--fy) * .8), #000 var(--fy));
+}
+@media (max-width: 1023px) {
+  .hero__head::before, .deck__head::before, .strip::before { display: none; }
+}
+
+/* Frosted glass, for everything that sits on the frame: the tour button,
+   the availability bar, the switch, the arrows and the cards. White frost
+   with a blue cast — the film's colour comes through it, blurred and
+   lifted — and navy type, which stays legible whatever the film is
+   showing. The place pill is part of a white line of type, so it is the
+   one piece of deep-blue glass. A solid fallback first, for browsers
+   without backdrop-filter. */
+.hero__tour, .booking, .seg, .deck__btn, .tcard, .tcard__tag, .tcard__go {
+  background: rgba(236, 244, 255, .95);
+  border: 1px solid rgba(255, 255, 255, .7);
+  box-shadow: inset 0 1px 0 #fff, 0 12px 32px -18px rgba(6, 34, 90, .6);
+  color: var(--sky-ink);
+}
+.pill {
+  background: rgb(5 60 132 / .92);
+  border: 1px solid rgba(214, 236, 255, .38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
+  color: #fff;
 }
 @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .hero__tour, .booking, .seg, .pill, .deck__btn, .tcard, .tcard__tag, .tcard__go {
-    background: rgba(14, 19, 31, .4);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-            backdrop-filter: blur(18px) saturate(140%);
+  .hero__tour, .booking, .seg, .deck__btn, .tcard, .tcard__tag, .tcard__go {
+    background: linear-gradient(180deg, rgba(246, 250, 255, .74), rgba(228, 239, 255, .64));
+    -webkit-backdrop-filter: blur(22px) saturate(150%) brightness(1.15);
+            backdrop-filter: blur(22px) saturate(150%) brightness(1.15);
   }
+  .pill {
+    background: rgb(var(--tint) / .42);
+    -webkit-backdrop-filter: blur(16px) saturate(160%) brightness(.72);
+            backdrop-filter: blur(16px) saturate(160%) brightness(.72);
+  }
+  /* over the brightest rooms the phone pill has to frost the film, not
+     just tint it */
+  .masthead:not(.is-stuck) .masthead__tel {
+    -webkit-backdrop-filter: blur(16px) saturate(150%) brightness(.9);
+            backdrop-filter: blur(16px) saturate(150%) brightness(.9);
+  }
+  /* the tag and the arrow sit on a photograph: thinner frost turned grey on
+     a night shot and pink on a red wall */
+  .tcard__tag, .tcard__go { background: rgba(248, 251, 255, .94); }
 }
 
 /* ...................................................... heading */
@@ -366,30 +503,37 @@ main:focus, main > section:focus { outline: none; }
 .hero__tour {
   display: inline-flex; align-items: center; gap: .65rem;
   padding: .3rem 1rem .3rem .3rem; border-radius: 999px;
-  color: #fff; font-size: .88rem; font-weight: 500;
+  font-size: .88rem; font-weight: 500;
   transition: border-color .2s;
 }
-.hero__tour:hover { border-color: rgba(255, 255, 255, .4); }
+.hero__tour:hover { border-color: #fff; }
+/* a bead of glowing blue — the same as the switch's chosen tab */
 .hero__tour-play {
   display: grid; place-items: center; width: 2rem; height: 2rem; flex: none;
-  border-radius: 50%; background: #fff; color: var(--ink);
-  transition: background-color .2s, color .2s, transform .2s var(--ease);
+  border-radius: 50%; color: #fff;
+  /* a fixed highlight over a colour that changes: swapping the gradient
+     itself would flash the button pale as it faded */
+  background: linear-gradient(180deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0)) var(--sky-blue);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 12px -2px rgba(27, 91, 207, .7);
+  transition: background-color .2s, box-shadow .2s, transform .2s var(--ease);
 }
 .hero__tour-play svg { width: .85rem; height: .85rem; margin-left: .1rem; }
-.hero__tour:hover .hero__tour-play { background: var(--accent); color: #fff; transform: scale(1.06); }
-.hero__tour-time { margin-left: .3rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
+.hero__tour:hover .hero__tour-play { background-color: var(--accent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 12px -2px rgba(187, 62, 59, .6); transform: scale(1.06); }
+.hero__tour-time { margin-left: .3rem; color: var(--sky-ink-2); font-variant-numeric: tabular-nums; }
 
 .hero__title {
   margin-top: 1.4rem;
   font-family: var(--sans); font-weight: 500;
   font-size: clamp(2.4rem, 1.3rem + 3.6vw, 4.4rem); line-height: 1.04; letter-spacing: -.035em;
   color: #fff; text-wrap: balance;
-  text-shadow: 0 2px 30px rgba(0, 0, 0, .35);
+  text-shadow: 0 2px 22px rgba(4, 30, 84, .5), 0 0 48px rgba(110, 190, 255, .22);
 }
+/* White type straight on the frame carries a soft navy halo: over the
+   film's brightest rooms it is what keeps it readable. */
 .hero__lede {
   max-width: 36rem; margin-top: 1.1rem;
-  font-size: 1rem; line-height: 1.65; color: rgba(255, 255, 255, .84);
-  text-shadow: 0 1px 14px rgba(0, 0, 0, .55);
+  font-size: 1rem; line-height: 1.65; color: #fff;
+  text-shadow: 0 0 10px rgba(4, 30, 84, .6), 0 1px 2px rgba(4, 30, 84, .45);
 }
 
 /* A short, quiet entrance. CSS, so nothing can be left stuck invisible if a
@@ -412,18 +556,28 @@ main:focus, main > section:focus { outline: none; }
   border-radius: 999px;
 }
 .booking .field-min { gap: .1rem; padding: .3rem 1.1rem; }
-.booking .field-min + .field-min { border-left: 1px solid rgba(255, 255, 255, .14); }
+.booking .field-min + .field-min { border-left: 1px solid rgba(14, 39, 71, .12); }
 .booking .field-min label {
   font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-  color: rgba(255, 255, 255, .62);
+  color: var(--sky-ink-2);
 }
 .booking .field-min input {
-  color-scheme: dark;               /* the date pickers' own icons turn light */
+  color-scheme: light;
   padding: .1rem 0; border: 0; border-radius: 4px;
-  background: transparent; color: #fff; font-size: .95rem;
+  background: transparent; color: var(--sky-ink); font-size: .95rem;
 }
-.booking .field-min input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); border-color: transparent; }
-.booking__go { border-radius: 999px; padding: .85rem 1.4rem; }
+.booking .field-min input:focus { box-shadow: 0 0 0 2px var(--sky-blue); border-color: transparent; }
+/* The one warm thing in the blue: the brand's red, as everywhere else on
+   the page, with a soft glow of its own. */
+.booking__go {
+  border-radius: 999px; padding: .85rem 1.4rem;
+  box-shadow: 0 10px 26px -10px rgba(187, 62, 59, .75), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+/* in the hero a white ring, a little heavier than the page's, to hold
+   against the lighter pane — and navy on the white frost, where white
+   would vanish */
+.hero :focus-visible { outline-width: 3px; outline-color: #fff; }
+.booking :focus-visible, .seg :focus-visible { outline-color: var(--sky-ink); }
 
 /* ........................................... the switch and the cards */
 
@@ -440,14 +594,15 @@ main:focus, main > section:focus { outline: none; }
 .seg__tab {
   display: inline-flex; align-items: center; gap: .5rem;
   padding: .55rem 1.15rem; border: 0; border-radius: 999px;
-  background: none; color: rgba(255, 255, 255, .72);
+  background: none; color: var(--sky-ink);
   font-size: .88rem; font-weight: 500; white-space: nowrap; cursor: pointer;
-  transition: background-color .2s, color .2s;
+  transition: background-color .2s, color .2s, box-shadow .2s;
 }
-.seg__tab:hover { color: #fff; }
+.seg__tab:hover { background: rgba(255, 255, 255, .55); }
+/* the chosen tab: a bead of white, in the hero's blue, glowing faintly */
 .seg__tab[aria-selected="true"] {
-  background: rgba(255, 255, 255, .16); color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+  background: #fff; color: var(--sky-blue);
+  box-shadow: 0 1px 2px rgba(6, 34, 90, .18), 0 4px 16px -4px rgba(27, 91, 207, .55);
 }
 .seg__tab svg { width: 1rem; height: 1rem; }
 
@@ -458,24 +613,30 @@ main:focus, main > section:focus { outline: none; }
 .deck__label {
   display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .7rem;
   font-size: 1.05rem; font-weight: 500; color: #fff;
+  text-shadow: 0 0 10px rgba(4, 30, 84, .6), 0 1px 2px rgba(4, 30, 84, .45);
 }
 .pill {
   display: inline-flex; align-items: center; gap: .4rem;
   padding: .35rem .85rem .35rem .7rem; border-radius: 999px;
-  font-size: .8rem; font-weight: 500; color: #fff;
+  font-size: .8rem; font-weight: 500;
+  text-shadow: none;
   transition: border-color .2s;
 }
-.pill:hover { border-color: rgba(255, 255, 255, .4); }
+.pill:hover { border-color: #fff; }
 .pill svg { width: .95rem; height: .95rem; }
 
 .deck__nav { display: flex; gap: .5rem; flex: none; }
 .deck__btn {
   display: grid; place-items: center; width: 2.5rem; height: 2.5rem;
-  border-radius: 50%; color: #fff; cursor: pointer;
+  border-radius: 50%; cursor: pointer;
   transition: border-color .2s, opacity .2s;
 }
-.deck__btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, .45); }
-.deck__btn:disabled { opacity: .35; cursor: default; }
+.deck__btn:hover:not(:disabled) { border-color: #fff; }
+.deck__btn:disabled {
+  cursor: default; box-shadow: none;
+  background: rgb(var(--tint) / .22); border-color: rgba(214, 236, 255, .35); color: rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
 .deck__btn svg { width: 1.1rem; height: 1.1rem; }
 
 /* The row runs out to the frame's edges, so the last card is cut by the
@@ -484,38 +645,46 @@ main:focus, main > section:focus { outline: none; }
   --card-w: clamp(15.5rem, 22vw, 19rem);
   display: grid; grid-auto-flow: column; grid-auto-columns: var(--card-w);
   gap: clamp(.85rem, 1.4vw, 1.25rem);
-  margin-inline: calc(-1 * var(--frame-pad));
-  padding: .25rem var(--frame-pad) .75rem;
+  /* room round the cards for their glow and shadow, which a scroller would
+     clip: what fits above (the label's gap), more below; the row's place in
+     the layout is unchanged */
+  margin: -1rem calc(-1 * var(--frame-pad)) -2rem;
+  padding: 1.25rem var(--frame-pad) 2.75rem;
   scroll-padding-inline: var(--frame-pad);
   overflow-x: auto; overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory; scrollbar-width: none;
 }
 .deck__track::-webkit-scrollbar { display: none; }
 
-/* A card: the photograph on top fading into smoked glass, a pill and an
+/* A card: the photograph on top fading into the frost, a pill and an
    arrow over the photograph, then the name, a line, the chips and the
    price. The title's link is stretched over the whole card. */
 .tcard {
   position: relative; display: flex; flex-direction: column;
   border-radius: 18px; overflow: hidden; scroll-snap-align: start;
-  box-shadow: 0 24px 50px -30px rgba(0, 0, 0, .75);
-  transition: border-color .3s, translate .3s var(--ease);
+  /* an ice rim and a soft cyan halo round each card */
+  box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(160, 215, 255, .3), 0 0 24px -2px rgba(72, 178, 255, .38), 0 24px 50px -28px rgba(6, 34, 84, .75);
+  transition: border-color .3s, box-shadow .3s, translate .3s var(--ease);
 }
-.tcard__media { aspect-ratio: 16 / 11; background: rgba(255, 255, 255, .05); }
+/* Two classes, to outweigh .frame__media's stone ground further down: the
+   photograph has to fade into the glass, not into a cream band. */
+.tcard .tcard__media { aspect-ratio: 16 / 11; background: none; }
 .tcard__media img {
   -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
           mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
   transition: transform .8s var(--ease);
 }
 /* a photograph that has not arrived: the lotus, in the frame's own light */
-.tcard .frame__media.has-ph { background: rgba(255, 255, 255, .06); }
+.tcard .frame__media.has-ph { background: rgba(14, 39, 71, .05); }
 
-.tcard__tag, .tcard__go { position: absolute; top: .7rem; z-index: 1; color: #fff; }
+.tcard__tag, .tcard__go { position: absolute; top: .7rem; z-index: 1; }
 .tcard__tag {
   left: .7rem; display: inline-flex; align-items: center; gap: .35rem;
   padding: .28rem .6rem; border-radius: 999px;
   font-size: .74rem; font-weight: 500;
 }
+/* a fine navy edge on both, so they hold against a bright ceiling */
+.tcard__tag, .tcard__go { box-shadow: 0 0 0 1px rgba(14, 39, 71, .16), 0 4px 12px -4px rgba(6, 34, 90, .45); }
 .tcard__tag svg { width: .85rem; height: .85rem; }
 .tcard__go {
   right: .7rem; display: grid; place-items: center; width: 2.1rem; height: 2.1rem;
@@ -524,28 +693,32 @@ main:focus, main > section:focus { outline: none; }
 .tcard__go svg { width: 1rem; height: 1rem; }
 
 .tcard__body { display: flex; flex-direction: column; gap: .55rem; flex: 1; padding: .15rem 1.05rem 1.05rem; }
-.tcard__title { font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.01em; color: #fff; }
+.tcard__title { font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.01em; color: var(--sky-ink); }
 .tcard__link::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
 .tcard__link:focus-visible { outline: none; }
-.tcard__link:focus-visible::after { outline: 2px solid #fff; outline-offset: -2px; border-radius: 18px; }
-.tcard__text { font-size: .83rem; line-height: 1.55; color: rgba(255, 255, 255, .68); }
+.tcard__link:focus-visible::after { outline: 2px solid var(--sky-blue); outline-offset: -2px; border-radius: 18px; }
+.tcard__text { font-size: .83rem; line-height: 1.55; color: var(--sky-ink-2); }
 
 .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .2rem; }
 .chips li {
   display: inline-flex; align-items: center; gap: .35rem;
-  padding: .26rem .6rem; border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px;
-  font-size: .74rem; color: rgba(255, 255, 255, .86); white-space: nowrap;
+  padding: .26rem .6rem; border: 1px solid rgba(14, 39, 71, .14); border-radius: 999px;
+  background: rgba(255, 255, 255, .45);
+  font-size: .74rem; color: var(--sky-ink); white-space: nowrap;
 }
 .chips svg { width: .9rem; height: .9rem; opacity: .85; }
 
-.tcard__foot { display: flex; align-items: baseline; gap: .15rem; margin-top: auto; padding-top: .6rem; color: #fff; }
-.tcard__foot strong { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; }
-.tcard__foot span { font-size: .84rem; color: rgba(255, 255, 255, .6); }
+.tcard__foot { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .15rem; margin-top: auto; padding-top: .6rem; color: var(--sky-ink); }
+.tcard__foot strong { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
+.tcard__foot span { font-size: .84rem; color: var(--sky-ink-2); }
 
 @media (hover: hover) {
-  .tcard:hover { border-color: rgba(255, 255, 255, .3); translate: 0 -3px; }
+  .tcard:hover {
+    border-color: #fff; translate: 0 -3px;
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(160, 215, 255, .45), 0 0 18px -2px rgba(72, 178, 255, .6), 0 22px 44px -22px rgba(27, 91, 207, .75);
+  }
   .tcard:hover .tcard__media img { transform: scale(1.04); }
-  .tcard:hover .tcard__go { background: #fff; color: var(--ink); }
+  .tcard:hover .tcard__go { background: var(--sky-blue); border-color: var(--sky-blue); color: #fff; }
 }
 
 /* .............................................. the facts along the foot */
@@ -555,34 +728,46 @@ main:focus, main > section:focus { outline: none; }
 .strip {
   display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 1rem 1.5rem;
   margin-top: clamp(1.5rem, 3vw, 2.25rem); padding-top: clamp(1.25rem, 2.2vw, 1.75rem);
-  border-top: 1px solid rgba(255, 255, 255, .12);
+  border-top: 1px solid rgba(214, 236, 255, .26);
 }
 @media (max-width: 1023px) { .strip { grid-template-columns: repeat(3, auto); } }
-.strip li { display: flex; align-items: center; gap: .6rem; font-size: .86rem; line-height: 1.35; color: rgba(255, 255, 255, .68); }
-.strip strong { font-weight: 600; color: #fff; }
-.strip svg { width: 1.3rem; height: 1.3rem; color: #fff; }
+.strip li {
+  display: flex; align-items: center; gap: .6rem; font-size: .86rem; line-height: 1.35; color: #fff;
+  text-shadow: 0 0 10px rgba(4, 30, 84, .6), 0 1px 2px rgba(4, 30, 84, .45);
+}
+.strip strong { font-weight: 600; }
+.strip svg { width: 1.3rem; height: 1.3rem; filter: drop-shadow(0 0 6px rgba(150, 210, 255, .6)); }
 
 /* ------------------------------------------------------- HERO ON PHONES
    Below 1024px a 16:9 film stretched behind an upright screen shows only a
    sliver of each shot, enlarged until it blurs. So here it plays in a
    window at the top of the frame instead — 4:3 on phones, 16:9 on tablets,
    sharp and nearly whole — with the film's opening shot as its cover until
-   the loop starts. The lobby photograph becomes a soft, dark ground behind
-   the frame. */
+   the loop starts. The lobby photograph becomes a soft, blue-washed ground
+   behind the frame. */
 @media (max-width: 1023px) {
-  .hero__frame { padding-top: var(--nav-h); }
+  /* Here the type sits over the soft ground, not the film: the pane can be
+     lighter and even, with no deeper patches behind the words. */
+  .hero__frame {
+    padding-top: var(--nav-h);
+    background:
+      linear-gradient(115deg, rgba(235, 245, 255, .08) 0%, rgba(235, 245, 255, 0) 22%),
+      linear-gradient(180deg, rgb(var(--tint) / .46) 0%, rgb(var(--tint) / .36) 30%, rgb(var(--tint) / .42) 100%);
+  }
   .hero__window {
     display: block; position: relative; overflow: hidden;
     aspect-ratio: 4 / 3; border-radius: 16px;
-    background: #1B2130 url("../video/hotel-tour-poster.jpg") center / cover;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+    background: #17406F url("../video/hotel-tour-poster.jpg") center / cover;
+    box-shadow: 0 0 0 1px rgba(214, 236, 255, .42), 0 14px 34px -14px rgba(6, 34, 84, .7);
   }
   .hero__film { z-index: 0; }
   .hero__film video { position: absolute; inset: 0; height: 100%; }
-  .hero__scrim { background: linear-gradient(180deg, rgba(9, 13, 24, 0) 60%, rgba(9, 13, 24, .3) 100%); }
+  .hero__scrim { background: linear-gradient(180deg, rgba(10, 44, 96, 0) 60%, rgba(10, 44, 96, .28) 100%); }
 
-  .hero__bg img { position: absolute; inset: 0; height: 100%; filter: blur(14px) saturate(120%); transform: scale(1.12); animation: none; }
-  .hero__bg::after { background: rgba(9, 13, 24, .7); }
+  /* drained of the lobby's warm light, which turned the blue wash lavender,
+     and brought down like the desktop photograph (brightness .85) */
+  .hero__bg img { position: absolute; inset: 0; height: 100%; filter: blur(14px) grayscale(1) brightness(.85); transform: scale(1.12); animation: none; }
+  .hero__bg::after { background: rgba(12, 62, 132, .44); }
   .hero.has-film .hero__bg { opacity: 1; }
 
   .hero__head { margin-top: 1.6rem; }
@@ -602,10 +787,10 @@ main:focus, main > section:focus { outline: none; }
   .booking .field-min { padding: 0; gap: .35rem; }
   .booking .field-min + .field-min { border-left: 0; }
   .booking .field-min input {
-    padding: .6rem .7rem; border: 1px solid rgba(255, 255, 255, .22); border-radius: 10px;
-    background: rgba(255, 255, 255, .08);
+    padding: .6rem .7rem; border: 1px solid rgba(14, 39, 71, .16); border-radius: 10px;
+    background: rgba(255, 255, 255, .66);
   }
-  .booking .field-min input:focus { border-color: rgba(255, 255, 255, .7); box-shadow: 0 0 0 3px rgba(255, 255, 255, .15); }
+  .booking .field-min input:focus { border-color: var(--sky-blue); box-shadow: 0 0 0 3px rgb(27 91 207 / .3); }
   .booking__go { width: 100%; padding: .8rem .6rem; border-radius: 10px; }
 }
 
