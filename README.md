@@ -27,7 +27,7 @@ hotel's own photographs matter most.
 | `index.html` | The page |
 | `assets/css/site.css` | The whole look: colours, type, layout, buttons, cards, form states |
 | `assets/js/main.js` | Contact details, the booking handoff, the enquiry form, dates, missing-photo fallback |
-| `assets/js/ui.js` | The facilities tabs, the scroll reveal, the nav link that follows the section in view |
+| `assets/js/ui.js` | The tabs (the hero's cards and the facilities), the card rows' arrows, the scroll reveal, the nav link that follows the section in view |
 | `assets/js/hero-figure.js` | Fades in Lord Ram & Mata Sita in the hero once the picture has loaded |
 | `assets/images/ram-sita.jpg` | That picture (33 KB) — frame 2 of the 12-frame sheet, cut out |
 | `assets/images/janaki-mandir.jpg` | The Janaki Mandir lit up at dusk — the hotel's own picture, leading the Janakpur section |
@@ -35,6 +35,7 @@ hotel's own photographs matter most.
 | `assets/images/ram-sita-turntable.png` / `.webp` | The original 12-frame sheet, kept as the source. The page does not load it |
 | `assets/images/hotel-logo.png` | The real logo, on a white card — used in the header, the footer, and (cropped) as the home-screen icon |
 | `assets/js/film.js` | The hero's video loop, and the "Watch the hotel tour" player |
+| `assets/images/dining-room.jpg`, `banquet.jpg`, `meeting-room.jpg` | Stills from the hotel's promo film (the dining hall, its buffet counter, the meeting room), taken between the film's captions |
 | `assets/js/scene.js` | A 3D gold lotus — only used if the Ram & Sita picture is taken out of the hero |
 | `assets/video/` | The hero loop (2.5 MB), the full hotel tour (13.9 MB) and its cover, all cut from the hotel's promo film |
 | `VIDEO-BRIEF.md` | How the hero video was cut, who sees what, and how to replace it |
@@ -50,20 +51,32 @@ there is a real photograph behind it to frost.
 
 - **Palette.** A warm light page (`#FAF7F2`), dark type, and one accent — the logo's own red
   (`#BB3E3B`) for buttons and links, so the site and the signage match.
-- **The hero** is the hotel's own lobby, full-bleed and colour-graded twice: once in the file
-  (`hero-lobby.jpg` — warmer, slightly less saturated), and again in CSS (a navy wash under the
-  words, shade under the booking bar, a warm bloom at the chandeliers). It drifts very slowly.
-- **Glass** — the stay-details card and the booking bar in the hero, the "Call reception"
-  button, and the header once the page scrolls. Each has a solid fallback for browsers without
-  `backdrop-filter`.
-- **Type.** Cormorant Garamond for headings, Inter for everything else, Tiro Devanagari Hindi
-  for जनकपुरधाम.
+- **The hero** is a glass window over the hotel's own film, after the "Voyago" travel-site
+  design. The film fills the hero; a tinted frame sits inset from the screen's edges, so the film
+  shows through it and around it. Inside the frame, top to bottom: the header (its links in the
+  middle, the phone and a white "Book now" pill on the right), "Watch the hotel tour", the
+  headline, the availability bar, a three-way switch — **Rooms**, **Dining & events**,
+  **Janakpur** — over a row of cards, and the facts guests ask first along the foot.
+- **The cards** are smoked glass: a photograph fading into the card, a pill and an arrow over it,
+  then the name, a line, small chips and the price (or the opening hours, or the walk). The whole
+  card is one link. The row runs out to the frame's edge, so the last card is cut by the glass —
+  the cue to swipe; on wide screens arrows appear when there is more.
+- **The rooms live in the hero now.** The cards carry everything the old Rooms section did —
+  name, sleeps, beds, size, line, price, "Check availability" — so that section is gone, and
+  "Rooms" in the menu goes to the hero's row (and switches it back to Rooms).
+- **On phones and tablets** the film plays in a rounded band at the top of the frame instead
+  (4:3, 16:9 on tablets) — sharp and nearly whole — with the lobby photograph as a soft, dark
+  ground behind the frame.
+- **Glass** — only in the hero, where there is a moving picture behind it to frost — and the
+  header once the page scrolls. Each has a solid fallback for browsers without `backdrop-filter`.
+- **Type.** Inter for the hero, as in the design it follows; Cormorant Garamond for the
+  headings below it, Inter for everything else, Tiro Devanagari Hindi for जनकपुरधाम.
 - **Photographs carry the page**, in softly rounded frames with a light shadow; room and place
   photos ease in slightly on hover.
 - **Lord Ram and Mata Sita** are out of the hero for now (see CONTENT-TODO, section 5). The
   picture and its script are kept for when they return.
-- **Motion** is limited to short fades and the hero's slow drift, and all of it stops for
-  visitors who ask their device for less motion.
+- **Motion** is limited to the film, short fades and the photograph's slow drift, and all of
+  it stops for visitors who ask their device for less motion.
 
 ---
 
@@ -71,16 +84,18 @@ there is a real photograph behind it to frost.
 
 There is no booking engine. Three paths lead to you:
 
-1. **The availability bar** under the hero. A guest picks dates and guests, presses the button,
-   and the page carries those values down into the enquiry form so nothing is typed twice.
+1. **The availability bar** in the hero, under the headline. A guest picks dates and guests,
+   presses the button, and the page carries those values down into the enquiry form so nothing
+   is typed twice.
 2. **The enquiry form** emails you through Formspree. While `formspreeId` is empty it opens
    WhatsApp with the enquiry already written out instead, so the form is never a dead end.
 3. **WhatsApp and Call** — in the header, the contact section, the footer, and a bar that rises
    from the bottom of the screen on phones.
 
-Every **Check availability** button on a room, **Ask about festival dates** under Vivaha
-Panchami, and **Enquire about an event** under Weddings pre-selects the matching option in the
-form.
+Every room card in the hero, the **Vivaha Panchami**, **Weddings and functions** and **Meeting
+room** cards, **Ask about festival dates** under Vivaha Panchami, and **Enquire about an event**
+under Weddings pre-select the matching option in the form. The restaurant and front-desk cards
+open those tabs in the facilities section instead.
 
 Dates are built from local parts, never `toISOString()`: Nepal is UTC+5:45, and converting to
 UTC rolls the date back a day.
@@ -107,10 +122,13 @@ credit.
 
 Each of these was a real bug found while building the page. They are commented in the code too.
 
-1. **The masthead has two looks.** Over the dark hero it is transparent with light type; once
-   the page scrolls (`.is-stuck`, set by `main.js`) or the phone menu opens, it becomes a white
-   bar with dark type. The phone-menu case uses `:has()`, because the menu is white too and the
-   light header type would vanish against it.
+1. **The masthead has two looks.** Over the hero it sits inside the glass frame, transparent
+   with light type; once the page scrolls (`.is-stuck`, set by `main.js`) or the phone menu
+   opens, it rises to the top as a white bar with dark type. The phone-menu case uses `:has()`,
+   because the menu is white too and the light header type would vanish against it. It is laid
+   out on the frame's own numbers (`--frame-x`, `--frame-y`, `--frame-pad`, `--frame-max`, at
+   the top of `site.css`) — change the frame there, never in one place only, or the header
+   slides out of it.
 2. **`scene.js` is loaded as a classic script, not `type="module"`.** A module loaded from disk
    is blocked by CORS on `file://`, so it would never run when the page is double-clicked.
 3. **The form's status line and error states are plain classes in `site.css`.** `main.js`
@@ -124,15 +142,18 @@ Each of these was a real bug found while building the page. They are commented i
    hotel tour". Putting the file back in `src`, or adding `autoplay`, would download both for
    everyone.
 7. **The photograph and the video share one colour grade, `--hero-grade`** (on `.hero` in
-   `site.css`), used by `.hero__bg::after` and `.hero__scrim` alike. Change it in one place and
-   the words stay equally legible over both; give the scrim its own gradient and the headline
-   can end up over undarkened video when it fades in.
+   `site.css`), used by `.hero__bg::after` and `.hero__scrim` alike, and the frame carries the
+   rest of the shade. Change the grade in one place and the frame looks the same over both.
+   **The frame is tinted, never blurred:** a `backdrop-filter` on it — or an `opacity`,
+   `filter` or `mask` on it or on `.deck` — would stop the cards inside frosting the film; they
+   would only see the tint. That is also why the entrance fade sits on the glass pieces
+   themselves, not on their containers.
 8. **The hero loop contains only caption-free shots.** The promo film has captions burned into
    most shots, and behind the site's own headline they clash. If you re-cut it, check the first
    and last frame of every shot — captions fade in and out over half a second (see
    VIDEO-BRIEF.md).
 9. **The page always opens at the top, on the hero.** Left alone, a phone reopens a page where it
-   was last scrolled to, and a link copied after tapping "View rooms" carries `#rooms` and jumps
+   was last scrolled to, and a link copied after tapping "Rooms" carries `#rooms` and jumps
    there — so guests landed mid-page. Two pieces fix it, and both must stay:
    - the small `<script>` near the top of `index.html`'s `<head>` turns off the browser's
      scroll-restoring and takes any `#…` off the address — **before** the page is built, so
@@ -141,6 +162,10 @@ Each of these was a real bug found while building the page. They are commented i
      the address, and keep each jump in the browser's history so the phone's Back button still
      returns to where the guest was. Add new section links as ordinary `<a href="#section">` —
      they are picked up automatically.
+10. **The hero's photograph and film stick to the top of the screen** while the hero scrolls
+    past, rather than stretching to its full height (a 720p film enlarged to a hero taller than
+    the screen would blur). That needs `overflow: clip` on `.hero`; `overflow: hidden` would
+    silently stop it.
 
 ---
 

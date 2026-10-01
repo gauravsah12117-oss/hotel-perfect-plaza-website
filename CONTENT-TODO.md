@@ -30,7 +30,13 @@ confirm or correct each line — in `index.html`, the **Restaurant, events and s
 - [ ] **Front desk and room service through the night**
 - [ ] **Laundry**, and help with onward travel
 
-If any of these is wrong, tell me which and I will rewrite it — or remove the tab entirely.
+**Meeting room** (a card in the hero's *Dining & events* row, and an option in the enquiry
+form's Room list) — the promo film says *"conference rooms"* and shows the room
+- [ ] Guests can book it for **meetings and small gatherings**
+
+The same claims appear on the hero's *Dining & events* cards (weddings, meeting room, front
+desk). If any of these is wrong, tell me which and I will rewrite it — or remove the tab or card
+entirely.
 
 **The headline** is your tagline, *For Perfect Satisfaction*. Confirm that is the exact wording.
 
@@ -146,10 +152,17 @@ therefore now shows the **lobby**, not the front of the building (the `<img>` wa
 "front," so nothing on the page overclaims). If you'd like the actual building front there
 instead, send me a daylight photo of the entrance and I'll swap it in — same spot, one file.
 
-**Still needed, because the folder had none:**
-- `dining-room.jpg` — the restaurant, laid and lit. (The restaurant's own signage is visible in
-  the lobby photos, but that's not the same as a photo of the dining room itself.)
-- `banquet.jpg` — the hall or lawn set up for a function. *Only if section 1 is confirmed.*
+**Stand-ins from your promo film, until there are photographs.** The folder had no photo of
+the restaurant, the function space or the meeting room, so these three are single frames of the
+film, taken where no caption is on screen (see VIDEO-BRIEF.md, *Stills from the film*):
+- `dining-room.jpg` — the dining hall
+- `banquet.jpg` — the buffet counter in the dining hall, draped in red and gold. If functions
+  are held somewhere else (a hall, a lawn), a photo of that place is better
+- `meeting-room.jpg` — the meeting room
+
+They are as sharp as a 720p film allows: fine on the cards, a little soft in the larger
+*Restaurant, events and services* panels. A photograph of each, laid and lit, would be better —
+save it under the same name.
 
 **Photos I didn't use, still in your folder, available if you want a gallery per room later:**
 `room view.JPG`, `Double bed room.JPG` and `Bed view.JPG` (more angles of the two room types
@@ -175,7 +188,7 @@ I'll swap it in; everything else about the layout stays the same.
 
 These are placeholders written to sound right. Confirm each against reality.
 
-### Rooms — `index.html`, the Rooms section
+### Rooms — `index.html`, the room cards in the hero
 
 - [ ] Room names — currently Deluxe Room, Executive Room, Plaza Suite
 - [ ] **Rates** — currently NPR 4,500 / 6,500 / 11,000. **These are invented**
@@ -185,12 +198,13 @@ These are placeholders written to sound right. Confirm each against reality.
 - [ ] The **Room** list in the enquiry form uses the same names — keep them matching
 - [ ] Is breakfast included in every rate? The page says so
 
-### The four facts under the booking bar
+### The facts along the foot of the hero
 
 - [ ] "10 minutes' walk to the Janaki Mandir" — is that right from your door?
-- [ ] "Open all night" — front desk and room service
-- [ ] "Breakfast included in every room rate"
-- [ ] "Air-conditioned, with hot water and Wi-Fi"
+- [ ] "Front desk open all night"
+- [ ] "Breakfast in every rate"
+- [ ] "Air-conditioned rooms"
+- [ ] "Free Wi-Fi in every room"
 - [ ] "25 minutes by air from Kathmandu" (under *Getting here*)
 
 ### Dining
@@ -229,7 +243,7 @@ These are placeholders written to sound right. Confirm each against reality.
       real logo (see section 6 for the one caveat on its sharpness)
 - [ ] Send one test enquiry and confirm it lands
 - [ ] Open the site on a real phone and press Call and WhatsApp
-- [ ] Look through the whole page on a real phone: Lord Ram and Mata Sita appear in the hero,
-      the booking bar sits under them, and nothing stutters while you scroll
+- [ ] Look through the whole page on a real phone: the film plays in the band at the top, the
+      cards swipe sideways, and nothing stutters while you scroll
 - [ ] Watch the hero video on a real phone for a minute: it plays, the loop is
       smooth, and "Watch the hotel tour" plays with sound

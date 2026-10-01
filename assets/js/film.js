@@ -9,12 +9,15 @@
 
    THE HERO LOOP
      • most visitors             the loop, faded in over the lobby photograph
+                                 (behind the glass frame on wide screens, in
+                                 the band at the top of the frame on phones)
      • "reduce motion" / data    no download at all — the photograph stays,
-       saver / a 2G connection   and it is already the right picture
-     • autoplay refused          the photograph stays (an iPhone in Low Power
-                                 Mode refuses to autoplay even muted video)
-   It pauses whenever the hero is scrolled away, the tab is hidden, or the
-   tour is open.
+       saver / a 2G connection   and it is already the right picture (on
+                                 phones, the band keeps the film's cover)
+     • autoplay refused          the same (an iPhone in Low Power Mode
+                                 refuses to autoplay even muted video)
+   It pauses whenever it is scrolled away, the tab is hidden, or the tour
+   is open.
 
    THE TOUR
    "Watch the hotel tour" opens the full film in a dialog, with sound — a
@@ -59,9 +62,12 @@
           hero.classList.add("has-film");
           /* on <html> too, for the header, which sits outside the hero */
           document.documentElement.classList.add("film-on");
+          /* Watch the film's own box: the whole hero on wide screens, only
+             the band on phones — where the hero runs on long after the
+             band has scrolled away. */
           if ("IntersectionObserver" in window) {
             new IntersectionObserver(([entry]) => { heroOnScreen = entry.isIntersecting; syncHero(); })
-              .observe(hero);
+              .observe(heroVideo.parentElement);
           }
           document.addEventListener("visibilitychange", syncHero);
         })

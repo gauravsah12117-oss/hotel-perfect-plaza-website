@@ -167,12 +167,17 @@ window.HPP = (function () {
     const bar = $("[data-masthead]");
     const actionbar = $("[data-actionbar]");
     const hero = $(".hero");
+    const avail = $("[data-avail]");
     if (!bar) return;
 
     const onScroll = () => {
       bar.classList.toggle("is-stuck", window.scrollY > 30);
       if (actionbar && hero) {
-        actionbar.classList.toggle("is-up", window.scrollY > hero.offsetHeight * 0.7);
+        /* The phone's bar rises once the hero's own availability bar has
+           gone off the top: its "Book now" takes over from that one. */
+        const gone = avail ? avail.getBoundingClientRect().bottom < 0
+                           : window.scrollY > hero.offsetHeight * 0.7;
+        actionbar.classList.toggle("is-up", gone);
       }
     };
     onScroll();

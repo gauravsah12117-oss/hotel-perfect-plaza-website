@@ -3,14 +3,13 @@
    --------------------------------------------------------------------------
    The whole look lives here: no framework, no build step.
 
-   The design is deliberately plain. A warm light page, dark type, one accent
-   colour (a deep sindoor red) and square-cornered photographs — the way a
-   real hotel presents itself. No glass, no glows, no gradient text, no gold
-   pills: those are what made the earlier version read as a template.
+   A warm light page, dark type, one accent colour (the logo's red) and
+   softly rounded photographs — the way a real hotel presents itself.
 
-   The hero is the one dark band, #0B0F19, because that is the ground of the
-   Ram & Sita picture: the picture's edges melt into it instead of sitting on
-   it as a box.
+   The hero is the one dark place: the hotel's own film behind a glass
+   frame, with smoked-glass pills and cards on it. Glass is used only there,
+   where there is a moving picture behind it to frost; anywhere else it
+   reads as a flat grey box.
    ========================================================================== */
 
 /* ----------------------------------------------------------------- TOKENS */
@@ -40,8 +39,17 @@
   --radius: 12px;
   --ease: cubic-bezier(.22, .61, .36, 1);
 
+  /* The hero's glass frame. The masthead is laid out on the same numbers,
+     so that over the hero it sits inside the frame. */
+  --frame-x:   clamp(.625rem, 4.5vw - .5rem, 4.5rem);  /* screen edge to frame */
+  --frame-y:   clamp(.625rem, 2vw, 1.75rem);           /* top of screen to frame */
+  --frame-pad: clamp(1rem, 3vw, 3rem);                 /* frame edge to its content */
+  --frame-max: 78rem;
+  --nav-h:     4.5rem;                                 /* the masthead's height */
+
   color-scheme: light;
 }
+@media (max-width: 1023px) { :root { --nav-h: 4rem; } }
 
 /* ------------------------------------------------------------ FOUNDATION */
 
@@ -149,53 +157,25 @@ main:focus, main > section:focus { outline: none; }
 .btn:hover { background: var(--accent-2); border-color: var(--accent-2); }
 .btn svg { width: 1.05em; height: 1.05em; }
 
-.btn--outline { background: transparent; color: var(--ink); border-color: var(--rule-2); box-shadow: none; }
-.btn--outline:hover { background: transparent; color: var(--accent); border-color: var(--accent); }
-
-/* for the dark hero */
-.btn--light { background: transparent; color: var(--night-ink); border-color: rgba(243, 238, 230, .45); box-shadow: none; }
-.btn--light:hover { background: rgba(243, 238, 230, .08); border-color: var(--night-ink); }
-
-/* Frosted glass, for use over the hero photograph. */
-.btn--glass {
-  background: rgba(255, 255, 255, .12); color: #fff;
-  border-color: rgba(255, 255, 255, .32); box-shadow: none;
-  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
-}
-.btn--glass:hover { background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .55); }
-
-/* ------------------------------------------------------------------ GLASS
-   Used sparingly — only where there is a photograph behind it to frost, or
-   the effect reads as a flat grey box. A solid fallback first, for browsers
-   without backdrop-filter. */
-.glass {
-  background: rgba(20, 24, 36, .62);
-  border: 1px solid rgba(255, 255, 255, .18);
-  border-radius: 16px;
-  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .12);
-}
-@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .glass {
-    background: rgba(255, 255, 255, .10);
-    -webkit-backdrop-filter: blur(20px) saturate(150%);
-            backdrop-filter: blur(20px) saturate(150%);
-  }
-}
-
 .btn--lg { padding: .9rem 1.55rem; font-size: .98rem; }
-.btn--sm { padding: .55rem .95rem; font-size: .85rem; }
 .btn--block { width: 100%; }
 
 /* ---------------------------------------------------------------- MASTHEAD */
 
+/* Over the hero the bar sits inside the glass frame: same width, same inner
+   padding, and as far from the top of the screen as the frame is. Once the
+   page scrolls it rises to the top and turns into a white bar; its content
+   stays where it was, so nothing jumps sideways. */
 .masthead {
   position: fixed; inset: 0 0 auto; z-index: 100;
+  top: var(--frame-y);
   color: var(--night-ink);
   border-bottom: 1px solid transparent;
-  transition: background-color .3s, color .3s, border-color .3s;
+  transition: top .3s var(--ease), background-color .3s, color .3s, border-color .3s;
 }
 .masthead.is-stuck,
 .masthead:has([aria-expanded="true"]) {
+  top: 0;
   background: #fff; color: var(--ink); border-bottom-color: var(--rule);
 }
 /* Once scrolled, the bar frosts over the page instead of hiding it. */
@@ -206,35 +186,64 @@ main:focus, main > section:focus { outline: none; }
             backdrop-filter: blur(18px) saturate(160%);
   }
 }
-.masthead__bar { display: flex; align-items: center; gap: 1.5rem; height: 4.5rem; }
+.masthead__bar {
+  display: flex; align-items: center; gap: 1.25rem;
+  width: min(100% - 2 * var(--frame-x), var(--frame-max)); height: var(--nav-h);
+  margin-inline: auto; padding-inline: var(--frame-pad);
+}
+/* Wide screens: logo | the links, centred | phone and "Book now". */
+@media (min-width: 1024px) {
+  .masthead__bar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 2rem; }
+}
 
 .brand { display: flex; align-items: center; gap: .65rem; margin-right: auto; }
 /* The real logo, on its own white card so it reads the same over the dark
    hero, the white scrolled header, and the drawer. alt="" here: the anchor
    already carries the accessible name, and the footer's copy repeats it
    for anyone who lands lower on the page first. */
-.brand__logo { height: 2.5rem; width: auto; display: block; border-radius: 5px; }
+.brand__logo { height: 2.5rem; width: auto; display: block; border-radius: 6px; }
 .brand__tag { font-size: .72rem; opacity: .72; white-space: nowrap; }
+/* the links need the room between 1024 and 1280 */
+@media (min-width: 1024px) and (max-width: 1279px) { .brand__tag { display: none; } }
 
-.masthead__nav { display: none; gap: 1.8rem; font-size: .92rem; }
+.masthead__nav { display: none; gap: 1.9rem; font-size: .9rem; }
 @media (min-width: 1024px) { .masthead__nav { display: flex; } }
-.navlink { padding: .3rem 0; opacity: .82; transition: opacity .2s; }
+.navlink { position: relative; padding: .3rem 0; opacity: .78; white-space: nowrap; transition: opacity .2s; }
 .navlink:hover { opacity: 1; }
-.navlink[aria-current="true"] {
-  opacity: 1;
-  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 7px;
+/* The section in view (ui.js): a short bar under the link. */
+.navlink[aria-current="true"] { opacity: 1; }
+.navlink::after {
+  content: ""; position: absolute; left: 50%; bottom: -.7rem;
+  width: 1.6rem; height: 2px; border-radius: 2px; translate: -50% 0;
+  background: currentColor; opacity: 0; transition: opacity .25s;
 }
+.navlink[aria-current="true"]::after { opacity: 1; }
 
-.masthead__tel { display: none; align-items: center; gap: .45rem; font-size: .9rem; }
-.masthead__tel svg { width: 1rem; height: 1rem; }
+.masthead__end { display: flex; align-items: center; justify-content: flex-end; gap: .6rem; }
+
+/* The phone, as a pill — glass over the hero, outlined on the white bar. */
+.masthead__tel {
+  display: none; align-items: center; gap: .45rem;
+  padding: .5rem .95rem; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .24); background: rgba(255, 255, 255, .08);
+  font-size: .86rem; white-space: nowrap;
+  transition: background-color .2s, border-color .2s;
+}
+.masthead__tel:hover { background: rgba(255, 255, 255, .16); }
+.masthead__tel svg { width: .95rem; height: .95rem; }
 @media (min-width: 1200px) { .masthead__tel { display: inline-flex; } }
+.is-stuck .masthead__tel { border-color: var(--rule-2); background: transparent; }
+.is-stuck .masthead__tel:hover { border-color: var(--accent); color: var(--accent); }
 
-.masthead__book { display: none; }
+/* "Book now": a white pill over the hero, the red one on the white bar. */
+.masthead__book { display: none; border-radius: 999px; padding: .6rem 1.2rem; }
 @media (min-width: 640px) { .masthead__book { display: inline-flex; } }
+.masthead:not(.is-stuck) .masthead__book { background: #fff; border-color: #fff; color: var(--ink); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, .6); }
+.masthead:not(.is-stuck) .masthead__book:hover { background: rgba(255, 255, 255, .86); }
 
 .burger {
   width: 44px; height: 44px; display: grid; place-items: center; flex: none;
-  border: 1px solid currentColor; border-radius: 4px; background: transparent;
+  border: 1px solid currentColor; border-radius: 50%; background: transparent;
   cursor: pointer; opacity: .9;
 }
 @media (min-width: 1024px) { .burger { display: none; } }
@@ -262,114 +271,130 @@ main:focus, main > section:focus { outline: none; }
 .drawer__foot { display: grid; gap: .9rem; }
 .drawer__tel { text-align: center; font-size: .95rem; color: var(--ink-2); }
 
-/* ---------------------------------------------------------------------- HERO */
+/* ---------------------------------------------------------------------- HERO
+   A glass window over the hotel's film. The film (or, before it arrives,
+   the lobby photograph) fills the hero; the frame is a tinted pane inset
+   from the screen's edges, so the film shows through it and around it. In
+   the frame, from the top: the masthead, the heading, the availability bar,
+   the switch and its row of cards, and the facts. */
 
 .hero {
-  position: relative; isolation: isolate; overflow: hidden;
-  display: flex; flex-direction: column; justify-content: flex-end;
-  min-height: 100svh;
-  padding-bottom: 2rem;
+  position: relative; isolation: isolate;
+  overflow: hidden; overflow: clip;   /* clip, not hidden: hidden would stop the film sticking */
+  padding-block: var(--frame-y);
   background: var(--night); color: rgba(255, 255, 255, .84);
 }
 
-/* The grade laid over whatever is behind the words — the photograph, or the
-   film once it plays. One definition for both, so the words are exactly as
-   legible either way: a deep navy wash from the left under the words, a
-   floor of shade under the booking bar, a faint warm bloom where the
-   chandeliers are. */
+/* The grade over the photograph and the film alike: one definition, so
+   nothing about the frame changes when the film fades in. Light — the frame
+   carries most of the shade — and darker towards the edges. */
 .hero {
   --hero-grade:
-    radial-gradient(60% 50% at 78% 22%, rgba(255, 196, 120, .16), transparent 70%),
-    linear-gradient(90deg, rgba(10, 14, 26, .92) 0%, rgba(10, 14, 26, .74) 38%, rgba(10, 14, 26, .30) 70%, rgba(10, 14, 26, .18) 100%),
-    linear-gradient(0deg, rgba(10, 14, 26, .88) 0%, rgba(10, 14, 26, .35) 30%, rgba(10, 14, 26, 0) 55%),
-    linear-gradient(180deg, rgba(10, 14, 26, .55) 0%, rgba(10, 14, 26, 0) 22%);
-}
-@media (max-width: 1023px) {
-  /* Phones and tablets: the picture is a band at the top, not behind the
-     words (see HERO ON PHONES below), so the grade only has to melt its
-     foot into the navy the words sit on. */
-  .hero {
-    --hero-grade:
-      linear-gradient(180deg, rgba(10, 14, 26, 0) 55%, rgba(10, 14, 26, .55) 82%, var(--night) 100%);
-  }
+    radial-gradient(120% 90% at 50% 40%, rgba(9, 13, 24, .12) 0%, rgba(9, 13, 24, .5) 100%),
+    linear-gradient(rgba(9, 13, 24, .22), rgba(9, 13, 24, .22));
 }
 
-/* The photograph, graded twice: once in the file (warmer, a little less
-   saturated), and again by --hero-grade. It is also what every visitor
-   sees before the film arrives, and all that visitors who ask for less
-   motion or are saving data ever see. */
+/* The photograph and the film each hold one screen's height and stick to
+   the top while the hero scrolls past, rather than stretching to the whole
+   hero: a 720p film enlarged to fill a hero taller than the screen would
+   blur. */
 .hero__bg { position: absolute; inset: 0; z-index: -2; }
 .hero__bg img {
-  width: 100%; height: 100%; object-fit: cover; object-position: 62% 50%;
+  position: sticky; top: 0;
+  width: 100%; height: 100vh; object-fit: cover; object-position: 55% 50%;
   animation: hero-drift 24s ease-in-out infinite alternate;
 }
 @keyframes hero-drift { from { transform: scale(1.02); } to { transform: scale(1.08); } }
 .hero__bg::after { content: ""; position: absolute; inset: 0; background: var(--hero-grade); }
 
-/* "Watch the hotel tour" — a glass play button under the main buttons. */
-.hero__tour {
-  display: inline-flex; align-items: center; gap: .75rem;
-  margin-top: 1.4rem;
-  color: #fff; font-size: .95rem; font-weight: 500;
+/* Hidden until film.js has the loop actually playing, then faded in over
+   the photograph, which fades out beneath it. Absolutely placed against the
+   hero itself: neither the frame nor the window is positioned here. */
+.hero__film {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity 1.8s var(--ease);
 }
-.hero__tour-play {
-  display: grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .38);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  transition: background-color .2s, transform .2s var(--ease);
+.hero.has-film .hero__film { opacity: 1; }
+.hero__film video {
+  position: sticky; top: 0; display: block;
+  width: 100%; height: 100vh; object-fit: cover; object-position: 50% 50%;
 }
-.hero__tour-play svg { width: 1.1rem; height: 1.1rem; margin-left: .15rem; }
-.hero__tour:hover .hero__tour-play { background: var(--accent); border-color: var(--accent); transform: scale(1.06); }
-.hero__tour-time { margin-left: .35rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
+.hero__bg { transition: opacity 1.2s var(--ease); }
+.hero.has-film .hero__bg { opacity: 0; }
+.hero__scrim { position: absolute; inset: 0; background: var(--hero-grade); }
 
-/* Left-aligned at every width, like every other section of the page. */
-.hero__inner {
-  position: relative; display: grid; align-items: end; gap: 2rem;
-  padding-top: 7.5rem; padding-bottom: 2rem;
+/* On wide screens the window takes no room; see HERO ON PHONES. */
+.hero__window { display: contents; }
+
+/* The frame. Tinted, not blurred: a backdrop blur here would also stop the
+   cards inside it frosting the film (they would only see the tint). */
+.hero__frame {
+  width: min(100% - 2 * var(--frame-x), var(--frame-max));
+  margin-inline: auto;
+  padding: calc(var(--nav-h) + clamp(1.75rem, 4vw, 3.5rem)) var(--frame-pad) clamp(1.5rem, 2.4vw, 2.25rem);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: clamp(20px, 2.4vw, 32px);
+  background:
+    radial-gradient(60% 34% at 50% 20%, rgba(9, 13, 24, .38), rgba(9, 13, 24, 0) 100%),
+    linear-gradient(180deg, rgba(9, 13, 24, .62) 0%, rgba(9, 13, 24, .44) 34%, rgba(9, 13, 24, .5) 62%, rgba(9, 13, 24, .74) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 40px 120px -40px rgba(0, 0, 0, .7);
 }
-@media (min-width: 1024px) {
-  .hero__inner {
-    grid-template-columns: 1fr auto; gap: 3rem;
-    padding-top: 9rem; padding-bottom: 2.5rem;
+
+/* Smoked glass, for everything small that sits on the frame: the tour
+   button, the availability bar, the switch, the pills and the cards. A
+   solid fallback first, for browsers without backdrop-filter. */
+.hero__tour, .booking, .seg, .pill, .deck__btn, .tcard, .tcard__tag, .tcard__go {
+  background: rgba(14, 19, 31, .82);
+  border: 1px solid rgba(255, 255, 255, .14);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .hero__tour, .booking, .seg, .pill, .deck__btn, .tcard, .tcard__tag, .tcard__go {
+    background: rgba(14, 19, 31, .4);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+            backdrop-filter: blur(18px) saturate(140%);
   }
 }
 
-/* The glass card of stay details, beside the words on wide screens. */
-.hero__card { padding: 1.4rem 1.5rem; min-width: 17rem; text-align: left; color: #fff; }
-@media (max-width: 1023px) { .hero__card { display: none; } }
-.hero__card-label {
-  margin-bottom: .8rem;
-  font-size: .72rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
-  color: rgba(255, 255, 255, .7);
-}
-.hero__facts { display: grid; gap: 0; }
-.hero__facts > div {
-  display: flex; justify-content: space-between; gap: 2rem;
-  padding: .6rem 0; border-top: 1px solid rgba(255, 255, 255, .14);
-  font-size: .92rem;
-}
-.hero__facts dt { color: rgba(255, 255, 255, .72); }
-.hero__facts dd { font-weight: 600; }
+/* ...................................................... heading */
 
-.hero__place {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: .55rem;
-  margin-bottom: 1rem; font-size: .92rem;
+.hero__head {
+  display: flex; flex-direction: column; align-items: center;
+  max-width: 48rem; margin-inline: auto; text-align: center;
 }
-.hero__place .deva { font-size: 1.1rem; color: #E6D6A8; }
+
+/* "Watch the hotel tour": a pill above the heading. */
+.hero__tour {
+  display: inline-flex; align-items: center; gap: .65rem;
+  padding: .3rem 1rem .3rem .3rem; border-radius: 999px;
+  color: #fff; font-size: .88rem; font-weight: 500;
+  transition: border-color .2s;
+}
+.hero__tour:hover { border-color: rgba(255, 255, 255, .4); }
+.hero__tour-play {
+  display: grid; place-items: center; width: 2rem; height: 2rem; flex: none;
+  border-radius: 50%; background: #fff; color: var(--ink);
+  transition: background-color .2s, color .2s, transform .2s var(--ease);
+}
+.hero__tour-play svg { width: .85rem; height: .85rem; margin-left: .1rem; }
+.hero__tour:hover .hero__tour-play { background: var(--accent); color: #fff; transform: scale(1.06); }
+.hero__tour-time { margin-left: .3rem; color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
 
 .hero__title {
-  font-family: var(--display); font-weight: 500;
-  font-size: clamp(2.6rem, 1.8rem + 3.4vw, 4.6rem); line-height: 1.02;
+  margin-top: 1.4rem;
+  font-family: var(--sans); font-weight: 500;
+  font-size: clamp(2.4rem, 1.3rem + 3.6vw, 4.4rem); line-height: 1.04; letter-spacing: -.035em;
   color: #fff; text-wrap: balance;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, .35);
 }
-.hero__lede { max-width: 34rem; margin-top: 1.25rem; font-size: 1.05rem; line-height: 1.65; text-shadow: 0 1px 12px rgba(0, 0, 0, .45); }
-.hero__title { text-shadow: 0 2px 24px rgba(0, 0, 0, .35); }
-
-.hero__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+.hero__lede {
+  max-width: 36rem; margin-top: 1.1rem;
+  font-size: 1rem; line-height: 1.65; color: rgba(255, 255, 255, .84);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, .55);
+}
 
 /* A short, quiet entrance. CSS, so nothing can be left stuck invisible if a
-   script fails. */
+   script fails. Only on things that are glass themselves or hold no glass:
+   while an element fades, glass inside it cannot see past it. */
 @keyframes rise { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 .hero-in { animation: rise .8s var(--ease) both; }
 .hero-in--1 { animation-delay: .1s; }
@@ -378,62 +403,225 @@ main:focus, main > section:focus { outline: none; }
 .hero-in--4 { animation-delay: .44s; }
 .hero-in--5 { animation-delay: .56s; }
 
-/* ---------------------------------------------------------------- BOOKING BAR */
+/* ............................................ the availability bar */
 
-/* Inside the hero now: a glass panel along its foot. */
-.booking { position: relative; z-index: 2; }
-.booking__form { display: grid; gap: .9rem; padding: 1.1rem; }
-
-/* Fields on glass: light type, a lighter frosted fill. The date pickers'
-   own icons follow color-scheme, so they turn light too. */
-.booking .field-min label { color: rgba(255, 255, 255, .82); font-weight: 500; }
+/* One pill on wide screens: check-in | check-out | guests | the button. */
+.booking {
+  display: grid; grid-template-columns: 1fr 1fr .7fr auto; align-items: center;
+  max-width: 50rem; margin: 2rem auto 0; padding: .45rem .45rem .45rem .6rem;
+  border-radius: 999px;
+}
+.booking .field-min { gap: .1rem; padding: .3rem 1.1rem; }
+.booking .field-min + .field-min { border-left: 1px solid rgba(255, 255, 255, .14); }
+.booking .field-min label {
+  font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: rgba(255, 255, 255, .62);
+}
 .booking .field-min input {
-  color-scheme: dark;
-  background: rgba(255, 255, 255, .10); color: #fff;
-  border-color: rgba(255, 255, 255, .28); border-radius: 8px;
+  color-scheme: dark;               /* the date pickers' own icons turn light */
+  padding: .1rem 0; border: 0; border-radius: 4px;
+  background: transparent; color: #fff; font-size: .95rem;
 }
-.booking .field-min input:focus {
-  border-color: rgba(255, 255, 255, .7); box-shadow: 0 0 0 3px rgba(255, 255, 255, .15);
+.booking .field-min input:focus { box-shadow: 0 0 0 2px rgba(255, 255, 255, .55); border-color: transparent; }
+.booking__go { border-radius: 999px; padding: .85rem 1.4rem; }
+
+/* ........................................... the switch and the cards */
+
+.deck { margin-top: clamp(2rem, 4vw, 3rem); }
+.deck:focus { outline: none; }       /* a section link (main.js) moves focus here */
+
+/* Hidden until ui.js has wired it, like the facilities tabs: without the
+   script all three rows simply show. */
+.seg { display: none; }
+.ui-ready .seg {
+  display: flex; gap: .2rem; width: fit-content; max-width: 100%;
+  margin-inline: auto; padding: .3rem; border-radius: 999px;
 }
-/* Two columns below desktop: check-in | check-out, then guests | the button. */
-.booking__form { grid-template-columns: 1fr 1fr; align-items: end; }
-@media (min-width: 640px) { .booking__form { padding: 1.25rem; } }
-@media (min-width: 1024px) {
-  .booking__form { grid-template-columns: 1fr 1fr .6fr auto; gap: 1.1rem; padding: 1.25rem 1.5rem; }
+.seg__tab {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .55rem 1.15rem; border: 0; border-radius: 999px;
+  background: none; color: rgba(255, 255, 255, .72);
+  font-size: .88rem; font-weight: 500; white-space: nowrap; cursor: pointer;
+  transition: background-color .2s, color .2s;
 }
-.booking__go { padding-block: .8rem; }
-@media (max-width: 1023px) { .booking__go { width: 100%; padding-inline: .6rem; } }
+.seg__tab:hover { color: #fff; }
+.seg__tab[aria-selected="true"] {
+  background: rgba(255, 255, 255, .16); color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+.seg__tab svg { width: 1rem; height: 1rem; }
+
+.deck__panel { margin-top: clamp(1.75rem, 3.5vw, 2.5rem); }
+.deck__panel:focus-visible { outline-offset: 6px; border-radius: 14px; }
+
+.deck__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.1rem; }
+.deck__label {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .7rem;
+  font-size: 1.05rem; font-weight: 500; color: #fff;
+}
+.pill {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .35rem .85rem .35rem .7rem; border-radius: 999px;
+  font-size: .8rem; font-weight: 500; color: #fff;
+  transition: border-color .2s;
+}
+.pill:hover { border-color: rgba(255, 255, 255, .4); }
+.pill svg { width: .95rem; height: .95rem; }
+
+.deck__nav { display: flex; gap: .5rem; flex: none; }
+.deck__btn {
+  display: grid; place-items: center; width: 2.5rem; height: 2.5rem;
+  border-radius: 50%; color: #fff; cursor: pointer;
+  transition: border-color .2s, opacity .2s;
+}
+.deck__btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, .45); }
+.deck__btn:disabled { opacity: .35; cursor: default; }
+.deck__btn svg { width: 1.1rem; height: 1.1rem; }
+
+/* The row runs out to the frame's edges, so the last card is cut by the
+   glass itself — the cue that there is more to swipe. */
+.deck__track {
+  --card-w: clamp(15.5rem, 22vw, 19rem);
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--card-w);
+  gap: clamp(.85rem, 1.4vw, 1.25rem);
+  margin-inline: calc(-1 * var(--frame-pad));
+  padding: .25rem var(--frame-pad) .75rem;
+  scroll-padding-inline: var(--frame-pad);
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.deck__track::-webkit-scrollbar { display: none; }
+
+/* A card: the photograph on top fading into smoked glass, a pill and an
+   arrow over the photograph, then the name, a line, the chips and the
+   price. The title's link is stretched over the whole card. */
+.tcard {
+  position: relative; display: flex; flex-direction: column;
+  border-radius: 18px; overflow: hidden; scroll-snap-align: start;
+  box-shadow: 0 24px 50px -30px rgba(0, 0, 0, .75);
+  transition: border-color .3s, translate .3s var(--ease);
+}
+.tcard__media { aspect-ratio: 16 / 11; background: rgba(255, 255, 255, .05); }
+.tcard__media img {
+  -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 58%, transparent 100%);
+  transition: transform .8s var(--ease);
+}
+/* a photograph that has not arrived: the lotus, in the frame's own light */
+.tcard .frame__media.has-ph { background: rgba(255, 255, 255, .06); }
+
+.tcard__tag, .tcard__go { position: absolute; top: .7rem; z-index: 1; color: #fff; }
+.tcard__tag {
+  left: .7rem; display: inline-flex; align-items: center; gap: .35rem;
+  padding: .28rem .6rem; border-radius: 999px;
+  font-size: .74rem; font-weight: 500;
+}
+.tcard__tag svg { width: .85rem; height: .85rem; }
+.tcard__go {
+  right: .7rem; display: grid; place-items: center; width: 2.1rem; height: 2.1rem;
+  border-radius: 50%; transition: background-color .25s, color .25s;
+}
+.tcard__go svg { width: 1rem; height: 1rem; }
+
+.tcard__body { display: flex; flex-direction: column; gap: .55rem; flex: 1; padding: .15rem 1.05rem 1.05rem; }
+.tcard__title { font-size: 1.1rem; font-weight: 600; line-height: 1.25; letter-spacing: -.01em; color: #fff; }
+.tcard__link::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; }
+.tcard__link:focus-visible { outline: none; }
+.tcard__link:focus-visible::after { outline: 2px solid #fff; outline-offset: -2px; border-radius: 18px; }
+.tcard__text { font-size: .83rem; line-height: 1.55; color: rgba(255, 255, 255, .68); }
+
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .2rem; }
+.chips li {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .26rem .6rem; border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px;
+  font-size: .74rem; color: rgba(255, 255, 255, .86); white-space: nowrap;
+}
+.chips svg { width: .9rem; height: .9rem; opacity: .85; }
+
+.tcard__foot { display: flex; align-items: baseline; gap: .15rem; margin-top: auto; padding-top: .6rem; color: #fff; }
+.tcard__foot strong { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; }
+.tcard__foot span { font-size: .84rem; color: rgba(255, 255, 255, .6); }
+
+@media (hover: hover) {
+  .tcard:hover { border-color: rgba(255, 255, 255, .3); translate: 0 -3px; }
+  .tcard:hover .tcard__media img { transform: scale(1.04); }
+  .tcard:hover .tcard__go { background: #fff; color: var(--ink); }
+}
+
+/* .............................................. the facts along the foot */
+
+/* Five across on wide screens (in the reference design, the row of partner
+   logos), three and two on tablets, two columns on phones. */
+.strip {
+  display: grid; grid-template-columns: repeat(5, auto); justify-content: space-between; gap: 1rem 1.5rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem); padding-top: clamp(1.25rem, 2.2vw, 1.75rem);
+  border-top: 1px solid rgba(255, 255, 255, .12);
+}
+@media (max-width: 1023px) { .strip { grid-template-columns: repeat(3, auto); } }
+.strip li { display: flex; align-items: center; gap: .6rem; font-size: .86rem; line-height: 1.35; color: rgba(255, 255, 255, .68); }
+.strip strong { font-weight: 600; color: #fff; }
+.strip svg { width: 1.3rem; height: 1.3rem; color: #fff; }
 
 /* ------------------------------------------------------- HERO ON PHONES
-   Below 1024px the picture no longer sits behind the words. A 16:9 film
-   stretched to fill an upright phone shows only a quarter of each shot,
-   enlarged until it blurs — so here the photograph and the film play in a
-   band across the top (4:3 on phones, 16:9 on tablets), sharp and nearly
-   whole, and the words sit below on plain navy, left-aligned like the rest
-   of the page. --band is the band's height; the words start beneath it. */
+   Below 1024px a 16:9 film stretched behind an upright screen shows only a
+   sliver of each shot, enlarged until it blurs. So here it plays in a
+   window at the top of the frame instead — 4:3 on phones, 16:9 on tablets,
+   sharp and nearly whole — with the film's opening shot as its cover until
+   the loop starts. The lobby photograph becomes a soft, dark ground behind
+   the frame. */
 @media (max-width: 1023px) {
-  .hero { display: block; min-height: 0; padding-bottom: 1.75rem; --band: 75vw; }
-  /* .hero in front: the film's own rule further down would otherwise win */
-  .hero .hero__bg, .hero .hero__film { inset: 4.5rem 0 auto 0; height: var(--band); overflow: hidden; }
-  .hero__inner { padding-top: calc(4.5rem + var(--band) + 1.25rem); padding-bottom: 1.5rem; gap: 1.5rem; }
-  .hero__title, .hero__lede { text-shadow: none; }
-  .hero__title { font-size: clamp(2.3rem, 1.6rem + 3.4vw, 3.4rem); }
-  .hero__lede { font-size: 1rem; }
-  /* the two buttons side by side, equal widths */
-  .hero__actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: 1.5rem; }
-  .hero__actions .btn { width: 100%; padding-inline: .7rem; }
-  .hero__tour { margin-top: 1.1rem; }
-  /* the header sits on plain navy here, so its extra shade over the film
-     would only darken the top of the band */
-  html.film-on .masthead:not(.is-stuck)::before { opacity: 0; }
+  .hero__frame { padding-top: var(--nav-h); }
+  .hero__window {
+    display: block; position: relative; overflow: hidden;
+    aspect-ratio: 4 / 3; border-radius: 16px;
+    background: #1B2130 url("../video/hotel-tour-poster.jpg") center / cover;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, .12);
+  }
+  .hero__film { z-index: 0; }
+  .hero__film video { position: absolute; inset: 0; height: 100%; }
+  .hero__scrim { background: linear-gradient(180deg, rgba(9, 13, 24, 0) 60%, rgba(9, 13, 24, .3) 100%); }
+
+  .hero__bg img { position: absolute; inset: 0; height: 100%; filter: blur(14px) saturate(120%); transform: scale(1.12); animation: none; }
+  .hero__bg::after { background: rgba(9, 13, 24, .7); }
+  .hero.has-film .hero__bg { opacity: 1; }
+
+  .hero__head { margin-top: 1.6rem; }
+  .hero__title { margin-top: 1.1rem; }
+  .hero__lede { font-size: .97rem; }
 }
 @media (min-width: 640px) and (max-width: 1023px) {
-  .hero { --band: 56.25vw; }
-  /* tablets have the width: buttons at their natural size, not stretched */
-  .hero__actions { display: flex; }
-  .hero__actions .btn { width: auto; padding-inline: 1.55rem; }
+  .hero__window { aspect-ratio: 16 / 9; }
 }
-@media (max-width: 359px) { .hero__actions { grid-template-columns: 1fr; } }
+
+/* The availability bar as a small card below 768px: two fields to a row. */
+@media (max-width: 767px) {
+  .booking {
+    grid-template-columns: 1fr 1fr; align-items: end; gap: .8rem .7rem;
+    margin-top: 1.6rem; padding: 1rem; border-radius: 18px;
+  }
+  .booking .field-min { padding: 0; gap: .35rem; }
+  .booking .field-min + .field-min { border-left: 0; }
+  .booking .field-min input {
+    padding: .6rem .7rem; border: 1px solid rgba(255, 255, 255, .22); border-radius: 10px;
+    background: rgba(255, 255, 255, .08);
+  }
+  .booking .field-min input:focus { border-color: rgba(255, 255, 255, .7); box-shadow: 0 0 0 3px rgba(255, 255, 255, .15); }
+  .booking__go { width: 100%; padding: .8rem .6rem; border-radius: 10px; }
+}
+
+@media (max-width: 639px) {
+  .deck__track { --card-w: min(78vw, 18rem); }
+  .deck__label { font-size: 1rem; }
+  /* the facts as two tidy columns */
+  .strip { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1rem; }
+  .strip li { align-items: flex-start; font-size: .82rem; }
+  .strip svg { width: 1.15rem; height: 1.15rem; }
+}
+/* the switch fits without its icons on narrow phones */
+@media (max-width: 479px) {
+  .seg__tab { padding-inline: .9rem; font-size: .85rem; }
+  .seg__tab svg { display: none; }
+}
 
 .field-min { display: grid; gap: .35rem; min-width: 0; }
 .field-min label, .field label { font-size: .84rem; font-weight: 600; color: var(--ink); }
@@ -464,15 +652,6 @@ main:focus, main > section:focus { outline: none; }
   outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(187, 62, 59, .16);
 }
 
-/* --------------------------------------------------------------------- FACTS */
-
-.facts { padding: 2.5rem 0 .5rem; }
-.facts__list { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem 1rem; }
-@media (min-width: 1024px) { .facts__list { grid-template-columns: repeat(4, 1fr); } }
-.facts__list li { display: flex; align-items: flex-start; gap: .7rem; font-size: .9rem; line-height: 1.45; color: var(--ink-3); }
-.facts__list svg { width: 1.4rem; height: 1.4rem; margin-top: .05rem; color: var(--accent); }
-.facts__list strong { display: block; font-size: .98rem; font-weight: 600; color: var(--ink); }
-
 /* ----------------------------------------------------------------- SECTIONS */
 
 .section { padding-block: clamp(3.75rem, 2.75rem + 4vw, 6.5rem); }
@@ -498,8 +677,8 @@ main:focus, main > section:focus { outline: none; }
 }
 .card .frame__media img { transition: transform .8s var(--ease); }
 @media (hover: hover) {
-  .room:hover, .place:hover { box-shadow: 0 2px 4px rgba(31, 27, 23, .05), 0 22px 44px -22px rgba(31, 27, 23, .32); }
-  .room:hover .frame__media img, .place:hover .frame__media img { transform: scale(1.04); }
+  .place:hover { box-shadow: 0 2px 4px rgba(31, 27, 23, .05), 0 22px 44px -22px rgba(31, 27, 23, .32); }
+  .place:hover .frame__media img { transform: scale(1.04); }
 }
 @media (prefers-reduced-motion: reduce) { .card .frame__media img { transition: none; } }
 .card__body { display: flex; flex-direction: column; gap: .65rem; padding: 1.35rem; flex: 1; }
@@ -519,31 +698,6 @@ img[data-failed] { visibility: hidden; }
   width: 22%; max-width: 110px; aspect-ratio: 64 / 40; height: auto;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 40'%3E%3Cg fill='none' stroke='%23B3A286' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M32 35C26.5 27.5 26.5 15.5 32 5.5c5.5 10 5.5 22 0 29.5Z'/%3E%3Cpath d='M31.6 35C24 33 18.6 25.2 17.6 13.8c8.4 2.2 13.4 10 14 21.2Z'/%3E%3Cpath d='M32.4 35C40 33 45.4 25.2 46.4 13.8c-8.4 2.2-13.4 10-14 21.2Z'/%3E%3Cpath d='M31 35.4C21.6 36.6 12.8 32 7.4 23.4c9-1.8 17.6 3 23.6 12Z'/%3E%3Cpath d='M33 35.4c9.4 1.2 18.2-3.4 23.6-12-9-1.8-17.6 3-23.6 12Z'/%3E%3Cpath d='M13 38.2h38'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
 }
-
-/* --------------------------------------------------------------------- ROOMS */
-
-.rooms { display: grid; gap: 1.5rem; }
-@media (min-width: 768px)  { .rooms { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 1024px) { .rooms { grid-template-columns: repeat(3, 1fr); } }
-
-.room__media { aspect-ratio: 3 / 2; }
-.room__specs { font-size: .86rem; color: var(--ink-3); }
-.room__foot {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem;
-  margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--rule);
-}
-.price { font-size: 1.08rem; font-weight: 600; color: var(--ink); }
-.price small { font-size: .85rem; font-weight: 400; color: var(--ink-3); }
-
-.amenity-row {
-  display: flex; flex-wrap: wrap; gap: .9rem 2rem;
-  margin-top: 2.5rem; padding-top: 1.75rem; border-top: 1px solid var(--rule-2);
-  font-size: .92rem; color: var(--ink-2);
-}
-/* two tidy columns on phones, instead of a ragged wrap */
-@media (max-width: 639px) { .amenity-row { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem 1rem; } }
-.amenity-row li { display: inline-flex; align-items: center; gap: .5rem; }
-.amenity-row svg { width: 1.15rem; height: 1.15rem; color: var(--accent); }
 
 /* ---------------------------------------------------------------------- TABS */
 
@@ -743,25 +897,6 @@ img[data-failed] { visibility: hidden; }
 .actionbar__btn svg { width: 1.05rem; height: 1.05rem; color: var(--accent); }
 .actionbar__btn--book { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* ----------------------------------------------------------------- HERO FILM */
-
-/* Hidden until film.js has the loop actually playing, then faded in over
-   the photograph, which fades out beneath it. The film is 16:9 and centred:
-   on an upright phone the middle of each shot stays in frame. */
-.hero__film {
-  position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  opacity: 0; transition: opacity 1.8s var(--ease);
-}
-.hero.has-film .hero__film { opacity: 1; }
-.hero__film video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; }
-
-.hero__bg { transition: opacity 1.2s var(--ease); }
-.hero.has-film .hero__bg { opacity: 0; }
-
-/* The same grade as the photograph's, so nothing about the words changes
-   when the film fades in. */
-.hero__scrim { position: absolute; inset: 0; background: var(--hero-grade); }
-
 /* -------------------------------------------------------------- TOUR PLAYER */
 
 /* The full tour, in a native <dialog>: it traps focus, closes on Escape, and
@@ -793,14 +928,6 @@ img[data-failed] { visibility: hidden; }
 html.tour-open { overflow: hidden; }
 /* the red ring is too faint on the dark backdrop */
 .tour :focus-visible { outline-color: #fff; }
-/* The header's own shade over the film, until the page scrolls and the
-   white bar takes over. */
-.masthead::before {
-  content: ""; position: absolute; inset: 0 0 -40px; z-index: -1; pointer-events: none;
-  background: linear-gradient(180deg, rgba(11, 15, 25, .86) 0%, rgba(11, 15, 25, .8) 60%, rgba(11, 15, 25, 0) 100%);
-  opacity: 0; transition: opacity .3s;
-}
-.film-on .masthead:not(.is-stuck)::before { opacity: 1; }
 
 /* -------------------------------------------------------------------- REVEAL */
 
