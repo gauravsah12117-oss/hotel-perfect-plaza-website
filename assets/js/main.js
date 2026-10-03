@@ -421,40 +421,70 @@ window.HPP = (function () {
 
   /* -------------------------------------------------------------- lightbox */
 
+  /* The gallery's photo viewer: tap a picture to see it large; arrows, a
+     swipe on a phone, or the arrow keys move along; Escape, the ✕ or a tap
+     on the dark surround closes it. The caption is the picture's own alt
+     text, so it is translated along with the page. */
   function wireLightbox() {
     const box = $("[data-lightbox]"), shots = $$("[data-track] .shot");
     if (!box || !shots.length || typeof box.showModal !== "function") return;
 
-    const img = $("[data-lb-img]", box), cap = $("[data-lb-cap]", box);
+    const img = $("[data-lb-img]", box), cap = $("[data-lb-cap]", box),
+          count = $("[data-lb-count]", box), figure = $(".lightbox__figure", box);
+    const pic = i => $("img", shots[(i + shots.length) % shots.length]);
     let at = 0;
 
     const show = i => {
       at = (i + shots.length) % shots.length;
-      const src = $("img", shots[at]);
-      img.src = src.currentSrc || src.src;
+      const src = pic(at);
+      img.src = src.src;                /* the file itself, loaded or not yet */
       img.alt = src.alt;
       cap.textContent = src.alt;
+      if (count) count.textContent = (at + 1) + " / " + shots.length;
+      /* fetch the neighbours now, so the next swipe is instant */
+      [at - 1, at + 1].forEach(n => { const p = new Image(); p.src = pic(n).src; });
     };
 
-    shots.forEach((shot, i) => {
-      shot.addEventListener("click", () => {
-        /* naturalWidth, not the failed flag: a lazy image further along the
-           rail has never been requested, so there is nothing to enlarge. */
-        if (!$("img", shot).naturalWidth) return;
-        show(i);
-        box.showModal();
-      });
-    });
+    shots.forEach((shot, i) => shot.addEventListener("click", () => {
+      show(i);
+      document.documentElement.classList.add("lb-open");
+      box.showModal();
+    }));
+
+    /* Unlock the page and hand focus back to the photo on show. Run straight
+       away by our own close buttons: the dialog's "close" event, which also
+       covers Escape, can arrive a second late while photos are loading. */
+    const done = () => {
+      if (!document.documentElement.classList.contains("lb-open")) return;
+      document.documentElement.classList.remove("lb-open");
+      shots[at].focus({ preventScroll: true });
+    };
+    const shut = () => { box.close(); done(); };
 
     $("[data-lb-prev]", box).addEventListener("click", () => show(at - 1));
     $("[data-lb-next]", box).addEventListener("click", () => show(at + 1));
-    $("[data-lb-close]", box).addEventListener("click", () => box.close());
+    $("[data-lb-close]", box).addEventListener("click", shut);
     box.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft")  { e.preventDefault(); show(at - 1); }
       if (e.key === "ArrowRight") { e.preventDefault(); show(at + 1); }
     });
-    box.addEventListener("click", e => { if (e.target === box) box.close(); });
-    box.addEventListener("close", () => shots[at].focus());
+    /* a tap on the dark surround (not the picture, not a button) closes */
+    box.addEventListener("click", e => { if (e.target === box || e.target === figure) shut(); });
+
+    /* swipe left / right on a phone; a mostly-vertical move is left alone */
+    let x0 = null, y0 = 0;
+    box.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) { x0 = null; return; }
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    }, { passive: true });
+    box.addEventListener("touchend", e => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) show(at + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+
+    box.addEventListener("close", done);
   }
 
   /* ------------------------------------------------- search-engine listing */

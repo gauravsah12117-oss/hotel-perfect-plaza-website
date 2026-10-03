@@ -1,14 +1,30 @@
-# The hero video
+# The site's videos
 
-Both videos on the site are cut from the hotel's own promotional film (72.9 seconds, 1280 × 720,
-with music), supplied as `Desktop\Travel cotation\hero page video.mp4`. The original stays there;
-only the web versions are in this folder.
+The hero loop and the tour are cut from the hotel's own promotional film (72.9 seconds,
+1280 × 720, with music), supplied as `Desktop\Travel cotation\hero page video.mp4`. The welcome
+film is the presenter's walk through the hotel, `Desktop\Travel cotation\0806 (1)(2).mov`
+(64 seconds, 1080p, iPhone HEVC — converted, because many browsers cannot play HEVC). The
+originals stay where they are; only the web versions are in this folder.
 
 | File | What it is | Size |
 |---|---|---|
 | `assets/video/hotel-hero.mp4` | A **12.6-second silent loop** behind the hero's headline | 2.5 MB |
-| `assets/video/hotel-tour.mp4` | The **full film, with its music**, opened by "Watch the hotel tour" | 13.9 MB |
+| `assets/video/hotel-tour.mp4` | The **full promo film, with its music**, opened by "Watch the hotel tour" | 13.9 MB |
 | `assets/video/hotel-tour-poster.jpg` | The tour player's cover picture — the drone shot of the building. Also the cover of the hero's video band on phones | 0.2 MB |
+| `assets/video/hotel-welcome.mp4` | The **presenter's welcome film**, with sound, playing in place in "About the hotel" when tapped | 12 MB |
+| `assets/video/hotel-welcome-poster.jpg` | Its cover — the presenter in the lobby, at 0:03 | 0.1 MB |
+
+The welcome film was converted with:
+
+```
+ffmpeg -i "0806 (1)(2).mov" -vf "scale=1280:-2" -c:v libx264 -preset slow -crf 24
+  -profile:v high -level 4.0 -pix_fmt yuv420p -c:a aac -b:a 128k -ac 2 -movflags +faststart
+  hotel-welcome.mp4
+ffmpeg -ss 3.0 -i "0806 (1)(2).mov" -frames:v 1 -vf "scale=1280:-2" -q:v 3 hotel-welcome-poster.jpg
+```
+
+Like the tour, it downloads only when someone presses play, and opening the tour pauses it — one
+film with sound at a time.
 
 ---
 
@@ -61,10 +77,12 @@ The hero is a glass frame over the film (see README, *The design*):
 
 ## Stills from the film
 
-Two photographs on the site are single frames of the promo film, because there are no photos
+Two photographs on the cards are single frames of the promo film, because there are no photos
 of these rooms yet. (A third, the dining hall, has since been replaced by the hotel's own photo
-of the restaurant.) Each is taken from a moment with no caption on screen, and cropped above
-where the captions sit:
+of the restaurant.) The gallery has three more, wider — the building from the air at 7.0 s
+(`hotel-exterior.jpg`), the function hall (`dining-hall.jpg`) and the meeting room
+(`conference-room.jpg`), all 1280 × 720. Each is taken from a moment with no caption on screen,
+and the card stills are cropped above where the captions sit:
 
 | File | From the film | Shows | Used in |
 |---|---|---|---|

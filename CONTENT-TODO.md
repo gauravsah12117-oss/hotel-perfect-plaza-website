@@ -129,6 +129,21 @@ of the building, the lobby, reception and two rooms — and **"Watch the hotel t
       behind the darkened hero but a little soft on large screens. Ask whoever made it for the
       1920 × 1080 export and I'll re-cut both videos from it.
 
+### The welcome film (presenter)
+
+`0806 (1)(2).mov` — the presenter in the red Mithila saree walking through the lobby and rooms —
+now plays in "About the hotel" when tapped, in the frame where the lobby photo was
+(`assets/video/hotel-welcome.mp4`: converted from the iPhone format, which many browsers cannot
+play, to a 12 MB web copy at 720p).
+
+- [ ] **⚠ The phone numbers in this film don't match your letterhead.** At 0:50–0:54 it shows
+      **+977‑9801625121** and **+977‑9801622215**; the letterhead (and so the website) says
+      **9854022215** and **9844022215**. Which are current? If the film's are right, I'll change
+      the site; if the letterhead's are, the film needs re-editing or guests will dial the wrong
+      numbers.
+- [ ] **Music and presenter rights.** As with the promo film: check that the music licence and
+      the presenter's agreement cover the hotel's own website.
+
 ---
 
 ## 6. Photographs of the hotel — done, from the set on your desktop
@@ -139,18 +154,17 @@ match what's actually in each photo):
 
 | Site file | Made from | Used for |
 |---|---|---|
-| `hotel-lobby.jpg` | `Front view.JPG` | "About the hotel" — see below |
+| `hotel-lobby.jpg` | `Front view.JPG` | Not shown at present: "About the hotel" now has the welcome film (5b) |
 | `front-desk.jpg` | `DSC_7061.JPG` | The reception desk, in Restaurant, events and services |
 | `room-1.jpg` | `deluxe room.JPG` | Deluxe Room |
 | `room-2.jpg` | `DSC_6972.JPG` | Executive Room |
 | `room-3.jpg` | `Glass view room.JPG` | Plaza Suite |
 | `og-image.jpg` | `Front main view.JPG`, cropped to 1200 × 630 | What appears when the link is shared |
 
-**No exterior photo was in that folder** — every photo is indoors. The "About the hotel" section
-therefore now shows the **lobby**, not the front of the building (the `<img>` was renamed from
-`hotel-exterior.jpg` to `hotel-lobby.jpg` and its alt text says "reception and lobby," not
-"front," so nothing on the page overclaims). If you'd like the actual building front there
-instead, send me a daylight photo of the entrance and I'll swap it in — same spot, one file.
+**No exterior photo was in that folder** — every photo is indoors. The building is now shown
+from the air, as the gallery's large picture: `hotel-exterior.jpg`, a still from the promo
+film's drone shot. A daylight photo of the entrance would be a good addition — send it and I'll
+add it.
 
 **The restaurant — done, from your photos:** `dining-room.jpg` (the restaurant), plus
 `restaurant-thali.jpg` and `restaurant-meal.jpg` (two meals), shown together in the Restaurant
@@ -170,11 +184,14 @@ They are as sharp as a 720p film allows: fine on the cards, a little soft in the
 *Restaurant, events and services* panels. A photograph of each, laid and lit, would be better —
 save it under the same name.
 
-**Photos I didn't use, still in your folder, available if you want a gallery per room later:**
-`room view.JPG`, `Double bed room.JPG` and `Bed view.JPG` (more angles of the two room types
-above), `DSC_7000.JPG` (a third angle of the Deluxe Room), and `Elevator View.JPG` (the
-lift/staircase corridor). The current room cards show one photo each; say the word and I'll add
-a click-to-enlarge gallery so guests can flick through all of a room's photos.
+**The gallery — done** ("Inside the hotel", between the restaurant and Janakpur): nine
+pictures, each opening large. It uses the photos that were left over — `Front main view.JPG`,
+`Elevator View.JPG`, `room view.JPG`, `Double bed room.JPG` and `DSC_7000.JPG` (as
+`gallery-*.jpg`) — the restaurant photo, and three wider stills from the promo film: the
+building from the air (`hotel-exterior.jpg`), the function hall (`dining-hall.jpg`) and the
+meeting room (`conference-room.jpg`). Only `Bed view.JPG` is unused: nine pictures make full
+rows. Sharper photos of the hall and the meeting room — even good phone photos in daylight —
+would replace the stills; same file names.
 
 **The real logo** (`hotellogo.tif`) is now used everywhere a mark appears: the header, the
 footer, and the phone/tablet home-screen icon (`assets/favicon/apple-touch-icon.png`, already
@@ -187,6 +204,21 @@ against the hero's colours, especially the black "HOTEL"/"PLAZA" text.
 close (most visible on the footer, where it's shown largest). If you have a bigger version — the
 original design file, or whatever was used to print your signage or letterhead — send it and
 I'll swap it in; everything else about the layout stays the same.
+
+---
+
+## 6b. The Nepali version — please have it read
+
+The header's **नेपाली** button switches the whole page to Nepali (and **English** switches back);
+the choice is remembered, and a phone set to Nepali opens in Nepali. I wrote the translation
+carefully, but a native reader at the hotel should read it through once:
+
+- [ ] Open the site, tap **नेपाली**, and read every section. Anything that sounds unnatural:
+      fix the right-hand side in `assets/js/i18n-ne.js` (or tell me the better wording)
+- [ ] Room names are transliterated (डिलक्स कोठा, एक्जिक्युटिभ कोठा, प्लाजा सुइट) — change them
+      if the hotel uses other names in Nepali
+- [ ] Prices and times use Western digits (रु. 4,500, 14:00) for clarity — say if you'd prefer
+      Nepali digits (रु. ४,५००)
 
 ---
 

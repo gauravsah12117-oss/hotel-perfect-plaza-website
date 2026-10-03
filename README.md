@@ -28,17 +28,20 @@ hotel's own photographs matter most.
 | `assets/css/site.css` | The whole look: colours, type, layout, buttons, cards, form states |
 | `assets/js/main.js` | Contact details, the booking handoff, the enquiry form, dates, missing-photo fallback |
 | `assets/js/ui.js` | The tabs (the hero's cards and the facilities), the card rows' arrows, the scroll reveal, the nav link that follows the section in view |
+| `assets/js/i18n.js` | The English ⇄ नेपाली switch in the header |
+| `assets/js/i18n-ne.js` | The Nepali text: English on the left, Nepali on the right — edit the right-hand side to improve a translation |
 | `assets/js/hero-figure.js` | Fades in Lord Ram & Mata Sita in the hero once the picture has loaded |
 | `assets/images/ram-sita.jpg` | That picture (33 KB) — frame 2 of the 12-frame sheet, cut out |
 | `assets/images/janaki-mandir.jpg` | The Janaki Mandir lit up at dusk — the hotel's own picture, leading the Janakpur section |
 | `assets/images/janaki-mandir-night.jpg`, `mithila-art.jpg`, `ponds.jpg` | Real photographs of Janakpur from Wikimedia Commons — see *Photo credits* below |
 | `assets/images/ram-sita-turntable.png` / `.webp` | The original 12-frame sheet, kept as the source. The page does not load it |
 | `assets/images/hotel-logo.png` | The real logo, on a white card — used in the header, the footer, and (cropped) as the home-screen icon |
-| `assets/js/film.js` | The hero's video loop, and the "Watch the hotel tour" player |
+| `assets/js/film.js` | The hero's video loop, the "Watch the hotel tour" player, and the welcome film in "About the hotel" |
 | `assets/images/dining-room.jpg`, `restaurant-thali.jpg`, `restaurant-meal.jpg` | The restaurant and two of its meals (a Nepali thali, a set meal) — the hotel's own photographs, shown together in the Restaurant tab |
 | `assets/images/banquet.jpg`, `meeting-room.jpg` | Stills from the hotel's promo film (the buffet counter in the dining hall, the meeting room), taken between the film's captions |
+| `assets/images/gallery-*.jpg`, `hotel-exterior.jpg`, `dining-hall.jpg`, `conference-room.jpg` | The gallery ("Inside the hotel"): the owner's own photographs, and wider stills from the promo film — the building from the air, the function hall, the meeting room |
 | `assets/js/scene.js` | A 3D gold lotus — only used if the Ram & Sita picture is taken out of the hero |
-| `assets/video/` | The hero loop (2.5 MB), the full hotel tour (13.9 MB) and its cover, all cut from the hotel's promo film |
+| `assets/video/` | The hero loop (2.5 MB) and the full hotel tour (13.9 MB), cut from the hotel's promo film; the presenter's welcome film (12 MB) in "About the hotel"; and their cover pictures |
 | `VIDEO-BRIEF.md` | How the hero video was cut, who sees what, and how to replace it |
 | `3D-ASSETS.md` | How to put a 3D model in the hero (not used at present) |
 
@@ -97,7 +100,18 @@ there is a real photograph behind it to frost.
 - **Type.** Inter for the hero, as in the design it follows; Cormorant Garamond for the
   headings below it, Inter for everything else, Tiro Devanagari Hindi for जनकपुरधाम.
 - **Photographs carry the page**, in softly rounded frames with a light shadow; room and place
-  photos ease in slightly on hover.
+  photos ease in slightly on hover. A **gallery** of nine real photographs, between the red band
+  and the dusk, opens each one large (arrows, swipe, keyboard).
+- **Video, three ways:** the silent loop in the hero; the full promo film behind "Watch the
+  hotel tour"; and the presenter's welcome film, playing in place in "About the hotel", in the
+  gold-and-sindoor frame the lobby photo had, with its play button in the corner so her face
+  stays clear. The two with sound download only when tapped, and only one plays at a time.
+- **English and नेपाली.** A switch in the header; Nepali uses Devanagari faces (Tiro Devanagari
+  for headings, Noto Sans Devanagari for text, loaded only for Nepali readers) and no
+  letter-spacing anywhere.
+- **Phone and WhatsApp** are always close: in the phone's bottom bar, and on larger screens as
+  two pills that float in the corner once the hero has gone. (The phone pill used to sit in the
+  header; beside six links and the language switch it no longer fits at any width.)
 - **Lord Ram and Mata Sita** are out of the hero for now (see CONTENT-TODO, section 5). The
   picture and its script are kept for when they return.
 - **Motion** is limited to the film, short fades and the photograph's slow drift, and all of
@@ -114,8 +128,8 @@ There is no booking engine. Three paths lead to you:
    is typed twice.
 2. **The enquiry form** emails you through Formspree. While `formspreeId` is empty it opens
    WhatsApp with the enquiry already written out instead, so the form is never a dead end.
-3. **WhatsApp and Call** — in the header, the contact section, the footer, and a bar that rises
-   from the bottom of the screen on phones.
+3. **WhatsApp and Call** — in the contact section, the footer, the phone menu, and a bar that
+   rises from the bottom of the screen on phones (two floating pills on larger screens).
 
 Every room card in the hero, the **Vivaha Panchami**, **Weddings and functions** and **Meeting
 room** cards, **Ask about festival dates** under Vivaha Panchami, and **Enquire about an event**
@@ -161,10 +175,10 @@ Each of these was a real bug found while building the page. They are commented i
 4. **The default icon size uses `:where()`.** An unsized inline SVG balloons to 300×150, so
    `site.css` gives SVGs a floor — at zero specificity, so any class still wins.
 5. **"Wi‑Fi" uses a non-breaking hyphen** (`&#8209;`), or it splits across lines as "Wi- / Fi".
-6. **Both `<video>` tags have `preload="none"` and their file in `data-src`, not `src`.**
+6. **All three `<video>` tags have `preload="none"` and their file in `data-src`, not `src`.**
    `film.js` decides first: visitors who asked for less motion or are saving data never
-   download the hero loop, and nobody downloads the 14 MB tour until they press "Watch the
-   hotel tour". Putting the file back in `src`, or adding `autoplay`, would download both for
+   download the hero loop, and nobody downloads the 14 MB tour or the 12 MB welcome film until
+   they press play. Putting a file back in `src`, or adding `autoplay`, would download it for
    everyone.
 7. **The photograph and the video share one colour grade, `--hero-grade`** (on `.hero` in
    `site.css`), used by `.hero__bg::after` and `.hero__scrim` alike, and the frame carries the
@@ -200,6 +214,16 @@ Each of these was a real bug found while building the page. They are commented i
     past, rather than stretching to its full height (a 720p film enlarged to a hero taller than
     the screen would blur). That needs `overflow: clip` on `.hero`; `overflow: hidden` would
     silently stop it.
+11. **The enquiry form's Room options carry fixed English `value`s.** The visible words are
+    translated into Nepali, but the room cards pick an option by its value, and the value is what
+    reaches the hotel. Remove the values and both break in Nepali.
+12. **Nepali works by matching English text exactly** (see `i18n.js`). Change an English sentence
+    on the page and its Nepali stops appearing until `i18n-ne.js` gets the new English as its
+    left-hand side. Nothing breaks — that sentence just stays in English in Nepali mode.
+13. **The header is full.** Logo, six links, the language switch and "Book now" fill the bar at
+    every width (it stops growing at 78rem). Between 1024 and 1280 the links already sit a little
+    closer. Adding a seventh link or a pill means taking something out — check at 1024 and 1440,
+    in both languages.
 
 ---
 

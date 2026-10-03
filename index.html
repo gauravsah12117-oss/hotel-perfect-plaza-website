@@ -18,6 +18,22 @@
   } catch (e) { /* a page opened straight from disk may refuse; it still works */ }
 </script>
 
+<!-- English or नेपाली, decided before anything is drawn: the reader's own
+     earlier choice, else Nepali for a phone set to Nepali. A Nepali reader's
+     page stays hidden for the moment i18n.js takes to switch, instead of
+     flashing English first; if it never arrives, the page shows anyway. -->
+<script>
+  (function () {
+    var lang = null;
+    try { lang = localStorage.getItem("hpp-lang"); } catch (e) {}
+    if (lang !== "ne" && lang !== "en") lang = /^ne\b/i.test(navigator.language || "") ? "ne" : "en";
+    if (lang !== "ne") return;
+    var html = document.documentElement;
+    html.classList.add("lang-pending");
+    setTimeout(function () { html.classList.remove("lang-pending"); }, 2500);
+  })();
+</script>
+
 <title>Hotel Perfect Plaza — Hotel in Janakpurdham, Nepal</title>
 <meta name="description" content="Hotel Perfect Plaza, Janakpurdham — ten minutes' walk from the Janaki Mandir. Air-conditioned rooms with breakfast, a restaurant, weddings and functions, and a front desk open all night.">
 <meta name="theme-color" content="#0B0F19">
@@ -87,6 +103,7 @@
   <symbol id="i-concierge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 17h16M6 17a6 6 0 0 1 12 0"/><path d="M12 11V9M10 9h4M3 20h18"/></g></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8.5 5.8v12.4a.8.8 0 0 0 1.2.7l9.6-6.2a.8.8 0 0 0 0-1.4L9.7 5.1a.8.8 0 0 0-1.2.7Z"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9s1.3-6.5 3.9-9Z"/></g></symbol>
   <!-- A Mithila fish, drawn like the lotus: the paired fish of Mithila wedding
        painting, a sign of good fortune. Used, mirrored, either side of the
        lotus in the Janakpur heading. -->
@@ -118,7 +135,7 @@
 
 <!-- ============================================================ MASTHEAD -->
 <!-- Over the hero it sits inside the glass frame: light type, the links in
-     the middle, the phone and a white "Book now" pill on the right. Once the
+     the middle, English ⇄ नेपाली and a white "Book now" pill on the right. Once the
      page scrolls (.is-stuck, from main.js) or the phone menu is open, it
      becomes a plain white bar with dark type. Its bar is laid out on the
      frame's own measurements (--frame-* in site.css), so the two line up. -->
@@ -133,15 +150,23 @@
       <a class="navlink" href="#top">Home</a>
       <a class="navlink" href="#rooms" data-show-tab="seg-rooms">Rooms</a>
       <a class="navlink" href="#amenities">Restaurant &amp; events</a>
+      <a class="navlink" href="#gallery">Gallery</a>
       <a class="navlink" href="#heritage">Janakpur</a>
       <a class="navlink" href="#enquire">Contact</a>
     </nav>
 
     <div class="masthead__end">
-      <a class="masthead__tel" data-tel href="#">
-        <svg aria-hidden="true"><use href="#i-phone"/></svg>
-        <span data-phone-display>+977-41-590911</span>
-      </a>
+      <!-- English ⇄ नेपाली (i18n.js). The label names the language you switch
+           TO, written in that language, so a Nepali reader finds "नेपाली" and an
+           English reader finds "English". translate="no" keeps the label as is. -->
+      <button class="lang" type="button" data-lang-switch translate="no">
+        <svg aria-hidden="true"><use href="#i-globe"/></svg>
+        <span class="lang__label" lang="ne" data-lang-label>नेपाली</span>
+      </button>
+      <!-- The phone number is not up here: beside six links and the language
+           switch it no longer fits at any width. On wide screens it floats in
+           the corner with WhatsApp instead (the action bar, below); on phones
+           and tablets it is in the menu. -->
       <a class="btn masthead__book" href="#enquire">Book now</a>
 
       <button class="burger" type="button" data-burger aria-expanded="false" aria-controls="drawer">
@@ -156,6 +181,7 @@
   <nav class="drawer__nav" aria-label="Mobile">
     <a class="drawer__link" href="#rooms" data-show-tab="seg-rooms">Rooms</a>
     <a class="drawer__link" href="#amenities">Restaurant &amp; events</a>
+    <a class="drawer__link" href="#gallery">Gallery</a>
     <a class="drawer__link" href="#heritage">Janakpur</a>
     <a class="drawer__link" href="#enquire">Contact</a>
   </nav>
@@ -513,8 +539,21 @@
         <p>We are just off all of it — close enough to walk to the temple before breakfast, far enough that you sleep well. Cool floors, quiet rooms, and people at the desk who have lived in Janakpur their whole lives.</p>
       </div>
     </div>
-    <div class="frame__media split__media" data-reveal>
-      <img src="assets/images/hotel-lobby.jpg" alt="The reception and lobby at Hotel Perfect Plaza, with the hotel's sign, a decorative wooden screen and the lift" width="1600" height="1067" loading="lazy" decoding="async" data-img>
+    <!-- The hotel's welcome film: a guided walk through the lobby and rooms,
+         with sound. It plays right here when tapped, and nothing downloads
+         before that (film.js). Without script, the link opens the file. It
+         sits in the same gold-and-sindoor frame the lobby photograph had. -->
+    <div class="welcome-film split__media" data-inline-film data-reveal>
+      <video controls playsinline preload="none" width="1280" height="720"
+             poster="assets/video/hotel-welcome-poster.jpg" data-src="assets/video/hotel-welcome.mp4"></video>
+      <a class="welcome-film__cover" href="assets/video/hotel-welcome.mp4" data-inline-play>
+        <img src="assets/video/hotel-welcome-poster.jpg" alt="" width="1280" height="720" loading="lazy" decoding="async">
+        <span class="welcome-film__play" aria-hidden="true"><svg><use href="#i-play"/></svg></span>
+        <span class="welcome-film__caption">
+          <strong>Watch our welcome</strong>
+          <span><span class="welcome-film__desc">A guided walk through the lobby and rooms · </span><span class="welcome-film__time">1:04</span></span>
+        </span>
+      </a>
     </div>
   </div>
 </section>
@@ -590,11 +629,42 @@
             <li>Airport pickup — send us your flight number</li>
             <li>Guides, rickshaws and cars arranged for the day</li>
             <li>Front desk and room service through the night</li>
+            <li>A lift to every floor</li>
             <li>Laundry, and help with onward travel</li>
           </ul>
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ============================================================ GALLERY -->
+<!-- Every picture here is of the hotel itself: the owner's photographs, and
+     stills from the hotel's own promotional film (the building from the air,
+     the hall, the meeting room). Tap one to see it large (main.js,
+     "lightbox"): arrows, a swipe or the keyboard move along. -->
+<section class="section section--gallery" id="gallery" aria-labelledby="gallery-title">
+  <div class="wrap">
+    <header class="section__head section__head--split" data-reveal>
+      <div>
+        <p class="label">Gallery</p>
+        <h2 class="h2" id="gallery-title">Inside the hotel</h2>
+        <span class="ornament" aria-hidden="true"><svg><use href="#lotus"/></svg></span>
+      </div>
+      <p class="section__note">Our building, lobby, rooms and halls, just as you will find them. Tap any picture to see it larger.</p>
+    </header>
+
+    <ul class="gallery" role="list" data-track data-reveal>
+      <li class="gallery__item gallery__item--big"><button type="button" class="shot"><img src="assets/images/hotel-exterior.jpg" alt="The hotel building at Ramanand Chowk, seen from the air" width="1280" height="720" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/gallery-lobby.jpg" alt="The lobby, with the reception desk and the restaurant beyond" width="1400" height="933" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/gallery-room-pink.jpg" alt="A double room with a carved wooden screen and a pink accent wall" width="1400" height="933" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/dining-hall.jpg" alt="The function hall, with its buffet counter and curtained windows" width="1280" height="720" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/gallery-room-twin.jpg" alt="A twin room with two single beds under wall lamps" width="1400" height="933" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/dining-room.jpg" alt="The hotel restaurant: wooden tables, cream upholstered chairs and a sofa along the wall" width="680" height="453" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/conference-room.jpg" alt="The meeting room, with one long table under the windows" width="1280" height="720" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/gallery-room-teal.jpg" alt="A twin room with a television, a tea kettle and a sitting corner" width="1400" height="933" loading="lazy" decoding="async"></button></li>
+      <li class="gallery__item"><button type="button" class="shot"><img src="assets/images/gallery-lift.jpg" alt="The lift and the staircase beside the lobby" width="1400" height="933" loading="lazy" decoding="async"></button></li>
+    </ul>
   </div>
 </section>
 
@@ -759,14 +829,17 @@
           </div>
           <div class="field field--pair">
             <label for="f-room">Room</label>
+            <!-- Each option's value is fixed in English: the "Check
+                 availability" links pick by it, and it is what reaches the
+                 hotel — so translating the visible words changes neither. -->
             <select id="f-room" name="room">
-              <option>Not sure yet</option>
-              <option>Deluxe Room</option>
-              <option>Executive Room</option>
-              <option>Plaza Suite</option>
-              <option>Vivaha Panchami — festival dates</option>
-              <option>Wedding or banquet</option>
-              <option>Meeting room</option>
+              <option value="Not sure yet">Not sure yet</option>
+              <option value="Deluxe Room">Deluxe Room</option>
+              <option value="Executive Room">Executive Room</option>
+              <option value="Plaza Suite">Plaza Suite</option>
+              <option value="Vivaha Panchami — festival dates">Vivaha Panchami — festival dates</option>
+              <option value="Wedding or banquet">Wedding or banquet</option>
+              <option value="Meeting room">Meeting room</option>
             </select>
           </div>
           <div class="field field--wide">
@@ -804,6 +877,7 @@
     <nav class="footer__links" aria-label="Footer">
       <a class="footlink" href="#rooms">Rooms</a>
       <a class="footlink" href="#amenities">Restaurant &amp; events</a>
+      <a class="footlink" href="#gallery">Gallery</a>
       <a class="footlink" href="#heritage">Janakpur</a>
       <a class="footlink" href="#enquire">Contact</a>
     </nav>
@@ -818,9 +892,11 @@
   <p class="footer__legal">© <span data-year>2026</span> Hotel Perfect Plaza, Janakpurdham</p>
 </footer>
 
-<!-- The phone's booking bar: rises once the hero has scrolled away. -->
+<!-- The phone's booking bar: rises once the hero has scrolled away. On
+     larger screens it becomes two floating pills in the corner — the phone
+     number and WhatsApp — and "Book now" stays in the header. -->
 <nav class="actionbar" data-actionbar aria-label="Quick contact">
-  <a class="actionbar__btn" data-tel href="#"><svg aria-hidden="true"><use href="#i-phone"/></svg>Call</a>
+  <a class="actionbar__btn" data-tel href="#"><svg aria-hidden="true"><use href="#i-phone"/></svg><span class="actionbar__word">Call</span><span class="actionbar__num" data-phone-display>+977-41-590911</span></a>
   <a class="actionbar__btn" data-whatsapp href="#"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg>WhatsApp</a>
   <a class="actionbar__btn actionbar__btn--book" href="#enquire">Book now</a>
 </nav>
@@ -841,7 +917,22 @@
   </div>
 </dialog>
 
+<!-- The gallery's photo viewer (main.js, "lightbox"). -->
+<dialog class="lightbox" data-lightbox aria-label="Photo viewer">
+  <figure class="lightbox__figure">
+    <img class="lightbox__img" data-lb-img alt="" width="1400" height="933">
+    <figcaption class="lightbox__cap"><span data-lb-cap></span> <span class="lightbox__count" data-lb-count></span></figcaption>
+  </figure>
+  <button type="button" class="lightbox__btn lightbox__btn--close" data-lb-close aria-label="Close the photo"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+  <button type="button" class="lightbox__btn lightbox__btn--prev" data-lb-prev aria-label="Previous photo"><svg aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+  <button type="button" class="lightbox__btn lightbox__btn--next" data-lb-next aria-label="Next photo"><svg aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+</dialog>
+
 <script src="assets/js/main.js" defer></script>
+<!-- After main.js: it translates the text main.js fills in, too. The Nepali
+     words are in i18n-ne.js; i18n.js does the switching. -->
+<script src="assets/js/i18n-ne.js" defer></script>
+<script src="assets/js/i18n.js" defer></script>
 <script src="assets/js/ui.js" defer></script>
 <!-- Classic, not type="module": a module loaded from disk is blocked by CORS
      when the page is opened straight from a file. See the top of scene.js. -->
