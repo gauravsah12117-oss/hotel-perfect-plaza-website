@@ -725,6 +725,30 @@ main:focus, main > section:focus { outline: none; }
 .tcard__foot strong { font-size: 1.4rem; font-weight: 600; letter-spacing: -.02em; white-space: nowrap; }
 .tcard__foot span { font-size: .84rem; color: var(--sky-ink-2); }
 
+/* The rates card at the end of the rooms row: every room type, its rate a
+   night and its breakfast, in the same frost — no photograph, so the body
+   starts at the top, clear of the arrow. */
+.tcard--rates .tcard__body { padding-top: 1.05rem; gap: .5rem; }
+.tcard--rates .tcard__title { padding-right: 2.6rem; }
+.tcard__kicker {
+  font-size: .7rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--sky-blue);
+}
+.rates { width: 100%; border-collapse: collapse; font-size: .8rem; color: var(--sky-ink); }
+.rates th, .rates td { padding: .38rem 0; text-align: left; vertical-align: baseline; }
+.rates thead th {
+  padding-top: 0; font-size: .66rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--sky-ink-2);
+}
+.rates td, .rates thead th + th { text-align: right; padding-left: .6rem; }
+.rates tbody tr { border-top: 1px solid rgba(14, 39, 71, .12); }
+.rates tbody th { font-weight: 600; line-height: 1.25; }
+.rates tbody th span { display: block; font-size: .7rem; font-weight: 400; color: var(--sky-ink-2); }
+.rates td { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rates td:nth-child(2) { font-weight: 600; }
+.tcard--rates .tcard__text { margin-top: auto; padding-top: .3rem; font-size: .76rem; }
+html[lang="ne"] :is(.tcard__kicker, .rates thead th) { text-transform: none; font-size: .78rem; }
+
 @media (hover: hover) {
   .tcard:hover {
     border-color: #fff; translate: 0 -3px;

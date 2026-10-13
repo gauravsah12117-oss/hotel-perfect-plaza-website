@@ -156,9 +156,9 @@ match what's actually in each photo):
 |---|---|---|
 | `hotel-lobby.jpg` | `Front view.JPG` | Not shown at present: "About the hotel" now has the welcome film (5b) |
 | `front-desk.jpg` | `DSC_7061.JPG` | The reception desk, in Restaurant, events and services |
-| `room-1.jpg` | `deluxe room.JPG` | Deluxe Room |
-| `room-2.jpg` | `DSC_6972.JPG` | Executive Room |
-| `room-3.jpg` | `Glass view room.JPG` | Plaza Suite |
+| `room-1.jpg` | `deluxe room.JPG` | Deluxe Twin Room |
+| `room-2.jpg` | `DSC_6972.JPG` | Deluxe Room |
+| `room-3.jpg` | `Glass view room.JPG` | Family Suite |
 | `og-image.jpg` | `Front main view.JPG`, cropped to 1200 × 630 | What appears when the link is shared |
 
 **No exterior photo was in that folder** — every photo is indoors. The building is now shown
@@ -217,7 +217,7 @@ carefully, but a native reader at the hotel should read it through once:
       fix the right-hand side in `assets/js/i18n-ne.js` (or tell me the better wording)
 - [ ] Room names are transliterated (डिलक्स कोठा, एक्जिक्युटिभ कोठा, प्लाजा सुइट) — change them
       if the hotel uses other names in Nepali
-- [ ] Prices and times use Western digits (रु. 4,500, 14:00) for clarity — say if you'd prefer
+- [ ] Prices and times use Western digits (रु. 2,500, 14:00) for clarity — say if you'd prefer
       Nepali digits (रु. ४,५००)
 
 ---
@@ -228,19 +228,38 @@ These are placeholders written to sound right. Confirm each against reality.
 
 ### Rooms — `index.html`, the room cards in the hero
 
-- [ ] Room names — currently Deluxe Room, Executive Room, Plaza Suite
-- [ ] **Rates** — currently NPR 4,500 / 6,500 / 11,000. **These are invented**
-- [ ] Room sizes — currently 26 / 34 / 52 m²
-- [ ] Occupancy and bed types
-- [ ] The details under each room
-- [ ] The **Room** list in the enquiry form uses the same names — keep them matching
-- [ ] Is breakfast included in every rate? The page says so
+**Done, from the hotel's room plan (October 2026).** Six room types, NPR a night, with
+breakfast charged on top:
+
+| Room | Night | Breakfast |
+|---|---|---|
+| Single room, non-AC | 1,500 | 1,100 |
+| Deluxe room, AC, attached bath | 2,500 | 1,100 |
+| Deluxe twin, AC | 2,800 | 1,100 |
+| Superior room, AC, triple bed | 3,500 | 1,650 |
+| Deluxe four-bed, AC | 4,000 | 2,200 |
+| Family suite ("Sweet room" on the plan), king and twin beds | 5,500 | 2,200 |
+
+Extra person NPR 800. The three types with photographs have a card each (Deluxe Room, Deluxe
+Twin Room, Family Suite); all six are in the **All rooms and rates** card at the end of the row,
+and in the enquiry form's Room list. The invented room sizes are gone, and the page no longer
+says breakfast is included.
+
+- [ ] **Which photo is which room?** I matched them by what is in each picture: the double bed
+      by the pink wall → Deluxe Room; the two single beds → Deluxe Twin Room; the room with the
+      wall of windows and a second bed → Family Suite. If the windowed room is actually the
+      Superior (triple) room, say so and I'll swap the name and price
+- [ ] **Photos of the Single, Superior and four-bed rooms** would give those three a card of
+      their own too
+- [ ] When a rate changes: the card's price, the rates card, the "from" prices (the hero's
+      opening line and the facts along its foot: lowest AC room, lowest room), and the same
+      lines in `assets/js/i18n-ne.js`
 
 ### The facts along the foot of the hero
 
 - [ ] "10 minutes' walk to the Janaki Mandir" — is that right from your door?
 - [ ] "Front desk open all night"
-- [ ] "Breakfast in every rate"
+- [x] "Rooms from NPR 1,500 a night" (was "Breakfast in every rate" — the room plan prices breakfast separately)
 - [ ] "Air-conditioned rooms"
 - [ ] "Free Wi-Fi in every room"
 - [ ] "25 minutes by air from Kathmandu" (under *Getting here*)
