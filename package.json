@@ -1,0 +1,17 @@
+{
+  "name": "hotel-perfect-plaza-website",
+  "private": true,
+  "type": "module",
+  "description": "Hotel Perfect Plaza: static site plus the booking API in /api (Vercel functions)",
+  "scripts": {
+    "dev": "node dev/server.mjs",
+    "test": "node --test \"dev/tests/*.test.mjs\""
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.0"
+  }
+}

@@ -119,6 +119,8 @@
     setButton();
     if (remember) { try { localStorage.setItem(KEY, next); } catch (e) { /* private mode */ } }
     html.classList.remove("lang-pending");
+    /* for scripts that write their own text in both languages (booking.js) */
+    document.dispatchEvent(new CustomEvent("hpp:lang", { detail: next }));
   }
 
   if (sw) sw.addEventListener("click", () => apply(lang === "ne" ? "en" : "ne", true));

@@ -10,6 +10,43 @@ of the actual hotel.
 
 ---
 
+## 0. Online booking with eSewa — to switch it on
+
+Built and tested (see README, *Online booking*). Until the steps below are done, "Book now"
+opens the booking window but it says online booking isn't available yet, and offers the
+enquiry form instead — nothing breaks.
+
+**To make it work in test mode (no real money):**
+- [ ] On Vercel: **Storage → Create → Neon (Postgres)**, connect it to this project. That sets
+      `DATABASE_URL`
+- [ ] Add `ADMIN_PASSWORD` (Settings → Environment Variables): the front desk's password
+- [ ] Open **/admin.html**, sign in, and enter **how many rooms of each type** the hotel has.
+      Until then every room shows as unavailable
+- [ ] **Max guests per room** are set in `api/_lib/rooms.js` as Single 1, Deluxe 2, Twin 2,
+      Superior 3, Four-bed 4, Family suite 4 (plus one extra person at NPR 800). Correct these
+- [ ] Try a booking, paying with eSewa's test account (README, *Testing a payment*)
+
+**Emails** (the guest's confirmation and the hotel's copy):
+- [ ] Make a free account at **resend.com**, add the domain (hotelperfectplaza.com) and put the
+      DNS records it shows into the domain's settings; then set `RESEND_API_KEY` and `MAIL_FROM`
+      on Vercel
+
+**Before taking real money:**
+- [ ] **eSewa merchant account** — apply with eSewa (business registration and PAN). They give
+      a **merchant code** and **secret key**: set `ESEWA_PRODUCT_CODE`, `ESEWA_SECRET` and
+      `ESEWA_MODE=live`, redeploy, and make one small real booking to check, then cancel and
+      refund it
+- [ ] **Your cancellation and refund policy.** The booking window shows a placeholder: "refunds
+      follow the hotel's cancellation policy, which the front desk will explain". Guests pay in
+      full, so they should see the real policy before paying — send it and I'll put it in
+      (English and Nepali)
+- [ ] **VAT and service charge** — the room plan's prices are charged as they are. If 13% VAT or
+      10% service should be added, say so (`api/_lib/rooms.js`)
+- [ ] Every booking that doesn't come through the website — walk-ins, phone, travel agents —
+      must be entered in /admin.html, or the website may sell a room that's already taken
+
+---
+
 ## 1. Check what the page promises — before anything else
 
 The new design asked for a weddings & banquets section and a guest-care section. I wrote them

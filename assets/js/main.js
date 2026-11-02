@@ -327,6 +327,11 @@ window.HPP = (function () {
       linkDates(aIn, aOut);
       bar.addEventListener("submit", e => {
         e.preventDefault();
+        /* online booking (booking.js), when the page has it */
+        if (window.HPP_BOOK) {
+          window.HPP_BOOK.open({ checkIn: aIn && aIn.value, checkOut: aOut && aOut.value, guests: aGuests && aGuests.value });
+          return;
+        }
         if (aIn && aIn.value && fIn) fIn.value = aIn.value;
         if (aOut && aOut.value && fOut) fOut.value = aOut.value;
         if (aGuests && aGuests.value && fGuests) fGuests.value = aGuests.value;
@@ -338,6 +343,15 @@ window.HPP = (function () {
       link.addEventListener("click", e => {
         e.preventDefault();
         const wanted = link.dataset.room;
+        /* a room type (or the rates card): book it online; weddings,
+           meetings and festival dates still go to the enquiry form */
+        const book = window.HPP_BOOK;
+        if (book && (book.isRoom(wanted) || wanted === "Not sure yet")) {
+          const v = sel => { const el = $(sel); return el && el.value; };
+          book.open({ room: wanted === "Not sure yet" ? null : wanted,
+            checkIn: v("[data-avail-in]"), checkOut: v("[data-avail-out]"), guests: v("[data-avail-guests]") });
+          return;
+        }
         if (fRoom && wanted) {
           const match = Array.from(fRoom.options).find(o => o.value === wanted || o.text === wanted);
           if (match) fRoom.value = match.value;

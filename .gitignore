@@ -6,3 +6,7 @@ desktop.ini
 .vercel
 .env*
 .claude/
+
+# booking backend
+node_modules
+dev/.data

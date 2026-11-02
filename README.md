@@ -27,6 +27,7 @@ hotel's own photographs matter most.
 | `index.html` | The page |
 | `assets/css/site.css` | The whole look: colours, type, layout, buttons, cards, form states |
 | `assets/js/main.js` | Contact details, the booking handoff, the enquiry form, dates, missing-photo fallback |
+| `api/`, `booking.html`, `admin.html`, `assets/js/booking.js` | Online booking with eSewa — see *Online booking* below |
 | `assets/js/ui.js` | The tabs (the hero's cards and the facilities), the card rows' arrows, the scroll reveal, the nav link that follows the section in view |
 | `assets/js/i18n.js` | The English ⇄ नेपाली switch in the header |
 | `assets/js/i18n-ne.js` | The Nepali text: English on the left, Nepali on the right — edit the right-hand side to improve a translation |
@@ -121,23 +122,82 @@ there is a real photograph behind it to frost.
 
 ## How the booking flow works
 
-There is no booking engine. Three paths lead to you:
+Guests can **book and pay online**. Everything else still reaches you as an enquiry.
 
-1. **The availability bar** in the hero, under the headline. A guest picks dates and guests,
-   presses the button, and the page carries those values down into the enquiry form so nothing
-   is typed twice.
-2. **The enquiry form** emails you through Formspree. While `formspreeId` is empty it opens
-   WhatsApp with the enquiry already written out instead, so the form is never a dead end.
+1. **Online booking** — "Book now", the availability bar in the hero, and every room card open
+   **Book your stay**: pick dates and guests, see which room types are free and what they cost,
+   choose one (and breakfast), enter name, email and phone, then **pay the full amount with
+   eSewa**. eSewa sends the guest back to `booking.html`, which shows the confirmation and a
+   button to send the booking to the hotel on WhatsApp. The hotel and the guest are emailed.
+2. **The enquiry form** for everything else: weddings, meetings, festival dates, questions. It
+   emails you through Formspree; while `formspreeId` is empty it opens WhatsApp with the
+   enquiry already written out instead, so the form is never a dead end.
 3. **WhatsApp and Call** — in the contact section, the footer, the phone menu, and a bar that
    rises from the bottom of the screen on phones (two floating pills on larger screens).
 
-Every room card in the hero, the **Vivaha Panchami**, **Weddings and functions** and **Meeting
-room** cards, **Ask about festival dates** under Vivaha Panchami, and **Enquire about an event**
-under Weddings pre-select the matching option in the form. The restaurant and front-desk cards
-open those tabs in the facilities section instead.
+The room cards and the rates card open online booking with that room picked; the **Vivaha
+Panchami**, **Weddings and functions** and **Meeting room** cards, **Ask about festival dates**
+and **Enquire about an event** pre-select the matching option in the enquiry form. The
+restaurant and front-desk cards open those tabs in the facilities section instead.
 
 Dates are built from local parts, never `toISOString()`: Nepal is UTC+5:45, and converting to
 UTC rolls the date back a day.
+
+---
+
+## Online booking: how it works, and setting it up
+
+The site is still plain files; online booking adds a small server part, the files in `api/`,
+which Vercel runs as "serverless functions", and a free Postgres database (Neon).
+
+| File | What it does |
+|---|---|
+| `api/_lib/rooms.js` | **The rate card** — room names, nightly rates, breakfast, extra person, VAT/service (0 for now), limits. The server works out every price from here. Change a rate here *and* on the page |
+| `api/availability.js` | Which room types are free for some dates, with prices |
+| `api/book.js` | Holds the rooms for 20 minutes and returns the signed eSewa form |
+| `api/esewa-verify.js` | When the guest is back from eSewa: confirms the payment **with eSewa itself**, marks it paid, emails the hotel and the guest (once) |
+| `api/esewa-failed.js` | The guest left eSewa without paying: frees the rooms at once |
+| `api/admin.js` | The front desk's page, `admin.html` |
+| `api/_lib/db.js`, `bookings.js` | The database (it creates its own tables) and how rooms are counted |
+| `api/_lib/esewa.js`, `mail.js` | eSewa (signing and checking payments) and the emails (Resend) |
+| `assets/js/booking.js` | The "Book your stay" dialog |
+| `booking.html`, `assets/js/booking-result.js` | Where eSewa sends the guest back |
+| `admin.html`, `assets/js/admin.js` | The front desk: bookings, rooms free night by night, walk-ins, room counts |
+| `dev/` | Testing on this computer (not deployed): `npm install`, then `npm test`, or `npm run dev` for the whole site with booking at http://localhost:3000 |
+
+**How rooms are counted.** Nothing is stored as "available"; it is counted each time. A room
+type is taken on a night by every paid booking, every front-desk entry, and every booking being
+paid right now (held 20 minutes — an eSewa payment session lasts 15). Each booking is written
+under a lock and the count re-checked, so two guests can never both get the last room. If a
+guest pays after their hold ran out and the room was sold meanwhile, the booking is marked
+**PAID — OVERBOOKED** and the hotel is emailed to call them.
+
+**Walk-ins and phone bookings must go into `admin.html`** ("Walk-in, phone booking, or rooms out
+of use") — the website only knows what it is told. Same for rooms out of order.
+
+**Refunds** are made in the eSewa merchant portal (merchant.esewa.com.np); cancelling in
+`admin.html` only frees the room.
+
+### Settings (Vercel → the project → Settings → Environment Variables)
+
+| Name | What | |
+|---|---|---|
+| `DATABASE_URL` | Set for you when you add **Neon** from Vercel → Storage (free) | required |
+| `ADMIN_PASSWORD` | The front desk's password for `admin.html` — long and private | required |
+| `ESEWA_MODE` | `test` (eSewa's test system, no real money) or `live` | default `test` |
+| `ESEWA_PRODUCT_CODE`, `ESEWA_SECRET` | The merchant code and secret key from eSewa — **only** for `live` | live only |
+| `RESEND_API_KEY` | From resend.com — without it no emails are sent (bookings still work and show in `admin.html`) | for email |
+| `MAIL_FROM` | e.g. `Hotel Perfect Plaza <bookings@hotelperfectplaza.com>` — the domain must be verified in Resend | for email |
+| `HOTEL_EMAIL` | Where bookings are emailed; default `hotelperfectplaza@gmail.com` | optional |
+
+After changing a setting, redeploy (Vercel → Deployments → ⋯ → Redeploy).
+
+### Testing a payment on eSewa's test system
+
+With `ESEWA_MODE=test`, book a room on the site and pay with eSewa's test account: **eSewa ID
+9711111111**, **password Nepal@123**, **MPIN 1122**, **token 123456**. eSewa's test login has a
+"not a robot" box, so this part is done by hand. Each payment attempt needs a fresh booking
+(eSewa refuses to see the same transaction twice).
 
 ---
 

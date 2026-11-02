@@ -37,7 +37,7 @@
 <title>Hotel Perfect Plaza — Hotel in Janakpurdham, Nepal</title>
 <meta name="description" content="Hotel Perfect Plaza, Janakpurdham — ten minutes' walk from the Janaki Mandir. Rooms from NPR 1,500 a night, a restaurant, weddings and functions, and a front desk open all night.">
 <meta name="theme-color" content="#0B0F19">
-<link rel="canonical" href="https://hotel-perfect-plaza-website.vercel.app/">
+<link rel="canonical" href="https://www.hotelperfectplaza.com/">
 <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/favicon/apple-touch-icon.png">
 
@@ -45,8 +45,8 @@
 <meta property="og:site_name" content="Hotel Perfect Plaza">
 <meta property="og:title" content="Hotel Perfect Plaza — For Perfect Satisfaction">
 <meta property="og:description" content="A hotel in Janakpurdham, ten minutes' walk from the Janaki Mandir.">
-<meta property="og:url" content="https://hotel-perfect-plaza-website.vercel.app/">
-<meta property="og:image" content="assets/images/og-image.jpg">
+<meta property="og:url" content="https://www.hotelperfectplaza.com/">
+<meta property="og:image" content="https://www.hotelperfectplaza.com/assets/images/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -167,7 +167,7 @@
            switch it no longer fits at any width. On wide screens it floats in
            the corner with WhatsApp instead (the action bar, below); on phones
            and tablets it is in the menu. -->
-      <a class="btn masthead__book" href="#enquire">Book now</a>
+      <a class="btn masthead__book" href="#enquire" data-book-open>Book now</a>
 
       <button class="burger" type="button" data-burger aria-expanded="false" aria-controls="drawer">
         <span class="sr-only">Open menu</span>
@@ -186,7 +186,7 @@
     <a class="drawer__link" href="#enquire">Contact</a>
   </nav>
   <div class="drawer__foot">
-    <a class="btn btn--block" href="#enquire">Book now</a>
+    <a class="btn btn--block" href="#enquire" data-book-open>Book now</a>
     <a class="drawer__tel" data-tel href="#">Call <span data-phone-display>+977-41-590911</span></a>
   </div>
 </div>
@@ -927,7 +927,7 @@
 <nav class="actionbar" data-actionbar aria-label="Quick contact">
   <a class="actionbar__btn" data-tel href="#"><svg aria-hidden="true"><use href="#i-phone"/></svg><span class="actionbar__word">Call</span><span class="actionbar__num" data-phone-display>+977-41-590911</span></a>
   <a class="actionbar__btn" data-whatsapp href="#"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg>WhatsApp</a>
-  <a class="actionbar__btn actionbar__btn--book" href="#enquire">Book now</a>
+  <a class="actionbar__btn actionbar__btn--book" href="#enquire" data-book-open>Book now</a>
 </nav>
 
 <!-- The full hotel tour, with sound, opened by "Watch the hotel tour" in the
@@ -943,6 +943,94 @@
     </div>
     <video class="tour__video" controls playsinline preload="none" width="1280" height="720"
            poster="assets/video/hotel-tour-poster.jpg" data-src="assets/video/hotel-tour.mp4"></video>
+  </div>
+</dialog>
+
+<!-- ============================================================ BOOKING -->
+<!-- "Book your stay" (booking.js): dates → a room → the guest's details →
+     eSewa. Opened by "Book now", the hero's availability bar and the room
+     cards. The rooms list, prices and messages are written by booking.js;
+     prices come from the server (api/_lib/rooms.js). -->
+<dialog class="book" data-booking aria-labelledby="book-title">
+  <div class="book__box">
+    <header class="book__head">
+      <div>
+        <p class="book__kicker">Hotel Perfect Plaza</p>
+        <h2 class="book__title" id="book-title">Book your stay</h2>
+      </div>
+      <button type="button" class="book__close" data-booking-close aria-label="Close booking"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+    </header>
+    <ol class="book__steps" aria-hidden="true">
+      <li data-step-mark="1" class="is-on">Room</li>
+      <li data-step-mark="2">Your details</li>
+      <li data-step-mark="3">Pay</li>
+    </ol>
+
+    <form class="book__step" data-step="1" novalidate>
+      <div class="book__dates">
+        <div class="field"><label for="b-in">Check-in</label><input id="b-in" type="date" required></div>
+        <div class="field"><label for="b-out">Check-out</label><input id="b-out" type="date" required></div>
+        <div class="field"><label for="b-guests">Guests</label><input id="b-guests" type="number" min="1" max="20" value="2" inputmode="numeric"></div>
+      </div>
+      <p class="book__status" data-book-status role="status" aria-live="polite"></p>
+      <fieldset class="book__rooms">
+        <legend class="sr-only">Choose a room</legend>
+        <div data-book-rooms></div>
+      </fieldset>
+      <div class="book__bar">
+        <p class="book__total" data-book-total aria-live="polite"></p>
+        <button class="btn" type="submit">Continue</button>
+      </div>
+    </form>
+
+    <form class="book__step" data-step="2" novalidate hidden>
+      <div class="book__summary" data-book-summary></div>
+      <div class="form-grid">
+        <div class="field field--wide">
+          <label for="b-name">Your name</label>
+          <input id="b-name" type="text" autocomplete="name" required>
+          <p class="field__err" data-err="b-name" hidden>Add your name so we know who to write back to.</p>
+        </div>
+        <div class="field">
+          <label for="b-email">Email</label>
+          <input id="b-email" type="email" autocomplete="email" required>
+          <p class="field__err" data-err="b-email" hidden>Check the email address — we could not read that one.</p>
+        </div>
+        <div class="field">
+          <label for="b-phone">Phone or WhatsApp</label>
+          <input id="b-phone" type="tel" autocomplete="tel" required>
+          <p class="field__err" data-err="b-phone" hidden>Add a phone number we can reach you on.</p>
+        </div>
+        <div class="field field--wide">
+          <label for="b-notes">Message <span class="field__opt">(optional)</span></label>
+          <textarea id="b-notes" rows="2"></textarea>
+        </div>
+      </div>
+      <!-- The booking terms. Replace with the hotel's own cancellation and
+           refund policy (CONTENT-TODO, "Online booking"). -->
+      <div class="book__terms">
+        <p>You pay the full amount now, through eSewa. Check-in is from 14:00 and check-out by 12:00. To change or cancel, call or WhatsApp the hotel with your booking number; refunds follow the hotel's cancellation policy, which the front desk will explain.</p>
+      </div>
+      <div class="field book__accept">
+        <label><input id="b-accept" type="checkbox"> <span>I agree to the booking terms</span></label>
+        <p class="field__err" data-err="b-accept" hidden>Please tick to agree to the booking terms.</p>
+      </div>
+      <div class="hp" aria-hidden="true">
+        <label for="b-website">Leave this empty</label>
+        <input id="b-website" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="book__test" data-book-test hidden>Test mode: payments go to eSewa's test system and no real money is taken.</p>
+      <p class="book__status" data-book-status2 role="status" aria-live="polite"></p>
+      <div class="book__bar">
+        <button type="button" class="book__back" data-book-back>Back</button>
+        <button class="btn book__pay" type="submit" data-book-pay>Pay with eSewa</button>
+      </div>
+    </form>
+
+    <div class="book__step book__going" data-step="3" hidden>
+      <span class="book__spinner" aria-hidden="true"></span>
+      <p data-book-going role="status">Taking you to eSewa to pay…</p>
+    </div>
   </div>
 </dialog>
 
@@ -962,6 +1050,8 @@
      words are in i18n-ne.js; i18n.js does the switching. -->
 <script src="assets/js/i18n-ne.js" defer></script>
 <script src="assets/js/i18n.js" defer></script>
+<!-- Online booking: after i18n.js, which it asks for the language. -->
+<script src="assets/js/booking.js" defer></script>
 <script src="assets/js/ui.js" defer></script>
 <!-- Classic, not type="module": a module loaded from disk is blocked by CORS
      when the page is opened straight from a file. See the top of scene.js. -->

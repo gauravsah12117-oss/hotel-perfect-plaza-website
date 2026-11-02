@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Where eSewa sends a guest back after paying (or not). booking-result.js
+     asks the server to confirm the payment with eSewa, then shows the
+     booking. Not a page to find from a search engine. -->
+<meta name="robots" content="noindex">
+<script>
+  (function () {
+    var lang = null;
+    try { lang = localStorage.getItem("hpp-lang"); } catch (e) {}
+    if (lang !== "ne" && lang !== "en") lang = /^ne\b/i.test(navigator.language || "") ? "ne" : "en";
+    if (lang !== "ne") return;
+    var html = document.documentElement;
+    html.classList.add("lang-pending");
+    setTimeout(function () { html.classList.remove("lang-pending"); }, 2500);
+  })();
+</script>
+<title>Your booking — Hotel Perfect Plaza</title>
+<meta name="theme-color" content="#0B0F19">
+<link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body class="result-page">
+
+<svg class="sprite" aria-hidden="true" focusable="false" width="0" height="0">
+  <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.5 3.9 5.5 3.9 9s-1.3 6.5-3.9 9c-2.6-2.5-3.9-5.5-3.9-9s1.3-6.5 3.9-9Z"/></g></symbol>
+  <symbol id="i-whatsapp" viewBox="0 0 24 24"><path fill="currentColor" d="M12.04 2C6.6 2 2.2 6.4 2.2 11.84c0 1.74.46 3.42 1.32 4.9L2.05 22l5.4-1.42a9.8 9.8 0 0 0 4.59 1.16h.01c5.43 0 9.84-4.4 9.84-9.84 0-2.63-1.03-5.1-2.89-6.96A9.78 9.78 0 0 0 12.04 2Zm0 1.8c2.15 0 4.17.84 5.69 2.36a7.99 7.99 0 0 1 2.35 5.68c0 4.45-3.6 8.05-8.04 8.05a8.1 8.1 0 0 1-4.1-1.12l-.3-.17-3.05.8.81-2.97-.19-.3a8 8 0 0 1-1.22-4.29c0-4.44 3.6-8.04 8.05-8.04Zm-2.4 4.06c-.2 0-.52.08-.79.38-.27.3-1.03 1-1.03 2.45s1.06 2.84 1.2 3.04c.15.2 2.05 3.13 4.97 4.27 2.42.95 2.92.76 3.45.71.53-.05 1.7-.69 1.94-1.36.24-.67.24-1.24.17-1.36-.07-.12-.27-.2-.56-.34-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.76.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.38-1.47-.88-.78-1.47-1.75-1.65-2.05-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.02-.53-.08-.15-.66-1.6-.9-2.2-.24-.57-.48-.5-.66-.5h-.35Z"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h3l2 5-2.5 1.5a12 12 0 0 0 5 5L15 12l5 2v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4 5.2 2 2 0 0 1 6 3Z"/></g></symbol>
+</svg>
+
+<header class="result-head">
+  <a href="./" class="result-head__logo" aria-label="Hotel Perfect Plaza — home">
+    <img src="assets/images/hotel-logo.png" alt="" width="762" height="288">
+  </a>
+  <button class="lang" type="button" data-lang-switch translate="no">
+    <svg aria-hidden="true"><use href="#i-globe"/></svg>
+    <span class="lang__label" lang="ne" data-lang-label>नेपाली</span>
+  </button>
+</header>
+
+<main class="result" id="main">
+  <!-- booking-result.js writes the outcome here. The text below is what a
+       visitor without script sees. -->
+  <div class="result__card" data-result aria-live="polite">
+    <span class="book__spinner" aria-hidden="true"></span>
+    <h1 class="result__title">Checking your payment…</h1>
+    <p>This takes a few seconds. If nothing happens, call us on <a data-tel href="tel:+97741590911"><span data-phone-display>+977-41-590911</span></a>.</p>
+  </div>
+</main>
+
+<footer class="result-foot">
+  <p>Hotel Perfect Plaza · Ramanand Chowk-9, Janakpurdham · <a data-tel href="tel:+97741590911"><span data-phone-display>+977-41-590911</span></a> · <a data-whatsapp href="https://wa.me/9779854022215">WhatsApp</a></p>
+</footer>
+
+<script src="assets/js/main.js" defer></script>
+<script src="assets/js/i18n-ne.js" defer></script>
+<script src="assets/js/i18n.js" defer></script>
+<script src="assets/js/booking-result.js" defer></script>
+</body>
+</html>

@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /admin.html
+Disallow: /booking.html
+Disallow: /api/
 
-Sitemap: https://hotel-perfect-plaza-website.vercel.app/sitemap.xml
+Sitemap: https://www.hotelperfectplaza.com/sitemap.xml

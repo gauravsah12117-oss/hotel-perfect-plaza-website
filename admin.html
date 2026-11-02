@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The front desk's page: bookings, rooms free, walk-ins, room counts.
+     Password: ADMIN_PASSWORD in Vercel's settings (see README, "Online
+     booking"). Never linked from the site, and kept out of search. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Bookings — Hotel Perfect Plaza</title>
+<link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+<header class="top">
+  <strong>Hotel Perfect Plaza · Bookings</strong>
+  <span class="top__mode" data-mode hidden></span>
+  <button type="button" class="link" data-logout hidden>Sign out</button>
+</header>
+
+<main>
+  <!-- sign in -->
+  <form class="card login" data-login>
+    <h1>Front desk sign in</h1>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" required>
+    <button class="btn" type="submit">Sign in</button>
+    <p class="msg" data-login-msg role="status"></p>
+  </form>
+
+  <div data-app hidden>
+    <!-- rooms free, night by night -->
+    <section class="card">
+      <div class="row">
+        <h2>Rooms free</h2>
+        <label class="inline">From <input type="date" data-grid-from></label>
+      </div>
+      <p class="hint">Rooms still free online, per night. A paid booking, a booking being paid right now (held for 20 minutes) or a block below each take a room. Red means overbooked.</p>
+      <div class="scroll"><table class="grid" data-grid></table></div>
+    </section>
+
+    <!-- bookings -->
+    <section class="card">
+      <div class="row">
+        <h2>Bookings</h2>
+        <label class="inline">From <input type="date" data-list-from></label>
+        <label class="inline">To <input type="date" data-list-to></label>
+        <label class="inline"><input type="checkbox" data-list-all> Show unpaid and cancelled</label>
+      </div>
+      <p class="hint">Staying in these dates, or made in the last 3 days. Cancelling frees the rooms; refund eSewa payments from the eSewa merchant portal (merchant.esewa.com.np).</p>
+      <div class="scroll"><table class="list" data-list></table></div>
+      <p class="msg" data-list-msg role="status"></p>
+    </section>
+
+    <!-- walk-ins and blocks -->
+    <section class="card">
+      <h2>Walk-in, phone booking, or rooms out of use</h2>
+      <p class="hint">Takes rooms off the website for these nights. Use it for every booking that doesn't come through the website, so online guests can't book a room that's already taken.</p>
+      <form class="form" data-block>
+        <label>Room type <select name="room" data-room-select required></select></label>
+        <label>Rooms <input name="rooms" type="number" min="1" max="100" value="1" required></label>
+        <label>Check-in <input name="checkIn" type="date" required></label>
+        <label>Check-out <input name="checkOut" type="date" required></label>
+        <label>Guest name <input name="name" type="text" placeholder="or: Maintenance"></label>
+        <label>Phone <input name="phone" type="tel"></label>
+        <label>Amount (NPR) <input name="amount" type="number" min="0" step="1" placeholder="optional"></label>
+        <label class="wide">Notes <input name="notes" type="text"></label>
+        <label class="wide check"><input name="force" type="checkbox"> Record it even if the website shows these rooms as full</label>
+        <button class="btn" type="submit">Take these rooms</button>
+        <p class="msg wide" data-block-msg role="status"></p>
+      </form>
+    </section>
+
+    <!-- room counts -->
+    <section class="card">
+      <h2>How many rooms the hotel has</h2>
+      <p class="hint">The website never sells more than this. Set a type to 0 to stop selling it online.</p>
+      <form class="form" data-rooms>
+        <div class="counts wide" data-counts></div>
+        <button class="btn" type="submit">Save room counts</button>
+        <p class="msg wide" data-rooms-msg role="status"></p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<script src="assets/js/admin.js" defer></script>
+</body>
+</html>
