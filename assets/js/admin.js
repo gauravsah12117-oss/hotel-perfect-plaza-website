@@ -55,6 +55,9 @@
   async function loadRooms() {
     const r = await api("rooms");
     rooms = r.json.rooms || [];
+    const mode = $("[data-mode]");
+    mode.hidden = false;
+    mode.textContent = r.json.payment === "live" ? "eSewa LIVE — guests can book online" : "eSewa TEST mode — guests can't book online yet; open the site with ?booking-test=1 to try it";
     const box = $("[data-counts]"); box.textContent = "";
     const sel = $("[data-room-select]"); sel.textContent = "";
     rooms.forEach(rm => {

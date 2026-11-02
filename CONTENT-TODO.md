@@ -12,9 +12,11 @@ of the actual hotel.
 
 ## 0. Online booking with eSewa — to switch it on
 
-Built, tested, and already on the website — but switched off until the first steps below are
-done: until then "Book now" goes to the enquiry form exactly as before. It switches itself on
-as soon as the database is connected and at least one room is entered in /admin.html.
+Built, tested, and already on the website — but switched off for guests until it can take real
+money: until then "Book now" goes to the enquiry form exactly as before. It switches on **for
+you** to try as soon as the database is connected and rooms are entered in /admin.html — open
+the site once as **www.hotelperfectplaza.com/?booking-test=1** (payments go to eSewa's test
+system). It switches on **for every guest** once the eSewa merchant keys are in (`ESEWA_MODE=live`).
 
 **To make it work in test mode (no real money):**
 - [ ] On Vercel: **Storage → Create → Neon (Postgres)**, connect it to this project. That sets

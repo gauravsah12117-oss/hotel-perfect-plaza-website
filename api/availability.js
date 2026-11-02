@@ -10,14 +10,18 @@ import { json, handle, only } from "./_lib/http.js";
 export default handle(async (req, res) => {
   if (!only(req, res, "GET")) return;
 
-  /* ?ping=1 — is online booking switched on? Yes once the database is
-     connected and staff have entered at least one room on admin.html.
+  /* ?ping=1 — is online booking switched on? For everyone once the
+     database is connected, staff have entered rooms on admin.html, AND
+     eSewa is in live mode. While eSewa is in test mode, only for browsers
+     that opened the site once with ?booking-test=1 (the hotel, trying it
+     out): real guests must never meet eSewa's test payment page.
      Until then booking.js leaves "Book now" going to the enquiry form. */
   if (req.query.ping) {
-    let ready = false;
-    try { ready = Number((await q(`SELECT COALESCE(SUM(count), 0)::int AS n FROM room_types`))[0].n) > 0; } catch (e) { ready = false; }
-    let payment = null; try { payment = config().mode; } catch (e) { ready = false; }
-    return json(res, 200, { ready, payment });
+    let rooms = false, payment = null;
+    try { rooms = Number((await q(`SELECT COALESCE(SUM(count), 0)::int AS n FROM room_types`))[0].n) > 0; } catch (e) { rooms = false; }
+    try { payment = config().mode; } catch (e) { payment = null; }
+    const ready = rooms && (payment === "live" || (payment === "test" && req.query.test === "1"));
+    return json(res, 200, { ready, rooms, payment });
   }
 
   const checkIn = String(req.query.in || ""), checkOut = String(req.query.out || "");

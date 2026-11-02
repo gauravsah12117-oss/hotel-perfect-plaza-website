@@ -439,7 +439,20 @@
   const wantsBook = new URLSearchParams(location.search).has("book");   /* "Try again" on booking.html */
   if (wantsBook) { try { history.replaceState(history.state, "", location.pathname); } catch (e) {} }
 
-  fetch("/api/availability?ping=1", { headers: { Accept: "application/json" } })
+  /* While eSewa is in test mode, online booking shows only in a browser
+     that has opened the site once with ?booking-test=1 (and ?booking-test=0
+     turns that off again) — so the hotel can try it without guests seeing
+     eSewa's test payment page. */
+  let tester = false;
+  try {
+    const flag = new URLSearchParams(location.search).get("booking-test");
+    if (flag === "1") localStorage.setItem("hpp-booking-test", "1");
+    if (flag === "0") localStorage.removeItem("hpp-booking-test");
+    if (flag !== null) history.replaceState(history.state, "", location.pathname);
+    tester = localStorage.getItem("hpp-booking-test") === "1";
+  } catch (e) { /* private mode: no tester */ }
+
+  fetch("/api/availability?ping=1" + (tester ? "&test=1" : ""), { headers: { Accept: "application/json" } })
     .then(r => r.ok ? r.json() : null)
     .then(j => {
       if (!j || !j.ready) return;

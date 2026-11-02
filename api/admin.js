@@ -14,6 +14,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { q, BOOKING_COLS, HOLDING } from "./_lib/db.js";
 import { createBooking } from "./_lib/bookings.js";
 import { ROOMS, byCode, parseDay, todayNepal } from "./_lib/rooms.js";
+import { config as esewaConfig } from "./_lib/esewa.js";
 import { json, body, handle, clean, cleanText } from "./_lib/http.js";
 
 const digest = s => createHash("sha256").update(String(s)).digest();
@@ -75,7 +76,8 @@ export default handle(async (req, res) => {
       }
     }
     const rows = await q(`SELECT code, count FROM room_types`);
-    return json(res, 200, { rooms: ROOMS.map(r => ({ code: r.code, name: r.name, count: Number((rows.find(x => x.code === r.code) || {}).count || 0) })) });
+    let payment = null; try { payment = esewaConfig().mode; } catch (e) {}
+    return json(res, 200, { payment, rooms: ROOMS.map(r => ({ code: r.code, name: r.name, count: Number((rows.find(x => x.code === r.code) || {}).count || 0) })) });
   }
 
   if (req.method === "POST" && action === "block") {

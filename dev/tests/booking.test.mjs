@@ -235,8 +235,13 @@ test("admin: password, walk-in blocks, the grid, cancelling", async () => {
   assert.equal((await book()).status, 200, "cancelled blocks free the room");
 });
 
-test("online booking switches on only once rooms are entered", async () => {
-  assert.equal((await call(availabilityRoute, { query: { ping: "1" } })).json.ready, true);
+test("online booking: for testers while eSewa is in test mode, for everyone once live, never without rooms", async () => {
+  const ping = q => call(availabilityRoute, { query: { ping: "1", ...q } }).then(r => r.json.ready);
+  assert.equal(await ping(), false, "test mode: guests don't see it");
+  assert.equal(await ping({ test: "1" }), true, "test mode: the hotel can try it");
+  process.env.ESEWA_MODE = "live"; process.env.ESEWA_PRODUCT_CODE = "X"; process.env.ESEWA_SECRET = "Y";
+  try { assert.equal(await ping(), true, "live: everyone"); }
+  finally { delete process.env.ESEWA_MODE; delete process.env.ESEWA_PRODUCT_CODE; delete process.env.ESEWA_SECRET; }
   await admin({ method: "POST", query: { action: "rooms" }, body: { counts: { deluxe: 0, twin: 0, suite: 0 } } });
-  assert.equal((await call(availabilityRoute, { query: { ping: "1" } })).json.ready, false);
+  assert.equal(await ping({ test: "1" }), false, "no rooms entered: off");
 });
