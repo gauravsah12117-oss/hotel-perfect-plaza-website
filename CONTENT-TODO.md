@@ -12,9 +12,9 @@ of the actual hotel.
 
 ## 0. Online booking with eSewa — to switch it on
 
-Built and tested (see README, *Online booking*). Until the steps below are done, "Book now"
-opens the booking window but it says online booking isn't available yet, and offers the
-enquiry form instead — nothing breaks.
+Built, tested, and already on the website — but switched off until the first steps below are
+done: until then "Book now" goes to the enquiry form exactly as before. It switches itself on
+as soon as the database is connected and at least one room is entered in /admin.html.
 
 **To make it work in test mode (no real money):**
 - [ ] On Vercel: **Storage → Create → Neon (Postgres)**, connect it to this project. That sets

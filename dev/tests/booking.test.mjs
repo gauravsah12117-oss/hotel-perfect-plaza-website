@@ -234,3 +234,9 @@ test("admin: password, walk-in blocks, the grid, cancelling", async () => {
   for (const bk of list.json.bookings) assert.equal((await admin({ method: "POST", query: { action: "cancel" }, body: { id: bk.id } })).status, 200);
   assert.equal((await book()).status, 200, "cancelled blocks free the room");
 });
+
+test("online booking switches on only once rooms are entered", async () => {
+  assert.equal((await call(availabilityRoute, { query: { ping: "1" } })).json.ready, true);
+  await admin({ method: "POST", query: { action: "rooms" }, body: { counts: { deluxe: 0, twin: 0, suite: 0 } } });
+  assert.equal((await call(availabilityRoute, { query: { ping: "1" } })).json.ready, false);
+});

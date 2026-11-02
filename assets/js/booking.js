@@ -15,8 +15,10 @@
    Prices shown here are worked out the same way as on the server
    (api/_lib/rooms.js), but the server's total is the one charged.
 
-   Without the booking API (the page opened from disk, or the API down) the
-   dialog says so and offers the enquiry form instead.
+   It only switches on once /api/availability?ping=1 says booking is set
+   up (see the foot of this file); until then "Book now" goes to the
+   enquiry form as before. If the server stops answering later, the dialog
+   says so and offers the enquiry form instead.
 
    Text the script writes is in both languages here (T); text in the
    dialog's markup is translated by i18n.js like the rest of the page.
@@ -416,7 +418,7 @@
 
   document.addEventListener("click", e => {
     const b = e.target.closest("[data-book-open]");
-    if (!b || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    if (!ready || !b || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault();
     open({ room: b.dataset.bookOpen || null });
   }, true);   /* capture: before main.js scrolls the link to the enquiry form */
@@ -428,16 +430,26 @@
     if (down) unavailable("down"); else if (data) render(); else load();
   });
 
-  /* index.html?book=1 (from booking.html's "Try again") opens the dialog */
-  const params = new URLSearchParams(location.search);
-  if (params.has("book")) {
-    try { history.replaceState(history.state, "", location.pathname); } catch (e) {}
-    window.addEventListener("load", () => open({}), { once: true });
-  }
+  /* Online booking switches itself on: only once the server says it is
+     ready (database connected, rooms entered on admin.html) do "Book now",
+     the hero bar and the room cards open this dialog. Until then — or with
+     no server at all, as when the page is opened from disk — they go to
+     the enquiry form as they always have. */
+  let ready = false;
+  const wantsBook = new URLSearchParams(location.search).has("book");   /* "Try again" on booking.html */
+  if (wantsBook) { try { history.replaceState(history.state, "", location.pathname); } catch (e) {} }
 
-  window.HPP_BOOK = {
-    open,
-    /* main.js: is this a room type the dialog can book? */
-    isRoom: name => /^(Single Room|Deluxe Room|Deluxe Twin Room|Superior Room|Deluxe Four-Bed Room|Family Suite) — /.test(name || "")
-  };
+  fetch("/api/availability?ping=1", { headers: { Accept: "application/json" } })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j || !j.ready) return;
+      ready = true;
+      window.HPP_BOOK = {
+        open,
+        /* main.js: is this a room type the dialog can book? */
+        isRoom: name => /^(Single Room|Deluxe Room|Deluxe Twin Room|Superior Room|Deluxe Four-Bed Room|Family Suite) — /.test(name || "")
+      };
+      if (wantsBook) open({});
+    })
+    .catch(() => { /* no booking server: the enquiry form it is */ });
 })();

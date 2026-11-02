@@ -172,6 +172,10 @@ under a lock and the count re-checked, so two guests can never both get the last
 guest pays after their hold ran out and the room was sold meanwhile, the booking is marked
 **PAID — OVERBOOKED** and the hotel is emailed to call them.
 
+**It switches itself on.** Each page asks `/api/availability?ping=1` whether booking is set up
+(database connected, at least one room entered in `admin.html`). Until it is — or if the server
+is unreachable — "Book now" and the room cards go to the enquiry form as they always did.
+
 **Walk-ins and phone bookings must go into `admin.html`** ("Walk-in, phone booking, or rooms out
 of use") — the website only knows what it is told. Same for rooms out of order.
 
