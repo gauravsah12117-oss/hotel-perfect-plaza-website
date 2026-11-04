@@ -69,12 +69,17 @@ const SCHEMA = [
   `INSERT INTO room_types (code) VALUES ${ROOMS.map((_, i) => `($${i + 1})`).join(", ")} ON CONFLICT (code) DO NOTHING`
 ];
 
+/* Other parts of the system (staff attendance) add their own tables here. */
+const EXTRA = [];
+export function addSchema(statements) { EXTRA.push(...statements); ready = null; }
+
 /* Creates the tables once per running instance. */
 async function ensure() {
   if (!driver) driver = await neonDriver();
   if (!ready) {
     ready = (async () => {
       for (const s of SCHEMA) await driver.query(s, s.startsWith("INSERT") ? ROOMS.map(r => r.code) : []);
+      for (const s of EXTRA) await driver.query(s, []);
     })().catch(e => { ready = null; throw e; });
   }
   await ready;

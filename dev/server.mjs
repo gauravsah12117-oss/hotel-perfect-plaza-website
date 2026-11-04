@@ -8,7 +8,9 @@
    runs them, and uses PGlite — real Postgres, running inside Node — in
    dev/.data instead of the Neon database. eSewa is in test mode; emails are
    only sent if RESEND_API_KEY is set. The admin password is "test" unless
-   ADMIN_PASSWORD is set. Nothing here is deployed (.vercelignore).
+   ADMIN_PASSWORD is set, and so is attendance.html's (ATTENDANCE_PASSWORD).
+   A pretend fingerprint machine: node dev/fake-machine.mjs (see there).
+   Nothing here is deployed (.vercelignore).
 
    Options:  PORT=3001   DB=memory (a fresh empty database each run)
    ========================================================================== */
@@ -23,6 +25,7 @@ import { useDriver } from "../api/_lib/db.js";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = +(process.env.PORT || 3000);
 process.env.ADMIN_PASSWORD ??= "test";
+process.env.ATTENDANCE_PASSWORD ??= "test";
 process.env.ESEWA_MODE ??= "test";
 
 useDriver(await makeDriver(process.env.DB === "memory" ? null : join(ROOT, "dev", ".data", "db")));
@@ -48,17 +51,28 @@ const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".mp4": "video/mp4", ".ico": "image/x-icon",
   ".txt": "text/plain; charset=utf-8", ".xml": "application/xml" };
 
-async function api(req, res, url) {
-  const name = url.pathname.slice(5).replace(/\/$/, "");
+async function api(req, res, url, name = url.pathname.slice(5).replace(/\/$/, "")) {
   if (!/^[a-z0-9-]+$/.test(name)) { res.statusCode = 404; return res.end("not found"); }
   let mod;
   try { mod = await import(pathToFileURL(join(ROOT, "api", name + ".js")).href); }
-  catch { res.statusCode = 404; return res.end("not found"); }
+  catch (e) { if (e.code !== "ERR_MODULE_NOT_FOUND") throw e; res.statusCode = 404; return res.end("not found"); }
   req.query = Object.fromEntries(url.searchParams);
   const chunks = []; for await (const c of req) chunks.push(c);
   const raw = Buffer.concat(chunks).toString("utf8");
+  if (typeof mod.default !== "function") return web(mod[req.method], req, res, url, raw);
   req.body = raw && /json/.test(req.headers["content-type"] || "") ? JSON.parse(raw) : raw || undefined;
   await mod.default(req, res);
+}
+
+/* A route written as a Web handler (export function GET(request)), as
+   api/iclock.js is: Request in, Response out. */
+async function web(handler, req, res, url, raw) {
+  if (typeof handler !== "function") { res.statusCode = 405; return res.end(); }
+  const headers = Object.entries(req.headers).filter(([k, v]) => typeof v === "string" && !/^(host|connection|content-length|transfer-encoding|keep-alive)$/.test(k));
+  const r = await handler(new Request(url, { method: req.method, headers, body: /^(GET|HEAD)$/.test(req.method) ? undefined : raw }));
+  res.statusCode = r.status;
+  r.headers.forEach((v, k) => res.setHeader(k, v));
+  res.end(Buffer.from(await r.arrayBuffer()));
 }
 
 async function file(req, res, url) {
@@ -82,6 +96,9 @@ async function file(req, res, url) {
 
 createServer(async (req, res) => {
   const url = new URL(req.url, "http://" + req.headers.host);
-  try { await (url.pathname.startsWith("/api/") ? api(req, res, url) : file(req, res, url)); }
+  /* vercel.json's rewrite: the fingerprint machine's /iclock/<op> */
+  const iclock = /^\/iclock\/([A-Za-z.]+)$/.exec(url.pathname);
+  if (iclock) url.searchParams.set("op", iclock[1]);
+  try { await (iclock ? api(req, res, url, "iclock") : url.pathname.startsWith("/api/") ? api(req, res, url) : file(req, res, url)); }
   catch (e) { console.error(e); if (!res.headersSent) { res.statusCode = 500; res.end("error"); } }
 }).listen(PORT, () => console.log(`Hotel Perfect Plaza (with booking) on http://localhost:${PORT}  — admin password: ${process.env.ADMIN_PASSWORD}`));

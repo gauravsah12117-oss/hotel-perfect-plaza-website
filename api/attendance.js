@@ -1,0 +1,221 @@
+/* /api/attendance?action=…  — for the owner's page, attendance.html.
+   Every call needs the header  Authorization: Bearer <ATTENDANCE_PASSWORD>.
+
+   GET  action=today                    everyone's day so far, and the machines
+   GET  action=report&from=&to=         every person's days and totals
+   GET  action=punches&from=&to=&pin=   the punches themselves
+   POST action=punch    { pin, day, time, note }    a punch someone forgot
+   POST action=punch-ignore { id, ignored }  leave a wrong punch out (or back in)
+   POST action=punch-delete { id }      only punches added by hand
+   GET  action=staff
+   POST action=staff    { pin, name, job, phone, shift_start, shift_end,
+                          weekly_off, salary, ot_rate, joined, active, notify }
+   GET  action=leave&from=&to=          leave and holidays
+   POST action=leave    { pin, from, to, kind: paid|sick|unpaid|none, note }
+   POST action=holiday  { day, name, remove }
+   GET  action=settings                 rules, machines, phones, Telegram
+   POST action=settings { grace, ot_min, … }
+   POST action=device   { sn, approved, name, remove }
+   POST action=telegram-link            a one-time link to add a phone
+   POST action=chat     { chat_id, active, remove }
+   POST action=telegram-test            a test message to every phone */
+
+import { createHash, timingSafeEqual, randomBytes } from "node:crypto";
+import { q } from "./_lib/db.js";
+import {
+  attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER,
+  okDay, addDays, dayStart, wall, wallText, toMin, nowNepal, dayOf, DAY
+} from "./_lib/attendance.js";
+import { telegramReady, botName, tg, webhookSecret, sendAll } from "./_lib/telegram.js";
+import { json, body, handle, clean, origin } from "./_lib/http.js";
+
+const digest = s => createHash("sha256").update(String(s)).digest();
+function authorised(req) {
+  const pass = process.env.ATTENDANCE_PASSWORD;
+  if (!pass) return null;
+  const given = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  return given.length > 0 && timingSafeEqual(digest(given), digest(pass));
+}
+
+const okPin = s => /^[0-9A-Za-z]{1,20}$/.test(String(s || ""));
+const days = (from, to) => Math.round((dayStart(to) - dayStart(from)) / DAY) + 1;
+function range(query, maxDays) {
+  const t = dayOf(nowNepal());
+  const from = okDay(query.from) ? query.from : t.slice(0, 8) + "01";
+  let to = okDay(query.to) ? query.to : t;
+  if (to < from) to = from;
+  if (days(from, to) > maxDays) to = addDays(from, maxDays - 1);
+  return { from, to };
+}
+
+export default handle(async (req, res) => {
+  const auth = authorised(req);
+  if (auth === null) return json(res, 503, { error: "setup" });
+  if (!auth) { await new Promise(r => setTimeout(r, 600)); return json(res, 401, { error: "password" }); }
+
+  const action = String(req.query.action || "");
+  const b = body(req);
+  const get = req.method === "GET", post = req.method === "POST";
+
+  if (get && action === "today") {
+    const [t, devs] = await Promise.all([today(), machines()]);
+    const chats = await q(`SELECT count(*)::int AS n FROM telegram_chats WHERE active`);
+    return json(res, 200, { ...t, set: undefined, machines: devs, telegram: telegramReady(), phones: chats[0].n });
+  }
+
+  if (get && action === "report") {
+    const { from, to } = range(req.query, 62);
+    const r = await attendance(from, to);
+    return json(res, 200, { from: r.from, to: r.to, now: r.now, staff: r.staff });
+  }
+
+  if (get && action === "punches") {
+    const { from, to } = range(req.query, 62);
+    const pin = okPin(req.query.pin) ? req.query.pin : null;
+    const rows = await q(
+      `SELECT p.id, p.pin, s.name, to_char(p.at, 'YYYY-MM-DD HH24:MI:SS') AS at, p.source, p.device, p.verify, p.note, p.ignored,
+              to_char(p.received_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD HH24:MI:SS') AS received
+       FROM punches p LEFT JOIN staff s ON s.pin = p.pin
+       WHERE p.at >= $1::timestamp AND p.at < $2::timestamp AND ($3::text IS NULL OR p.pin = $3)
+       ORDER BY p.at DESC, p.id DESC LIMIT 3000`, [from + " 00:00:00", addDays(to, 1) + " 00:00:00", pin]);
+    return json(res, 200, { from, to, punches: rows.map(r => ({ ...r, id: Number(r.id) })) });
+  }
+
+  if (post && action === "punch") {
+    if (!okPin(b.pin)) return json(res, 400, { error: "pin" });
+    const t = wall(`${b.day} ${b.time}`);
+    if (t === null) return json(res, 400, { error: "time" });
+    if (t > nowNepal() + 5 * 60000) return json(res, 400, { error: "future" });
+    const st = await q(`SELECT pin FROM staff WHERE pin = $1`, [b.pin]);
+    if (!st.length) return json(res, 400, { error: "pin" });
+    const rows = await q(`INSERT INTO punches (pin, at, source, note) VALUES ($1, $2::timestamp, 'manual', $3)
+      ON CONFLICT (pin, at) DO NOTHING RETURNING id`, [b.pin, wallText(t), clean(b.note, 200)]);
+    return json(res, rows.length ? 200 : 409, rows.length ? { id: Number(rows[0].id) } : { error: "exists" });
+  }
+
+  if (post && action === "punch-ignore") {
+    const rows = await q(`UPDATE punches SET ignored = $2 WHERE id = $1 RETURNING id`, [Number(b.id) || 0, b.ignored !== false]);
+    return json(res, rows.length ? 200 : 404, rows.length ? { ok: true } : { error: "unknown" });
+  }
+
+  if (post && action === "punch-delete") {
+    const rows = await q(`DELETE FROM punches WHERE id = $1 AND source = 'manual' RETURNING id`, [Number(b.id) || 0]);
+    return json(res, rows.length ? 200 : 404, rows.length ? { ok: true } : { error: "unknown" });
+  }
+
+  if (action === "staff") {
+    if (post) {
+      if (!okPin(b.pin)) return json(res, 400, { error: "pin" });
+      const time = s => { s = clean(s, 5); return s === "" || toMin(s) !== null ? s : false; };
+      const shiftStart = time(b.shift_start), shiftEnd = time(b.shift_end);
+      if (shiftStart === false || shiftEnd === false || (shiftStart === "") !== (shiftEnd === "")) return json(res, 400, { error: "shift" });
+      const off = b.weekly_off === "" || b.weekly_off == null ? null : Number(b.weekly_off);
+      if (off !== null && !(Number.isInteger(off) && off >= 0 && off <= 6)) return json(res, 400, { error: "off" });
+      const money = (v, max) => { const n = Math.round(Number(v) || 0); return n >= 0 && n <= max ? n : false; };
+      const salary = money(b.salary, 10000000), otRate = money(b.ot_rate, 100000);
+      if (salary === false || otRate === false) return json(res, 400, { error: "money" });
+      const joined = okDay(b.joined) ? b.joined : null;
+      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12)
+        ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, job = EXCLUDED.job, phone = EXCLUDED.phone,
+          shift_start = EXCLUDED.shift_start, shift_end = EXCLUDED.shift_end, weekly_off = EXCLUDED.weekly_off,
+          salary = EXCLUDED.salary, ot_rate = EXCLUDED.ot_rate, joined = COALESCE($10::date, staff.joined),
+          active = EXCLUDED.active, notify = EXCLUDED.notify`,
+        [b.pin, clean(b.name, 80), clean(b.job, 60), clean(b.phone, 30), shiftStart, shiftEnd, off, salary, otRate, joined,
+         b.active !== false, b.notify !== false]);
+    }
+    const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
+    return json(res, 200, { staff: rows });
+  }
+
+  if (get && action === "leave") {
+    const { from, to } = range(req.query, 400);
+    const [leave, holidays] = await Promise.all([
+      q(`SELECT l.pin, s.name, l.day::text AS day, l.kind, l.note FROM staff_leave l LEFT JOIN staff s ON s.pin = l.pin
+         WHERE l.day BETWEEN $1::date AND $2::date ORDER BY l.day, l.pin`, [from, to]),
+      q(`SELECT day::text AS day, name FROM holidays WHERE day BETWEEN $1::date AND $2::date ORDER BY day`, [from, to])
+    ]);
+    return json(res, 200, { from, to, leave, holidays });
+  }
+
+  if (post && action === "leave") {
+    if (!okPin(b.pin)) return json(res, 400, { error: "pin" });
+    if (!okDay(b.from) || !okDay(b.to || b.from)) return json(res, 400, { error: "dates" });
+    const to = b.to || b.from;
+    if (to < b.from || days(b.from, to) > 62) return json(res, 400, { error: "dates" });
+    if (b.kind === "none") {
+      await q(`DELETE FROM staff_leave WHERE pin = $1 AND day BETWEEN $2::date AND $3::date`, [b.pin, b.from, to]);
+      return json(res, 200, { ok: true });
+    }
+    if (!["paid", "sick", "unpaid"].includes(b.kind)) return json(res, 400, { error: "kind" });
+    await q(`INSERT INTO staff_leave (pin, day, kind, note)
+      SELECT $1, d::date, $4, $5 FROM generate_series($2::date, $3::date, interval '1 day') AS g(d)
+      ON CONFLICT (pin, day) DO UPDATE SET kind = EXCLUDED.kind, note = EXCLUDED.note`, [b.pin, b.from, to, b.kind, clean(b.note, 200)]);
+    return json(res, 200, { ok: true });
+  }
+
+  if (post && action === "holiday") {
+    if (!okDay(b.day)) return json(res, 400, { error: "dates" });
+    if (b.remove) await q(`DELETE FROM holidays WHERE day = $1::date`, [b.day]);
+    else await q(`INSERT INTO holidays (day, name) VALUES ($1::date, $2) ON CONFLICT (day) DO UPDATE SET name = EXCLUDED.name`, [b.day, clean(b.name, 80)]);
+    return json(res, 200, { ok: true });
+  }
+
+  if (action === "settings") {
+    if (post) {
+      const v = b.settings || {};
+      const checks = {
+        shift_start: s => toMin(s) !== null, shift_end: s => toMin(s) !== null,
+        grace: s => /^\d{1,3}$/.test(s), ot_min: s => /^\d{1,3}$/.test(s),
+        ot_multiplier: s => /^\d{1,2}(\.\d{1,2})?$/.test(s) && Number(s) > 0,
+        notify_in: s => /^[01]$/.test(s), notify_out: s => /^[01]$/.test(s), notify_summary: s => /^[01]$/.test(s),
+        lang: s => s === "en" || s === "ne"
+      };
+      for (const [k, ok] of Object.entries(checks)) if (k in v && !ok(String(v[k]))) return json(res, 400, { error: "setting", key: k });
+      for (const k of Object.keys(checks)) if (k in v) await setSetting(k, String(v[k]));
+    }
+    const [set, devs, chats] = await Promise.all([getSettings(), machines(),
+      q(`SELECT chat_id, name, active, to_char(added_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD') AS added FROM telegram_chats ORDER BY added_at`)]);
+    let bot = null; try { bot = await botName(); } catch (e) {}
+    return json(res, 200, { settings: Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, set[k]])), machines: devs, chats,
+      telegram: { ready: telegramReady(), bot }, server: { host: String(req.headers["x-forwarded-host"] || req.headers.host || "") } });
+  }
+
+  if (post && action === "device") {
+    const sn = clean(b.sn, 40);
+    if (b.remove) await q(`DELETE FROM att_devices WHERE sn = $1`, [sn]);
+    else {
+      const rows = await q(`UPDATE att_devices SET approved = COALESCE($2, approved), name = COALESCE($3, name) WHERE sn = $1 RETURNING sn`,
+        [sn, typeof b.approved === "boolean" ? b.approved : null, b.name == null ? null : clean(b.name, 60)]);
+      if (!rows.length) return json(res, 404, { error: "unknown" });
+    }
+    return json(res, 200, { ok: true });
+  }
+
+  if (post && action === "telegram-link") {
+    if (!telegramReady()) return json(res, 503, { error: "telegram" });
+    const hook = await tg("setWebhook", { url: origin(req) + "/api/telegram", secret_token: webhookSecret(), allowed_updates: ["message"] });
+    if (!hook.ok) return json(res, 502, { error: "webhook", detail: hook.description || "" });
+    await tg("setMyCommands", { commands: [{ command: "today", description: "Today's attendance" }, { command: "now", description: "Who is in the hotel now" }] });
+    const code = randomBytes(9).toString("base64url");
+    await setSetting("tg_link", code + "|" + (Date.now() + 60 * 60000));
+    const bot = await botName();
+    return json(res, 200, { link: `https://t.me/${bot}?start=${code}`, bot });
+  }
+
+  if (post && action === "chat") {
+    const id = clean(b.chat_id, 30);
+    if (b.remove) await q(`DELETE FROM telegram_chats WHERE chat_id = $1`, [id]);
+    else await q(`UPDATE telegram_chats SET active = $2 WHERE chat_id = $1`, [id, b.active !== false]);
+    return json(res, 200, { ok: true });
+  }
+
+  if (post && action === "telegram-test") {
+    if (!telegramReady()) return json(res, 503, { error: "telegram" });
+    const set = await getSettings();
+    const sent = await sendAll(set.lang === "ne" ? "🔔 होटल पर्फेक्ट प्लाजा हाजिरी: परीक्षण सन्देश। यो आयो भने सबै ठीक छ।" : "🔔 Hotel Perfect Plaza attendance: a test message. If you can read this, messages are working.");
+    return json(res, 200, { sent });
+  }
+
+  json(res, 400, { error: "action" });
+});

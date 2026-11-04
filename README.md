@@ -28,6 +28,7 @@ hotel's own photographs matter most.
 | `assets/css/site.css` | The whole look: colours, type, layout, buttons, cards, form states |
 | `assets/js/main.js` | Contact details, the booking handoff, the enquiry form, dates, missing-photo fallback |
 | `api/`, `booking.html`, `admin.html`, `assets/js/booking.js` | Online booking with eSewa — see *Online booking* below |
+| `attendance.html`, `api/attendance.js`, `api/iclock.js`, `api/telegram.js`, `attendance-bridge/` | Staff attendance from the fingerprint machine, with Telegram messages — see [ATTENDANCE.md](ATTENDANCE.md) |
 | `assets/js/ui.js` | The tabs (the hero's cards and the facilities), the card rows' arrows, the scroll reveal, the nav link that follows the section in view |
 | `assets/js/i18n.js` | The English ⇄ नेपाली switch in the header |
 | `assets/js/i18n-ne.js` | The Nepali text: English on the left, Nepali on the right — edit the right-hand side to improve a translation |
@@ -205,6 +206,9 @@ of use") — the website only knows what it is told. Same for rooms out of order
 | `HOTEL_EMAIL` | Where bookings are emailed; default `hotelperfectplaza@gmail.com` | optional |
 
 After changing a setting, redeploy (Vercel → Deployments → ⋯ → Redeploy).
+
+The staff attendance system (`attendance.html`, the fingerprint machine, Telegram messages) has
+its own settings and guide: **[ATTENDANCE.md](ATTENDANCE.md)**.
 
 ### Testing a payment on eSewa's test system
 

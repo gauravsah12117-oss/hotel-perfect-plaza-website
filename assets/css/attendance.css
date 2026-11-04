@@ -1,0 +1,87 @@
+/* attendance.html — the owner's staff attendance page. Built on admin.css
+   (the bookings page's look); this adds the tabs, the tiles, the status
+   colours and a clean printout of the monthly report. */
+
+main { max-width: 90rem; }
+.top { flex-wrap: wrap; row-gap: .3rem; }
+.top .link { white-space: nowrap; }
+input[type=time], input[type=month] {
+  padding: .45rem .55rem; border: 1px solid #CFC4B4; border-radius: 8px; background: #fff; color: var(--ink); min-width: 0; font: inherit;
+}
+.form .check { grid-column: 1 / -1; }
+.pill { padding: .15rem .6rem; border-radius: 99px; font-size: .78rem; font-weight: 600; background: #EEE; color: #555; white-space: nowrap; }
+.pill.on { background: #E3F2E5; color: var(--ok); }
+.pill.off { background: #FDECEA; color: var(--bad); }
+
+/* tabs: a row of buttons that scrolls sideways on a phone */
+.tabs { display: flex; gap: .25rem; overflow-x: auto; padding: .25rem; background: #fff; border: 1px solid var(--rule); border-radius: 12px; position: sticky; top: .5rem; z-index: 5; }
+.tabs button { flex: none; padding: .5rem .85rem; border: 0; border-radius: 8px; background: none; color: var(--ink-2); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.tabs button:hover { background: var(--paper); }
+.tabs button[aria-selected="true"] { background: var(--accent); color: #fff; }
+[data-panel] { display: grid; gap: 1rem; min-width: 0; }
+[data-panel] > * { min-width: 0; }
+
+.actions { margin: .2rem 0 .8rem; }
+.live { font-size: .8rem; font-weight: 600; color: var(--ok); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1rem 2rem; }
+h3 { margin: .3rem 0; font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); }
+
+/* the day's numbers */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: .6rem; margin: .6rem 0 1rem; }
+.tile { padding: .7rem .8rem; border-radius: 10px; background: var(--paper); border: 1px solid var(--rule); }
+.tile b { display: block; font-size: 1.6rem; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tile span { font-size: .78rem; color: var(--ink-3); font-weight: 600; }
+.tile.in { background: #E3F2E5; border-color: #C5E3CA; } .tile.in b { color: var(--ok); }
+.tile.late { background: #FFF4D6; border-color: #F1DFA8; } .tile.late b { color: #6B4A00; }
+.tile.absent { background: #FDECEA; border-color: #F3C9C4; } .tile.absent b { color: var(--bad); }
+
+/* tables */
+.att td.num, .att th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.att td.name { font-weight: 600; color: var(--ink); }
+.att td.name small { display: block; font-weight: 400; color: var(--ink-3); }
+.att td.times { white-space: normal; min-width: 8rem; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.att td.muted, .att tr.muted td { color: #9A9086; }
+.att tr.ignored td { text-decoration: line-through; color: #9A9086; }
+.att tr.click { cursor: pointer; }
+.att tr.click:hover td { background: #FBF6EE; }
+.att tfoot td { font-weight: 600; color: var(--ink); border-top: 2px solid var(--rule); }
+.att .bad { color: var(--bad); font-weight: 600; }
+.att .warn { color: var(--warn); font-weight: 600; }
+.att .good { color: var(--ok); font-weight: 600; }
+.att td .btn--small { margin-right: .3rem; }
+.report th { white-space: normal; vertical-align: bottom; min-width: 4.2rem; }
+
+/* status chips (chip and its base look are in admin.css) */
+.chip.present { background: #E3F2E5; color: var(--ok); }
+.chip.inside { background: var(--ok); color: #fff; }
+.chip.late, .chip.half { background: #FFF4D6; color: #6B4A00; }
+.chip.absent { background: #FDECEA; color: var(--bad); }
+.chip.leave { background: #E8EEF9; color: #24426A; }
+.chip.holiday { background: #F1E8F7; color: #5B2E7A; }
+.chip.off, .chip.upcoming, .chip.none { background: #EEE; color: #666; }
+.chip.manual { background: #FFF; color: var(--ink-3); border: 1px solid var(--rule); }
+.chip.missing { background: #FFF; color: var(--bad); border: 1px solid #E5B4B0; }
+
+.btn--plain { color: var(--ink-2); border-color: var(--rule); }
+.btn--plain:hover { background: var(--paper); }
+.setup { border-left: 4px solid var(--warn); }
+.setup ul { margin: .2rem 0 0; padding-left: 1.2rem; }
+.setup li { margin: .25rem 0; }
+.linkbox { margin: .6rem 0; padding: .8rem 1rem; border-radius: 10px; background: #E8EEF9; color: #24426A; }
+.linkbox p { margin: .3rem 0; }
+.linkbox a { word-break: break-all; font-weight: 600; color: #24426A; }
+.howto { margin-top: .8rem; }
+.howto summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.howto li { margin: .35rem 0; }
+code { padding: .05rem .35rem; border-radius: 5px; background: var(--paper); border: 1px solid var(--rule); font-size: .88em; }
+
+/* the printed report: just the table */
+@media print {
+  .top, .tabs, .login, [data-panel]:not([data-panel="report"]), .actions, .hint, .row label, .link, [data-setup] { display: none !important; }
+  body, .card { background: #fff; }
+  main { max-width: none; padding: 0; }
+  .card { border: 0; padding: 0; }
+  .scroll { overflow: visible; }
+  table { font-size: 9pt; }
+  th, td { padding: .2rem .3rem; }
+}

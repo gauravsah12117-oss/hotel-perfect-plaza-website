@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/iclock/:op", "destination": "/api/iclock?op=:op" }
+  ],
+  "crons": [
+    { "path": "/api/attendance-cron", "schedule": "15 15 * * *" }
+  ]
+}
