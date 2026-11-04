@@ -7,23 +7,45 @@
      Password: ATTENDANCE_PASSWORD in Vercel's settings (see ATTENDANCE.md).
      Never linked from the site, and kept out of search. -->
 <meta name="robots" content="noindex, nofollow">
-<title>Staff Attendance — Hotel Perfect Plaza</title>
+<title>Staff Register — Hotel Perfect Plaza</title>
 <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/css/admin.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
 <link rel="stylesheet" href="assets/css/attendance.css">
 </head>
 <body>
 
-<header class="top">
-  <strong>Hotel Perfect Plaza · Staff attendance</strong>
-  <span class="pill" data-machine-pill hidden></span>
-  <button type="button" class="link" data-logout hidden>Sign out</button>
+<header class="mast">
+  <div class="mast__in">
+    <div>
+      <p class="mast__hotel">Hotel Perfect Plaza</p>
+      <h1 class="mast__title">Staff register <span lang="ne">कर्मचारी हाजिरी</span></h1>
+    </div>
+    <div class="mast__side">
+      <p class="mast__clock" data-clock aria-live="off"></p>
+      <p class="mast__meta">
+        <span class="pill" data-machine-pill hidden></span>
+        <button type="button" class="link link--light" data-logout hidden>Sign out</button>
+      </p>
+    </div>
+  </div>
 </header>
+
+<nav class="tabs" role="tablist" data-tabs hidden>
+  <div class="tabs__in">
+    <button type="button" role="tab" data-tab="day" aria-selected="true">Today</button>
+    <button type="button" role="tab" data-tab="report">Month</button>
+    <button type="button" role="tab" data-tab="punches">Punches</button>
+    <button type="button" role="tab" data-tab="staff">Staff</button>
+    <button type="button" role="tab" data-tab="leave">Leave &amp; holidays</button>
+    <button type="button" role="tab" data-tab="settings">Settings</button>
+  </div>
+</nav>
 
 <main>
   <form class="card login" data-login>
-    <h1>Owner sign in</h1>
+    <h2>Sign in</h2>
+    <p class="hint">The owner's page for staff attendance.</p>
     <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password" required>
     <button class="btn" type="submit">Sign in</button>
@@ -31,15 +53,6 @@
   </form>
 
   <div data-app hidden>
-    <nav class="tabs" role="tablist">
-      <button type="button" role="tab" data-tab="day" aria-selected="true">Daily</button>
-      <button type="button" role="tab" data-tab="report">Monthly report</button>
-      <button type="button" role="tab" data-tab="punches">Punches</button>
-      <button type="button" role="tab" data-tab="staff">Staff</button>
-      <button type="button" role="tab" data-tab="leave">Leave &amp; holidays</button>
-      <button type="button" role="tab" data-tab="settings">Settings</button>
-    </nav>
-
     <!-- ================================================= DAILY -->
     <section data-panel="day">
       <div class="card setup" data-setup hidden>
@@ -47,30 +60,65 @@
         <ul data-setup-list></ul>
       </div>
 
-      <div class="card">
-        <div class="row">
-          <h2><span data-day-title>Today</span> <span class="live" data-live hidden>● live</span></h2>
-          <label class="inline">Date <input type="date" data-day-date></label>
+      <div class="dayhead">
+        <div>
+          <h2 class="display" data-day-title>Today</h2>
+          <p class="lede" data-day-lede></p>
         </div>
-        <div class="tiles" data-tiles></div>
-        <div class="scroll"><table class="att" data-day-table></table></div>
-        <p class="hint" data-day-hint></p>
+        <div class="dayhead__pick">
+          <button type="button" class="btn btn--plain btn--icon" data-day-prev aria-label="Day before">‹</button>
+          <input type="date" data-day-date aria-label="Date">
+          <button type="button" class="btn btn--plain btn--icon" data-day-next aria-label="Day after">›</button>
+          <button type="button" class="btn btn--plain" data-day-today hidden>Today</button>
+        </div>
       </div>
+
+      <div class="card card--flush">
+        <div class="board" data-board></div>
+      </div>
+      <p class="key" data-day-key>
+        <span><i class="k k--shift"></i>Shift</span>
+        <span><i class="k k--bar"></i>At work</span>
+        <span><i class="k k--late"></i>Late</span>
+        <span><i class="k k--ot"></i>Overtime</span>
+        <span><i class="k k--now"></i>Now</span>
+        <span><i class="k k--hand"></i>Added by hand</span>
+      </p>
     </section>
 
     <!-- ================================================= REPORT -->
     <section data-panel="report" hidden>
-      <div class="card">
-        <div class="row">
-          <h2>Monthly report</h2>
+      <div class="dayhead">
+        <div>
+          <h2 class="display">Month</h2>
+          <p class="lede" data-rep-note></p>
+        </div>
+        <div class="dayhead__pick wrap">
           <label class="inline">Month <input type="month" data-rep-month></label>
           <label class="inline">From <input type="date" data-rep-from></label>
           <label class="inline">To <input type="date" data-rep-to></label>
         </div>
-        <div class="row actions">
-          <button type="button" class="btn btn--ghost" data-rep-csv>Download for Excel</button>
-          <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
-          <span class="hint" data-rep-note></span>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <h2>Register</h2>
+          <p class="legend">
+            <span><b class="r r--p">P</b>present</span><span><b class="r r--l">L</b>late</span><span><b class="r r--h">½</b>half day</span>
+            <span><b class="r r--a">A</b>absent</span><span><b class="r r--v">Lv</b>leave</span><span><b class="r r--o">–</b>day off</span>
+            <span><b class="r r--hol">H</b>holiday</span>
+          </p>
+        </div>
+        <div class="scroll"><table class="register" data-rep-register></table></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <h2>Totals and pay</h2>
+          <div class="row actions">
+            <button type="button" class="btn btn--ghost" data-rep-csv>Download for Excel</button>
+            <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
+          </div>
         </div>
         <div class="scroll"><table class="att report" data-rep-table></table></div>
         <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>

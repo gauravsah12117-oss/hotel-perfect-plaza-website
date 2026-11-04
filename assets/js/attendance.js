@@ -53,6 +53,15 @@
     if (foot) table.append(el("tfoot", {}, el("tr", {}, foot.map(td))));
   }
   const btn = (text, onclick, cls = "btn btn--small btn--plain") => el("button", { type: "button", className: cls, onclick }, text);
+  const DANGER = "btn btn--small btn--danger";
+
+  /* the masthead's clock: Nepal time, whatever the phone's own time zone */
+  function tickClock() {
+    const d = new Date(Date.now() + 345 * 60000);
+    $("[data-clock]").textContent = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) +
+      ", " + clock(d.toISOString().slice(11, 16));
+  }
+  tickClock(); setInterval(tickClock, 15000);
 
   async function api(action, { method = "GET", query = {}, body } = {}) {
     const res = await fetch("/api/attendance?" + new URLSearchParams({ action, ...query }), {
@@ -71,11 +80,11 @@
   function signOut(text) {
     pass = null; try { sessionStorage.removeItem(KEY); } catch (e) {}
     clearInterval(timer);
-    $("[data-app]").hidden = true; $("[data-login]").hidden = false; $("[data-logout]").hidden = true; $("[data-machine-pill]").hidden = true;
+    $("[data-app]").hidden = true; $("[data-tabs]").hidden = true; $("[data-login]").hidden = false; $("[data-logout]").hidden = true; $("[data-machine-pill]").hidden = true;
     msg($("[data-login-msg]"), text || "");
   }
   async function start() {
-    $("[data-login]").hidden = true; $("[data-app]").hidden = false; $("[data-logout]").hidden = false;
+    $("[data-login]").hidden = true; $("[data-app]").hidden = false; $("[data-tabs]").hidden = false; $("[data-logout]").hidden = false;
     const t = today();
     $("[data-day-date]").value ||= t;
     $("[data-rep-month]").value ||= t.slice(0, 7);
@@ -89,6 +98,7 @@
     $("[data-leave-form]").from.value ||= t;
     await loadStaff();
     show((location.hash.slice(1) || "day"));
+    if (current !== "day") api("today").then(r => machinePill(r.json.machines)).catch(() => {});
     clearInterval(timer);
     timer = setInterval(() => { if (pass && current === "day" && $("[data-day-date]").value === today() && !document.hidden) loadDay().catch(() => {}); }, 30000);
   }
@@ -203,7 +213,7 @@
     if (rec.manual) c("manual", "by hand");
     return out;
   }
-  const times = rec => rec.punches.map(p => clock(p.time) + (p.manual ? " ✎" : "")).join(" · ");
+  const times = rec => rec.punches.map(p => clock(p.time) + (p.manual ? " (by hand)" : "")).join(", ");
 
   async function loadDay() {
     const d = $("[data-day-date]").value || today();
@@ -212,6 +222,7 @@
     if (isToday) {
       const r = await api("today");
       rows = r.json.rows;
+      nowStamp = r.json.now;
       setup(r.json);
       machinePill(r.json.machines);
     } else {
@@ -219,39 +230,131 @@
       rows = r.json.staff.map(s => ({ pin: s.pin, name: s.displayName, job: s.job, rec: s.days[0] }));
       $("[data-setup]").hidden = true;
     }
-    $("[data-day-title]").textContent = isToday ? "Today, " + nice(d) : nice(d);
-    $("[data-live]").hidden = !isToday;
-    const n = f => rows.filter(r => f(r.rec)).length;
-    const otTotal = rows.reduce((a, r) => a + r.rec.ot, 0);
-    const tiles = $("[data-tiles]"); tiles.textContent = "";
-    const tile = (cls, num, label) => tiles.append(el("div", { className: "tile " + cls }, el("b", {}, num), el("span", {}, label)));
-    if (isToday) tile("in", n(r => r.inside), "In now");
-    tile("", n(r => r.punches.length > 0), "Came");
-    tile("late", n(r => r.late > 0), "Late");
-    tile("absent", n(r => r.status === "absent"), isToday ? "Not come" : "Absent");
-    tile("", n(r => r.status === "leave"), "On leave");
-    tile("", dur(otTotal), "Overtime");
-
-    fill($("[data-day-table]"), ["Staff", "In", "Out", "", ["Worked", "num"], ["Late", "num"], ["Left early", "num"], ["Overtime", "num"], "Shift", "Punches"],
-      rows.map(r => {
-        const x = r.rec;
-        return [
-          { v: [r.name, r.job ? el("small", {}, r.job) : null], cls: "name" },
-          clock(x.in) || "—", x.inside ? el("span", { className: "good" }, "still in") : clock(x.out) || "—",
-          { v: chips(x, isToday) },
-          { v: dur(x.worked), cls: "num" },
-          { v: x.late ? dur(x.late) : "—", cls: "num" + (x.late ? " warn" : "") },
-          { v: x.early ? dur(x.early) : "—", cls: "num" + (x.early ? " warn" : "") },
-          { v: x.ot ? dur(x.ot) : "—", cls: "num" + (x.ot ? " good" : "") },
-          x.off || x.holiday ? el("span", { className: "muted" }, "day off") : `${clock(x.shiftStart)}–${clock(x.shiftEnd)}`,
-          { v: times(x), cls: "times" }
-        ];
-      }));
-    $("[data-day-hint]").textContent = isToday
-      ? "Updates by itself every 30 seconds. A night shift's day is the day it started. ✎ = added by hand."
-      : "✎ = added by hand. Fix a forgotten punch in the Punches tab.";
+    $("[data-day-title]").textContent = isToday ? "Today" : longDay(d);
+    $("[data-day-today]").hidden = isToday;
+    $("[data-day-next]").disabled = isToday;
+    lede(rows, isToday);
+    lastBoard = [rows, isToday ? ms(nowStamp) : null, isToday];
+    board(...lastBoard);
   }
+  let lastBoard = null, resizing = 0;
+  addEventListener("resize", () => { clearTimeout(resizing); resizing = setTimeout(() => { if (lastBoard && current === "day") board(...lastBoard); }, 150); });
+  const go = n => { $("[data-day-date]").value = addDays($("[data-day-date]").value || today(), n); loadDay(); };
   $("[data-day-date]").addEventListener("change", () => loadDay());
+  $("[data-day-prev]").addEventListener("click", () => go(-1));
+  $("[data-day-next]").addEventListener("click", () => go(1));
+  $("[data-day-today]").addEventListener("click", () => { $("[data-day-date]").value = today(); loadDay(); });
+
+  const longDay = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const ms = s => Date.parse(s.slice(0, 19).replace(" ", "T") + "Z");      /* Nepal wall time → ms */
+  const at = (day, hm) => Date.parse(`${day}T${hm}:00Z`);
+  const HOUR = 3600000;
+  const hourLabel = t => { const h = new Date(t).getUTCHours(); return h === 0 ? "midnight" : h === 12 ? "noon" : `${h % 12} ${h < 12 ? "am" : "pm"}`; };
+  let nowStamp = "";
+
+  /* One sentence for the day, in place of a row of numbers. */
+  function lede(rows, isToday) {
+    const p = $("[data-day-lede]"); p.textContent = "";
+    if (!rows.length) return;
+    const pick = f => rows.filter(r => f(r.rec));
+    const came = pick(x => x.punches.length), late = pick(x => x.late), away = pick(x => x.status === "absent");
+    const inside = pick(x => x.inside), leave = pick(x => x.status === "leave");
+    const ot = rows.reduce((a, r) => a + r.rec.ot, 0);
+    const b = (text, cls) => el("b", { className: cls }, text);
+    const names = list => list.map(r => r.name).join(", ");
+    p.append(b(came.length), ` of ${rows.length} ${isToday ? "have come" : "came"}.`);
+    if (isToday && inside.length) p.append(" ", b(inside.length, "good"), ` ${inside.length === 1 ? "is" : "are"} in the hotel now.`);
+    if (late.length) p.append(" ", b(late.length, "warn"), ` ${isToday ? (late.length === 1 ? "was" : "were") : (late.length === 1 ? "was" : "were")} late.`);
+    if (away.length) p.append(" ", b(away.length, "bad"), isToday ? ` not come yet: ${names(away)}.` : ` absent: ${names(away)}.`);
+    else if (came.length) p.append(isToday ? " Nobody missing." : " Nobody absent.");
+    if (leave.length) p.append(` ${leave.length} on leave.`);
+    if (ot) p.append(" ", b(dur(ot)), " overtime.");
+  }
+
+  /* The day as a strip per person: the shift (dashed), time at work (green),
+     a late start (marigold), overtime (blue), each punch (a tick), now (red). */
+  function board(rows, nowT, isToday) {
+    const box = $("[data-board]"); box.textContent = "";
+    if (!rows.length) { box.append(el("p", { className: "board__empty" }, "No staff yet. Add them in Staff, or they appear here after their first punch.")); return; }
+    const info = rows.map(r => {
+      const x = r.rec, s = at(x.day, x.shiftStart);
+      return { s, e: s + x.shiftLen * 60000, scheduled: !x.off && !x.holiday, ps: x.punches.map(p => ({ t: ms(p.at), manual: p.manual, time: p.time })) };
+    });
+    let lo = Infinity, hi = -Infinity;
+    const take = t => { lo = Math.min(lo, t); hi = Math.max(hi, t); };
+    info.forEach(sp => { if (sp.scheduled) { take(sp.s); take(sp.e); } sp.ps.forEach(p => take(p.t)); });
+    if (nowT) take(nowT);
+    if (!isFinite(lo)) { lo = at(rows[0].rec.day, "07:00"); hi = lo + 14 * HOUR; }
+    lo = Math.floor(lo / HOUR) * HOUR - HOUR; hi = Math.ceil(hi / HOUR) * HOUR + HOUR;
+    const span = hi - lo, pct = t => ((t - lo) / span * 100).toFixed(3) + "%";
+    const place = (parent, cls, a, b, title) => {
+      const n = el("i", { className: cls, title });
+      n.style.left = pct(a);
+      if (b != null) n.style.width = ((b - a) / span * 100).toFixed(3) + "%";
+      parent.append(n); return n;
+    };
+
+    /* hour labels at least ~60px apart, at whatever width the strips have */
+    const stripPx = box.clientWidth - (matchMedia("(max-width: 760px)").matches ? 32 : 490);
+    const step = ([1, 2, 3, 4, 6, 12].find(h => h * HOUR / span * stripPx >= 60) || 12) * HOUR;
+    const ticks = el("div", { className: "ticks", "aria-hidden": "true" });
+    for (let t = Math.ceil((lo + HOUR / 2) / step) * step; t < hi - HOUR / 2; t += step) {
+      const n = el("span", { className: "tick" + (new Date(t).getUTCHours() === 0 ? " mid" : "") }, hourLabel(t));
+      n.style.left = pct(t); ticks.append(n);
+    }
+    if (nowT) { const n = el("span", { className: "tick nowlabel" }, clock(new Date(nowT).toISOString().slice(11, 16))); n.style.left = pct(nowT); ticks.append(n); }
+    box.append(el("div", { className: "board__axis" }, el("div"), ticks, el("div")));
+
+    rows.forEach((r, i) => {
+      const x = r.rec, sp = info[i], P = sp.ps;
+      const strip = el("div", { className: "strip", role: "img", "aria-label": describe(r, isToday) });
+      strip.style.setProperty("--hour", (HOUR / span * 100) + "%");
+      strip.style.backgroundPosition = "0 0";
+      if (sp.scheduled) place(strip, "s-shift", sp.s, sp.e, `Shift ${clock(x.shiftStart)} to ${clock(x.shiftEnd)}`);
+      if (x.late && P.length) place(strip, "s-late", sp.s, P[0].t, `${dur(x.late)} late`);
+      const bar = (a, b, cls) => {
+        place(strip, "s-bar " + cls, a, b);
+        const from = sp.scheduled ? Math.max(a, sp.e) : a;
+        if (x.ot && b > from) place(strip, "s-bar ot", from, b, "Overtime").style.borderRadius = from > a ? "0 99px 99px 0" : "";
+      };
+      for (let k = 0; k + 1 < P.length; k += 2) bar(P[k].t, P[k + 1].t, "");
+      if (P.length % 2) {
+        const last = P[P.length - 1].t;
+        if (x.inside && nowT) { bar(last, nowT, "open"); place(strip, "s-dot", nowT, null, "Still at work"); }
+        else place(strip, "s-bar lost", last, last + HOUR, "No punch out");
+      }
+      P.forEach(p => place(strip, "s-punch" + (p.manual ? " hand" : ""), p.t, null, clock(p.time) + (p.manual ? ", added by hand" : "")));
+      if (nowT) place(strip, "s-now", nowT, null);
+
+      box.append(el("div", { className: "srow" + (x.status === "absent" ? " absent" : "") },
+        el("div", { className: "srow__who" }, el("b", {}, r.name), r.job ? el("small", {}, r.job) : null, el("div", { className: "chips" }, chips(x, isToday))),
+        strip,
+        el("div", { className: "srow__facts" }, facts(x, isToday))));
+    });
+  }
+
+  function facts(x, isToday) {
+    if (!x.punches.length) {
+      const say = {
+        absent: [isToday ? "Not come yet" : "Absent", "bad"], leave: [LEAVE[x.leave] || "On leave"], holiday: [x.holiday], off: ["Day off"],
+        none: ["Not joined yet"], upcoming: [isToday ? "Due at " + clock(x.shiftStart) : "—"]
+      }[x.status] || ["—"];
+      return [el("span", { className: "times" }, "—"), el("span", { className: say[1] }, say[0])];
+    }
+    const parts = [el("span", {}, dur(x.worked) + " worked")];
+    if (x.late) parts.push(el("span", { className: "late" }, dur(x.late) + " late"));
+    if (x.early) parts.push(el("span", { className: "late" }, "left " + dur(x.early) + " early"));
+    if (x.ot) parts.push(el("span", { className: "ot" }, "+" + dur(x.ot) + " overtime"));
+    if (x.missing) parts.push(el("span", { className: "bad" }, "no punch out"));
+    const out = [el("span", { className: "times" }, `${clock(x.in)} – ${x.inside ? "now" : x.out ? clock(x.out) : "?"}`)];
+    parts.forEach((p, i) => out.push(i ? ", " : "", p));
+    return out;
+  }
+
+  function describe(r, isToday) {
+    const x = r.rec, f = facts(x, isToday).map(n => typeof n === "string" ? n : n.textContent).join(" ");
+    return `${r.name}: ${f}. Punches: ${times(x) || "none"}.`;
+  }
 
   function setup(t) {
     const items = [];
@@ -293,7 +396,11 @@
     report = r.json;
     const span = Math.round((Date.parse(report.to) - Date.parse(report.from)) / 86400000) + 1;
     const wholeMonth = span >= 28;
-    $("[data-rep-note]").textContent = `${nice(report.from)} – ${nice(report.to)}, ${span} days` + (wholeMonth ? "" : ". Pay is only shown for a whole month.");
+    const all = k => report.staff.reduce((a, s) => a + s.summary[k], 0);
+    $("[data-rep-note]").textContent = `${nice(report.from)} to ${nice(report.to)}, ${span} days. ` +
+      (report.staff.length ? `${all("late")} late arrival${all("late") === 1 ? "" : "s"}, ${all("absent")} day${all("absent") === 1 ? "" : "s"} absent, ${hours(all("ot"))} hours of overtime so far.` : "") +
+      (wholeMonth ? "" : " Pay is only worked out for a whole month.");
+    register(report.staff);
     const head = ["Staff", ["Present", "num"], ["Half day", "num"], ["Absent", "num"], ["Paid leave", "num"], ["Unpaid leave", "num"], ["Off & holidays", "num"],
       ["Late (times)", "num"], ["Late (total)", "num"], ["Hours worked", "num"], ["Overtime (h)", "num"], ["Overtime pay", "num"], ["Unpaid days", "num"], ["Salary", "num"]];
     if (wholeMonth) head.push(["Pay", "num"]);
@@ -307,13 +414,40 @@
         n(x.late || "—", x.late ? "warn" : ""), n(x.lateMin ? dur(x.lateMin) : "—"), n(hours(x.worked)), n(x.ot ? hours(x.ot) : "—", x.ot ? "good" : ""),
         n(x.otPay ? rs(x.otPay) : "—"), n(x.unpaidDays || "—"), n(s.salary ? rs(s.salary) : "—")
       ];
-      if (wholeMonth) row.push(n(s.salary ? rs(x.pay) : "—", "good"));
+      if (wholeMonth) row.push(n(s.salary ? rs(x.pay) : "—", "pay"));
       return row;
     });
     const foot = ["Total", n(tot("present")), "", n(tot("absent")), "", "", "", n(tot("late")), "", n(hours(tot("worked"))), n(hours(tot("ot"))), n(rs(tot("otPay"))), "", n(rs(S.reduce((a, s) => a + (s.salary || 0), 0)))];
     if (wholeMonth) foot.push(n(rs(tot("pay"))));
     fill($("[data-rep-table]"), head, rows, { foot: S.length ? foot : null, rowProps: i => ({ className: "click", title: "See every day", onclick: () => detail(S[i]) }) });
     $("[data-rep-detail]").hidden = true;
+  }
+
+  /* The paper register: a row per person, a mark per day. */
+  function mark(d) {
+    const plan = d.holiday ? ["H", "hol"] : d.leave ? ["Lv", "v"] : d.off ? ["–", "o"] : null;
+    let m;
+    if (d.punches.length) m = d.status === "late" ? ["L", "l"] : d.status === "half" ? ["½", "h"] : ["P", "p"];
+    else m = { absent: ["A", "a"], leave: ["Lv", "v"], holiday: ["H", "hol"], off: ["–", "o"], none: ["", "n"] }[d.status] || (plan ? [plan[0], "u"] : ["", "u"]);
+    const said = d.punches.length
+      ? `${clock(d.in)} to ${d.inside ? "now" : d.out ? clock(d.out) : "no punch out"}, ${dur(d.worked)} worked` + (d.late ? `, ${dur(d.late)} late` : "") + (d.ot ? `, ${dur(d.ot)} overtime` : "")
+      : d.status === "leave" ? LEAVE[d.leave] : d.status === "holiday" ? d.holiday : d.status === "upcoming" ? (plan ? "planned: " + (d.holiday || LEAVE[d.leave] || "day off") : "still to come") : STATUS[d.status];
+    return el("b", { className: `r r--${m[1]}` + (d.ot ? " ot" : "") + (d.manual ? " hand" : ""), title: `${nice(d.day)}: ${said}` }, m[0]);
+  }
+  function register(S) {
+    const t = $("[data-rep-register]"); t.textContent = "";
+    if (!S.length) { t.append(el("tbody", {}, el("tr", {}, el("td", { className: "who" }, "No staff yet.")))); return; }
+    const days = S[0].days.map(d => d.day);
+    t.append(el("thead", {}, el("tr", {}, el("th", { className: "who" }, ""),
+      days.map(d => { const w = new Date(d + "T00:00:00Z").getUTCDay(); return el("th", { className: (w === 6 ? "sat" : "") + (d === today() ? " today" : ""), title: d === today() ? "Today" : null }, +d.slice(8), el("small", {}, WD[w].slice(0, 2))); }),
+      el("th", {}, ""))));
+    t.append(el("tbody", {}, S.map(s => {
+      const x = s.summary;
+      return el("tr", {},
+        el("td", { className: "who", onclick: () => detail(s), title: "See every day" }, s.displayName, s.job ? el("small", {}, s.job) : null),
+        s.days.map(d => el("td", {}, mark(d))),
+        el("td", { className: "sum" }, el("b", {}, x.present + x.half / 2), " present", x.absent ? `, ${x.absent} absent` : ""));
+    })));
   }
 
   function detail(s) {
@@ -361,7 +495,7 @@
       p.source === "manual" ? el("span", { className: "chip manual" }, "by hand") : HOW[p.verify] || "Machine",
       p.note,
       [btn(p.ignored ? "Put back" : "Leave out", async () => { await post("punch-ignore", { id: p.id, ignored: !p.ignored }); loadPunches(); }),
-       p.source === "manual" ? btn("Delete", async () => { if (confirm("Delete this punch added by hand?")) { await post("punch-delete", { id: p.id }); loadPunches(); } }, "btn btn--small") : null]
+       p.source === "manual" ? btn("Delete", async () => { if (confirm("Delete this punch added by hand?")) { await post("punch-delete", { id: p.id }); loadPunches(); } }, DANGER) : null]
     ]), { rowProps: i => P[i].ignored ? { className: "ignored", title: "Left out of the sums" } : { title: "Received " + P[i].received } });
     msg($("[data-pun-msg]"), P.length >= 3000 ? "Showing the latest 3,000. Choose fewer days to see the rest." : "");
   }
@@ -421,7 +555,7 @@
     fill($("[data-chat-table]"), ["Phone (Telegram name)", "Added", "", ""], j.chats.map(c => [
       { v: c.name, cls: "name" }, nice(c.added), c.active ? el("span", { className: "chip present" }, "Gets messages") : el("span", { className: "chip off" }, "Paused"),
       [btn(c.active ? "Pause" : "Resume", async () => { await post("chat", { chat_id: c.chat_id, active: !c.active }); loadSettings(); }),
-       btn("Remove", async () => { if (confirm(`Stop sending messages to ${c.name}?`)) { await post("chat", { chat_id: c.chat_id, remove: true }); loadSettings(); } }, "btn btn--small")]
+       btn("Remove", async () => { if (confirm(`Stop sending messages to ${c.name}?`)) { await post("chat", { chat_id: c.chat_id, remove: true }); loadSettings(); } }, DANGER)]
     ]));
     $("[data-dev-host]").textContent = j.server.host || location.host;
     fill($("[data-dev-table]"), ["Machine (serial no.)", "Status", "Last connected", "Clock", ""], j.machines.map(m => [
@@ -433,7 +567,7 @@
       [m.approved ? btn("Stop", async () => { if (confirm("Stop taking punches from this machine?")) { await post("device", { sn: m.sn, approved: false }); loadSettings(); } })
                   : btn("Approve", async () => { await post("device", { sn: m.sn, approved: true }); loadSettings(); }, "btn btn--small btn--plain good"),
        btn("Name", async () => { const n = prompt("A name for this machine (e.g. Staff entrance)", m.name); if (n != null) { await post("device", { sn: m.sn, name: n }); loadSettings(); } }),
-       btn("Remove", async () => { if (confirm("Remove this machine from the list? It will appear again, waiting for approval, the next time it connects.")) { await post("device", { sn: m.sn, remove: true }); loadSettings(); } }, "btn btn--small")]
+       btn("Remove", async () => { if (confirm("Remove this machine from the list? It will appear again, waiting for approval, the next time it connects.")) { await post("device", { sn: m.sn, remove: true }); loadSettings(); } }, DANGER)]
     ]));
     $("[data-dev-howto]").open = !j.machines.length;
     machinePill(j.machines);
