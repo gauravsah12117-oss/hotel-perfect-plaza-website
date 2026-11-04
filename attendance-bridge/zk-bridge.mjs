@@ -23,7 +23,7 @@
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 
-const SITE = (process.env.SITE || "https://hotel-perfect-plaza-website.vercel.app").replace(/\/$/, "");
+const SITE = (process.env.SITE || "https://www.hotelperfectplaza.com").replace(/\/$/, "");
 const PORT = +(process.env.PORT || 8081);
 
 createServer(async (req, res) => {

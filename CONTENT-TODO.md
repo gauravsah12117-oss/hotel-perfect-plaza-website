@@ -327,14 +327,17 @@ says breakfast is included.
 ## 8. Before you go live
 
 - [ ] Everything in section 1 confirmed or corrected
-- [ ] **Re-register `hotelperfectplaza.com` — urgent.** Your letterhead prints
-      www.hotelperfectplaza.com, but as of 30 September 2026 that domain is **not registered to
-      anyone** (it has lapsed, or was never registered), so the address leads nowhere and anyone
-      could buy it. Register it (about US$10–15 a year, at any registrar such as Namecheap,
-      GoDaddy or Cloudflare) in the hotel's name. Then tell me: I'll connect it to this site in
-      Vercel and point the site's address — `canonical`/`og:url` in `index.html`, `sitemap.xml`
-      and `robots.txt` — at it. Until then the site lives at
-      `https://hotel-perfect-plaza-website.vercel.app/`
+- [x] **`hotelperfectplaza.com` registered** at Hostinger on 3 October 2026, paid until
+      **3 October 2029**. Turn on **auto-renew** in Hostinger (Domains → hotelperfectplaza.com),
+      or set a reminder for September 2029: if it lapses, the website, the booking pages, the
+      staff app and the fingerprint machine all stop at once. `www.hotelperfectplaza.com` is
+      connected to Vercel and works (checked 5 November 2026).
+- [ ] **Make `hotelperfectplaza.com` without "www" work too.** In Hostinger → Domains →
+      hotelperfectplaza.com → **DNS / Nameservers**, add a record: type **A**, name **@**,
+      points to **216.198.79.1** (the address Vercel gives; check it in Vercel → the project →
+      Settings → Domains, which shows the exact record it wants). Delete any other A record
+      for **@** (Hostinger's parking page). In Vercel → Settings → Domains, add
+      `hotelperfectplaza.com` too and choose "redirect to www.hotelperfectplaza.com".
 - [x] iPhone/Android home-screen icon — `assets/favicon/apple-touch-icon.png`, made from your
       real logo (see section 6 for the one caveat on its sharpness)
 - [ ] Send one test enquiry and confirm it lands

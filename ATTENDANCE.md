@@ -5,7 +5,7 @@ happens. The website keeps it, works out the day, and sends a **Telegram message
 owner's phone: *"✅ Hari Yadav came in at 9:22 AM · Kitchen · 22 min late"*.
 
 Everything is on one private page: **`/attendance.html`**
-(now: https://hotel-perfect-plaza-website.vercel.app/attendance.html). It works on a phone too.
+(**https://www.hotelperfectplaza.com/attendance.html**). It works on a phone too.
 
 | Tab | What's there |
 |---|---|
@@ -63,7 +63,7 @@ The page can also sit on the home screen as an app called **हाजिरी**
 opens full screen, stays signed in, and keeps itself up to date. There's nothing to download
 from the Play Store or App Store. On his phone:
 
-1. Open **hotel-perfect-plaza-website.vercel.app/attendance.html** and sign in, with *Keep me
+1. Open **www.hotelperfectplaza.com/attendance.html** and sign in, with *Keep me
    signed in on this phone* ticked.
 2. **Android** (Chrome): press **Install app** at the top. If it isn't there, open Chrome's
    **⋮** menu → **Add to Home screen** → **Install**.
@@ -83,8 +83,8 @@ Magnum, among others. Ask the shop for *"ADMS / Push / Cloud Server"* support, a
 1. Connect the machine to the internet: a LAN cable to the hotel's router (most reliable), or
    Wi-Fi on models that have it.
 2. On the machine: **Menu → Comm. → Cloud Server Setting** (on some models *ADMS*).
-3. **Enable Domain Name**: on. **Server address**: `hotel-perfect-plaza-website.vercel.app`
-   (later, when the hotel's own domain works: `www.hotelperfectplaza.com`).
+3. **Enable Domain Name**: on. **Server address**: `www.hotelperfectplaza.com`, with the www.
+   The machine doesn't follow redirects, so the address without www won't do.
 4. **HTTPS**: on, **Server port**: `443`. **Proxy**: off. Save, then restart the machine.
 5. Within a minute it shows in **Settings → Fingerprint machines** as *Waiting for approval*.
    Press **Approve**. From then on every punch arrives, including the ones already stored in the
