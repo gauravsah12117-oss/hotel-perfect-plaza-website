@@ -1,0 +1,18 @@
+{
+  "name": "Staff Register — Hotel Perfect Plaza",
+  "short_name": "हाजिरी",
+  "description": "Hotel Perfect Plaza staff attendance: who came, when, late, overtime and the month's pay.",
+  "id": "/attendance.html",
+  "start_url": "/attendance.html",
+  "scope": "/attendance",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#0C2850",
+  "lang": "en",
+  "icons": [
+    { "src": "/assets/icons/register-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/register-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icons/register-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -79,6 +79,20 @@ main { max-width: 80rem; margin: 0 auto; padding: 1.4rem clamp(1rem, 3vw, 2rem) 
 .login { max-width: 23rem; margin: 3rem auto; display: grid; gap: .6rem; padding: 1.6rem; }
 .login h2 { font: 600 1.7rem/1.1 var(--display); }
 .login .hint { margin: 0 0 .5rem; }
+.login .check, .check { display: flex; align-items: center; gap: .55rem; font-size: .9rem; color: var(--ink-2); }
+.login .check input { width: 1.1rem; height: 1.1rem; accent-color: var(--sindoor); }
+
+.offline { margin: 0 0 1rem; padding: .7rem 1rem; border-radius: 10px; background: var(--sindoor); color: #fff; font-weight: 500; }
+
+/* the app: the install button on the night blue, and the card in Settings */
+.btn--install { background: var(--marigold); border-color: var(--marigold); color: var(--night); }
+.btn--install:hover { background: #F0B43A; border-color: #F0B43A; color: var(--night); }
+.appcard { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1.1rem; align-items: start; }
+.appcard img { border-radius: 14px; }
+.appcard h2 { margin-bottom: .3rem; }
+.howlist { margin: 0 0 .8rem; padding-left: 1.2rem; font-size: .9rem; }
+.howlist li { margin: .35rem 0; }
+@media (display-mode: standalone) { .mast__in { padding-top: max(1.1rem, env(safe-area-inset-top)); } }
 
 .dayhead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .8rem 1.5rem; }
 .display { font: 600 clamp(1.9rem, 4vw, 2.6rem)/1.05 var(--display); color: var(--ink); }

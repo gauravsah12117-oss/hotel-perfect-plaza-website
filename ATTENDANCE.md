@@ -57,6 +57,22 @@ Vercel → the project → **Settings → Environment Variables** → add:
 Add as many phones as you like (yours, a manager's): each one needs its own new link. **Pause**
 stops messages to a phone for a while; **Remove** stops them for good.
 
+### 3½. The app on his phone
+
+The page can also sit on the home screen as an app called **हाजिरी**, with its own icon. It
+opens full screen, stays signed in, and keeps itself up to date. There's nothing to download
+from the Play Store or App Store. On his phone:
+
+1. Open **hotel-perfect-plaza-website.vercel.app/attendance.html** and sign in, with *Keep me
+   signed in on this phone* ticked.
+2. **Android** (Chrome): press **Install app** at the top. If it isn't there, open Chrome's
+   **⋮** menu → **Add to Home screen** → **Install**.
+   **iPhone** (Safari): **Share** → **Add to Home Screen** → **Add**.
+3. From then on he taps **हाजिरी** on the home screen. Telegram brings the messages the moment
+   someone punches. The app is for the whole day, the month and the register.
+
+*Sign out* on that phone, or a new `ATTENDANCE_PASSWORD` in Vercel, signs the app out.
+
 ### 4. The fingerprint machine
 
 The system speaks ZKTeco's **ADMS / "Cloud Server"** protocol. Most ZKTeco and eSSL machines sold

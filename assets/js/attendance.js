@@ -7,8 +7,10 @@
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const KEY = "hpp-attendance";
+  /* "Keep me signed in on this phone" keeps the password in localStorage
+     (stays after the app is closed); otherwise sessionStorage (this tab only). */
   let pass = null;
-  try { pass = sessionStorage.getItem(KEY); } catch (e) {}
+  try { pass = localStorage.getItem(KEY) || sessionStorage.getItem(KEY); } catch (e) {}
 
   /* ------------------------------------------------------------ helpers */
   const today = () => new Date(Date.now() + 345 * 60000).toISOString().slice(0, 10);   /* Nepal, UTC+5:45 */
@@ -64,10 +66,18 @@
   tickClock(); setInterval(tickClock, 15000);
 
   async function api(action, { method = "GET", query = {}, body } = {}) {
-    const res = await fetch("/api/attendance?" + new URLSearchParams({ action, ...query }), {
-      method, headers: { Authorization: "Bearer " + pass, ...(body ? { "Content-Type": "application/json" } : {}) },
-      body: body ? JSON.stringify(body) : undefined
-    });
+    let res;
+    try {
+      res = await fetch("/api/attendance?" + new URLSearchParams({ action, ...query }), {
+        method, headers: { Authorization: "Bearer " + pass, ...(body ? { "Content-Type": "application/json" } : {}) },
+        body: body ? JSON.stringify(body) : undefined
+      });
+    } catch (e) {
+      $("[data-offline]").hidden = false;
+      msg($("[data-login-msg]"), "No internet. Connect and try again.");
+      throw e;
+    }
+    $("[data-offline]").hidden = true;
     let json = {}; try { json = await res.json(); } catch (e) {}
     if (res.status === 401) { signOut("Wrong password."); throw new Error("password"); }
     if (res.status === 503 && json.error === "setup") { signOut("Attendance isn't set up yet: ATTENDANCE_PASSWORD or the database is missing in Vercel."); throw new Error("setup"); }
@@ -78,7 +88,7 @@
   /* ------------------------------------------------------------ sign in */
   let timer = null;
   function signOut(text) {
-    pass = null; try { sessionStorage.removeItem(KEY); } catch (e) {}
+    pass = null; try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch (e) {}
     clearInterval(timer);
     $("[data-app]").hidden = true; $("[data-tabs]").hidden = true; $("[data-login]").hidden = false; $("[data-logout]").hidden = true; $("[data-machine-pill]").hidden = true;
     msg($("[data-login-msg]"), text || "");
@@ -107,7 +117,7 @@
     pass = $("#pw").value;
     try {
       const r = await api("staff");
-      if (r.ok) { try { sessionStorage.setItem(KEY, pass); } catch (err) {} start(); }
+      if (r.ok) { try { ($("[data-remember]").checked ? localStorage : sessionStorage).setItem(KEY, pass); } catch (err) {} start(); }
     } catch (err) { /* message already shown */ }
   });
   $("[data-logout]").addEventListener("click", () => signOut(""));
@@ -598,6 +608,30 @@
   $("[data-tg-test]").addEventListener("click", async () => {
     const r = await post("telegram-test");
     msg($("[data-tg-msg]"), r.ok ? (r.json.sent ? `Sent to ${r.json.sent} phone${r.json.sent > 1 ? "s" : ""}.` : "No phone to send to yet. Add a phone first.") : errText(r), r.ok && r.json.sent);
+  });
+
+  /* ---------------------------------------------------------- the app */
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  $("[data-app-url]").textContent = location.host + "/attendance.html";
+  $("[data-app-done]").hidden = !standalone;
+  $("[data-app-howto]").hidden = standalone;
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("/attendance-sw.js", { scope: "/attendance" }).catch(() => {});
+  let installer = null;
+  const installButtons = () => [$("[data-install]"), $("[data-install-card]")];
+  addEventListener("beforeinstallprompt", e => {
+    e.preventDefault(); installer = e;
+    installButtons().forEach(b => { b.hidden = false; });
+  });
+  installButtons().forEach(b => b.addEventListener("click", async () => {
+    if (!installer) return;
+    installer.prompt();
+    await installer.userChoice.catch(() => {});
+    installer = null; installButtons().forEach(x => { x.hidden = true; });
+  }));
+  addEventListener("appinstalled", () => installButtons().forEach(b => { b.hidden = true; }));
+  /* back in the app after a while: show what changed straight away */
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && pass && current === "day" && $("[data-day-date]").value === today()) loadDay().catch(() => {});
   });
 
   if (pass) start().catch(() => {});

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- The staff register's app icon (attendance.html): the website's gold
+       lotus on night blue, the marigold toran, and हाजिरी. Full-bleed, with
+       everything inside the middle 80% so phones can crop it to a circle.
+       The PNGs next to it are made from this file. -->
+  <rect width="512" height="512" fill="#0C2850"/>
+  <path d="M0 0h512v70H0z" fill="#E3A21A"/>
+  <path fill="#0C2850" d="M0 70 16 54 32 70 48 54 64 70 80 54 96 70 112 54 128 70 144 54 160 70 176 54 192 70 208 54 224 70 240 54 256 70 272 54 288 70 304 54 320 70 336 54 352 70 368 54 384 70 400 54 416 70 432 54 448 70 464 54 480 70 496 54 512 70v4H0z"/>
+  <g transform="translate(136 118) scale(3.75)" fill="none" stroke="#D4AF37" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 35C26.5 27.5 26.5 15.5 32 5.5c5.5 10 5.5 22 0 29.5Z"/>
+    <path d="M31.6 35C24 33 18.6 25.2 17.6 13.8c8.4 2.2 13.4 10 14 21.2Z"/>
+    <path d="M32.4 35C40 33 45.4 25.2 46.4 13.8c-8.4 2.2-13.4 10-14 21.2Z"/>
+    <path d="M31 35.4C21.6 36.6 12.8 32 7.4 23.4c9-1.8 17.6 3 23.6 12Z"/>
+    <path d="M33 35.4c9.4 1.2 18.2-3.4 23.6-12-9-1.8-17.6 3-23.6 12Z"/>
+    <path d="M13 38.2h38"/>
+  </g>
+  <text x="256" y="408" text-anchor="middle" font-family="Nirmala UI, Tiro Devanagari Hindi, Noto Sans Devanagari, sans-serif" font-size="96" font-weight="700" fill="#F3EEE6">हाजिरी</text>
+</svg>

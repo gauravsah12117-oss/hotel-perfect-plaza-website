@@ -8,7 +8,14 @@
      Never linked from the site, and kept out of search. -->
 <meta name="robots" content="noindex, nofollow">
 <title>Staff Register — Hotel Perfect Plaza</title>
-<link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
+<!-- an app on the phone's home screen: attendance.webmanifest, attendance-sw.js -->
+<link rel="manifest" href="attendance.webmanifest">
+<meta name="theme-color" content="#0C2850">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="हाजिरी">
+<link rel="apple-touch-icon" href="assets/icons/register-180.png">
+<link rel="icon" href="assets/icons/register.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
 <link rel="stylesheet" href="assets/css/attendance.css">
@@ -25,6 +32,7 @@
       <p class="mast__clock" data-clock aria-live="off"></p>
       <p class="mast__meta">
         <span class="pill" data-machine-pill hidden></span>
+        <button type="button" class="btn btn--small btn--install" data-install hidden>Install app</button>
         <button type="button" class="link link--light" data-logout hidden>Sign out</button>
       </p>
     </div>
@@ -43,11 +51,13 @@
 </nav>
 
 <main>
+  <p class="offline" data-offline role="status" hidden>No internet on this phone. What you see may be out of date; it updates once you're back online.</p>
   <form class="card login" data-login>
     <h2>Sign in</h2>
     <p class="hint">The owner's page for staff attendance.</p>
     <label for="pw">Password</label>
     <input id="pw" type="password" autocomplete="current-password" required>
+    <label class="check"><input type="checkbox" data-remember checked> Keep me signed in on this phone</label>
     <button class="btn" type="submit">Sign in</button>
     <p class="msg" data-login-msg role="status"></p>
   </form>
@@ -240,6 +250,23 @@
 
     <!-- ================================================= SETTINGS -->
     <section data-panel="settings" hidden>
+      <div class="card appcard" data-appcard>
+        <img src="assets/icons/register-192.png" alt="" width="64" height="64">
+        <div>
+          <h2>The app on a phone</h2>
+          <p class="hint" data-app-done hidden>This is the app. It's on this phone's home screen, and opens signed in.</p>
+          <div data-app-howto>
+            <p class="hint">Put this page on the home screen of your phone, or your father's, as an app called <strong lang="ne">हाजिरी</strong>. It opens full screen and stays signed in. Open <strong data-app-url></strong> on that phone, sign in, then:</p>
+            <ul class="howlist">
+              <li><strong>Android:</strong> press <strong>Install app</strong> at the top of the page. If it isn't there: Chrome's <strong>⋮</strong> menu → <strong>Add to Home screen</strong> → <strong>Install</strong>.</li>
+              <li><strong>iPhone:</strong> in Safari, press <strong>Share</strong> (the square with the arrow) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+            </ul>
+            <p class="hint">With Telegram on the same phone, he gets the arrival messages there, and opens the app for the full day or the month.</p>
+          </div>
+          <button type="button" class="btn" data-install-card hidden>Install app on this device</button>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Messages on Telegram</h2>
         <div data-tg-status></div>
