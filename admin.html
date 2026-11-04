@@ -31,6 +31,20 @@
   </form>
 
   <div data-app hidden>
+    <!-- today at the desk; new-booking alerts (admin.js checks every minute) -->
+    <section class="card today" data-today-card>
+      <div class="row">
+        <h2>Today <span class="today__date" data-today-date></span></h2>
+        <button type="button" class="btn btn--ghost" data-alerts>Turn on booking alerts</button>
+      </div>
+      <p class="alert" data-alert hidden></p>
+      <div class="today__cols">
+        <div><h3>Arriving</h3><ul data-arrive></ul></div>
+        <div><h3>Leaving</h3><ul data-leave></ul></div>
+      </div>
+      <p class="hint" data-refresh></p>
+    </section>
+
     <!-- rooms free, night by night -->
     <section class="card">
       <div class="row">

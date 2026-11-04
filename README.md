@@ -180,6 +180,12 @@ would meet eSewa's test payment page); to try it, open the site once as
 `https://www.hotelperfectplaza.com/?booking-test=1` — that browser then shows online booking
 until it is opened with `?booking-test=0`.
 
+**Keep `admin.html` open at the desk.** It shows today's arrivals and departures, checks for new
+bookings every minute, and announces each new paid booking on the page, in the tab's title, with
+a sound and — after "Turn on booking alerts" — a desktop notification. (Which bookings a browser
+has already seen is remembered in that browser.) Until Resend is set up, this is how the desk
+hears of online bookings.
+
 **Walk-ins and phone bookings must go into `admin.html`** ("Walk-in, phone booking, or rooms out
 of use") — the website only knows what it is told. Same for rooms out of order.
 

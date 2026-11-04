@@ -38,7 +38,9 @@
     $("[data-list-from]").value ||= addDays(today(), -1);
     $("[data-list-to]").value ||= addDays(today(), 30);
     await loadRooms();
-    await Promise.all([loadGrid(), loadList()]);
+    await Promise.all([loadGrid(), loadList(), loadToday()]);
+    clearInterval(timer);
+    timer = setInterval(() => { if (pass) Promise.all([loadToday(), loadList(), loadGrid()]).catch(() => {}); }, 60000);
   }
   $("[data-login]").addEventListener("submit", async e => {
     e.preventDefault();
@@ -157,6 +159,106 @@
     else msg(m, r.json.error === "full" ? "The website shows these rooms as full for some of those nights. Tick the box to record it anyway." :
       r.json.error === "dates" ? "Check the dates: check-out must be after check-in." : "Could not save: " + (r.json.error || r.status));
   });
+
+  /* ------------------------------------------------ today, and new bookings
+     Arrivals and departures for today, and an alert — on the page, in the
+     tab's title, as a sound and (once allowed) a desktop notification —
+     for every paid booking this browser hasn't seen yet. Checked every
+     minute while the page is open: keep it open at the desk. */
+  const HOLDING = ["paid", "blocked", "paid_conflict"];
+  const SEEN = "hpp-admin-seen";
+  const baseTitle = document.title;
+  let seen = null, fresh = [], audio = null, timer = null;
+  try { seen = new Set(JSON.parse(localStorage.getItem(SEEN) || "null")); } catch (e) { seen = null; }
+  const saveSeen = () => { try { localStorage.setItem(SEEN, JSON.stringify([...seen].slice(-500))); } catch (e) {} };
+
+  function fill(sel, rows) {
+    const ul = $(sel); ul.textContent = "";
+    if (!rows.length) { const li = document.createElement("li"); li.className = "none"; li.textContent = "None"; ul.append(li); return; }
+    rows.forEach(b => {
+      const li = document.createElement("li");
+      const strong = document.createElement("strong"); strong.textContent = b.name;
+      li.append(strong, " — " + (b.rooms > 1 ? b.rooms + " × " : "") + b.roomName + (b.breakfast ? ", breakfast" : "") + " · " + b.guests + " guest" + (b.guests > 1 ? "s" : ""));
+      if (b.phone) { li.append(" · "); const a = document.createElement("a"); a.href = "tel:" + b.phone; a.textContent = b.phone; li.append(a); }
+      if (b.status === "paid_conflict") li.classList.add("bad");
+      ul.append(li);
+    });
+  }
+
+  /* browsers allow sound only after a click on the page: get it ready on
+     the first one (signing in, or the alerts button) */
+  const wakeAudio = () => { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch (e) {} };
+  document.addEventListener("pointerdown", wakeAudio, { once: true });
+  function beep() {
+    if (!audio) return;
+    try {
+      [0, .25, .5].forEach(t => {
+        const o = audio.createOscillator(), g = audio.createGain();
+        o.frequency.value = 880; g.gain.setValueAtTime(.18, audio.currentTime + t); g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + t + .2);
+        o.connect(g).connect(audio.destination); o.start(audio.currentTime + t); o.stop(audio.currentTime + t + .22);
+      });
+    } catch (e) { /* no sound: the page and the title still show it */ }
+  }
+
+  function showAlert() {
+    const box = $("[data-alert]");
+    document.title = fresh.length ? "(" + fresh.length + ") New booking — " + baseTitle : baseTitle;
+    if (!fresh.length) { box.hidden = true; return; }
+    box.hidden = false; box.textContent = "";
+    const conflict = fresh.some(b => b.status === "paid_conflict");
+    box.className = "alert" + (conflict ? " alert--bad" : "");
+    const head = document.createElement("strong");
+    head.textContent = fresh.length === 1 ? "New booking" : fresh.length + " new bookings";
+    box.append(head);
+    const ul = document.createElement("ul");
+    fresh.forEach(b => {
+      const li = document.createElement("li");
+      li.textContent = (b.status === "paid_conflict" ? "⚠ PAID BUT OVERBOOKED — call the guest: " : "") +
+        b.id + " · " + b.name + " · " + (b.rooms > 1 ? b.rooms + " × " : "") + b.roomName + " · " + short(b.check_in) + " – " + short(b.check_out) + " · " + npr(b.amount) + (b.phone ? " · " + b.phone : "");
+      ul.append(li);
+    });
+    const ok = document.createElement("button");
+    ok.type = "button"; ok.className = "btn"; ok.textContent = "Seen";
+    ok.addEventListener("click", () => { fresh.forEach(b => seen.add(b.id)); saveSeen(); fresh = []; showAlert(); });
+    box.append(ul, ok);
+  }
+
+  async function loadToday() {
+    const t = today();
+    $("[data-today-date]").textContent = short(t);
+    /* stays around today, plus everything booked in the last 3 days */
+    const r = await api("bookings", { query: { from: addDays(t, -1), to: addDays(t, 1) } });
+    const rows = r.json.bookings || [];
+    fill("[data-arrive]", rows.filter(b => HOLDING.includes(b.status) && b.check_in === t));
+    fill("[data-leave]", rows.filter(b => HOLDING.includes(b.status) && b.check_out === t));
+
+    const paid = rows.filter(b => b.status === "paid" || b.status === "paid_conflict");
+    if (!seen) { seen = new Set(paid.map(b => b.id)); saveSeen(); }   /* first visit: nothing is "new" */
+    const before = fresh.length;
+    fresh = paid.filter(b => !seen.has(b.id));
+    if (fresh.length > before) {
+      beep();
+      if ("Notification" in window && Notification.permission === "granted") {
+        const b = fresh[fresh.length - 1];
+        try { new Notification("New booking — Hotel Perfect Plaza", { body: b.name + " · " + b.roomName + " · " + short(b.check_in) + " · " + npr(b.amount), tag: b.id }); } catch (e) {}
+      }
+    }
+    showAlert();
+    $("[data-refresh]").textContent = "Updated " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + " · checks for new bookings every minute while this page is open.";
+  }
+
+  function alertsButton() {
+    const b = $("[data-alerts]");
+    const on = "Notification" in window && Notification.permission === "granted";
+    b.textContent = on ? "Booking alerts on ✓" : "Turn on booking alerts";
+    b.disabled = on;
+  }
+  $("[data-alerts]").addEventListener("click", async () => {
+    wakeAudio(); beep();   /* a click lets the page play sound from now on */
+    if ("Notification" in window) { try { await Notification.requestPermission(); } catch (e) {} }
+    alertsButton();
+  });
+  alertsButton();
 
   if (pass) start().catch(() => {}); else signOut("");
 })();

@@ -521,6 +521,10 @@ window.HPP = (function () {
         streetAddress: a.street, addressLocality: a.city, addressRegion: a.region,
         postalCode: a.postalCode, addressCountry: a.country
       },
+      /* the room plan's lowest and highest nightly rates (api/_lib/rooms.js) */
+      priceRange: "NPR 1,500 – 5,500",
+      currenciesAccepted: "NPR",
+      paymentAccepted: "Cash, eSewa",
       checkinTime: SITE_CONFIG.checkIn,
       checkoutTime: SITE_CONFIG.checkOut,
       sameAs: Object.values(SITE_CONFIG.social).filter(Boolean),
