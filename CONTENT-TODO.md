@@ -55,10 +55,8 @@ The page itself is ready (title, heading, the hotel's details in `index.html`'s 
 and Bing and others were told about it through IndexNow on 5 Nov 2026. Google has to be told by
 the owner:
 
-- [ ] **Google Search Console** (search.google.com/search-console) — add a *Domain* property
-      `hotelperfectplaza.com`, copy the TXT record it gives into Hostinger's DNS records
-      (Type TXT, Name @), press Verify. Then **Sitemaps** → submit `sitemap.xml`, and
-      **URL inspection** → `https://www.hotelperfectplaza.com/` → **Request indexing**
+- [x] **Google Search Console** — done 5 Nov 2026: verified with the meta tag in `index.html`
+      (keep it), sitemap submitted, indexing requested. Check back in a week under *Pages*
 - [ ] **Google Business Profile** (business.google.com) — claim the hotel's Google Maps listing
       and put `https://www.hotelperfectplaza.com` in its Website field. This is what puts the
       site in the box on the right when someone searches the hotel's name
