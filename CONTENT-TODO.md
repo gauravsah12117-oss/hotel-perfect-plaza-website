@@ -49,6 +49,24 @@ system). It switches on **for every guest** once the eSewa merchant keys are in 
 
 ---
 
+## 0b. Showing up first on Google — only you can do these
+
+The page itself is ready (title, heading, the hotel's details in `index.html`'s schema block),
+and Bing and others were told about it through IndexNow on 5 Nov 2026. Google has to be told by
+the owner:
+
+- [ ] **Google Search Console** (search.google.com/search-console) — add a *Domain* property
+      `hotelperfectplaza.com`, copy the TXT record it gives into Hostinger's DNS records
+      (Type TXT, Name @), press Verify. Then **Sitemaps** → submit `sitemap.xml`, and
+      **URL inspection** → `https://www.hotelperfectplaza.com/` → **Request indexing**
+- [ ] **Google Business Profile** (business.google.com) — claim the hotel's Google Maps listing
+      and put `https://www.hotelperfectplaza.com` in its Website field. This is what puts the
+      site in the box on the right when someone searches the hotel's name
+- [ ] The same website link on the hotel's Facebook, Instagram, TripAdvisor and booking-site
+      profiles; send me those profile links for the `sameAs` list in `index.html`
+
+---
+
 ## 1. Check what the page promises — before anything else
 
 The new design asked for a weddings & banquets section and a guest-care section. I wrote them
