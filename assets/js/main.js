@@ -501,39 +501,6 @@ window.HPP = (function () {
     box.addEventListener("close", done);
   }
 
-  /* ------------------------------------------------- search-engine listing */
-
-  function wireSchema() {
-    const slot = $("[data-schema]");
-    if (!slot) return;
-    const a = SITE_CONFIG.address;
-    slot.textContent = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Hotel",
-      name: "Hotel Perfect Plaza",
-      description: "A hotel at Ramanand Chowk, Janakpurdham, Nepal, ten minutes' walk from the Janaki Mandir.",
-      url: window.location.origin + window.location.pathname,
-      image: new URL("assets/images/og-image.jpg", window.location.href).href,
-      telephone: SITE_CONFIG.phone,
-      email: SITE_CONFIG.email || undefined,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: a.street, addressLocality: a.city, addressRegion: a.region,
-        postalCode: a.postalCode, addressCountry: a.country
-      },
-      /* the room plan's lowest and highest nightly rates (api/_lib/rooms.js) */
-      priceRange: "NPR 1,500 – 5,500",
-      currenciesAccepted: "NPR",
-      paymentAccepted: "Cash, eSewa",
-      checkinTime: SITE_CONFIG.checkIn,
-      checkoutTime: SITE_CONFIG.checkOut,
-      sameAs: Object.values(SITE_CONFIG.social).filter(Boolean),
-      amenityFeature: ["Air conditioning", "Free Wi-Fi", "Restaurant", "Room service",
-                       "Airport shuttle", "24-hour front desk", "Laundry service"]
-        .map(n => ({ "@type": "LocationFeatureSpecification", name: n, value: true }))
-    });
-  }
-
   /* ----------------------------------------------------------------- start */
 
   wireContacts();
@@ -545,7 +512,6 @@ window.HPP = (function () {
   wireAvailability();
   wireForm();
   wireLightbox();
-  wireSchema();
 
   document.body.classList.remove("is-loading");
 

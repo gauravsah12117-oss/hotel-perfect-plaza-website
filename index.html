@@ -34,8 +34,8 @@
   })();
 </script>
 
-<title>Hotel Perfect Plaza — Hotel in Janakpurdham, Nepal</title>
-<meta name="description" content="Hotel Perfect Plaza, Janakpurdham — ten minutes' walk from the Janaki Mandir. Rooms from NPR 1,500 a night, a restaurant, weddings and functions, and a front desk open all night.">
+<title>Hotel Perfect Plaza, Janakpur — Hotel in Janakpurdham, Nepal</title>
+<meta name="description" content="Hotel Perfect Plaza, Ramanand Chowk, Janakpurdham (Janakpur), Nepal — the hotel's own website. Ten minutes' walk from the Janaki Mandir; rooms from NPR 1,500 a night, a restaurant, weddings and functions, and a front desk open all night. Book direct.">
 <meta name="theme-color" content="#0B0F19">
 <link rel="canonical" href="https://www.hotelperfectplaza.com/">
 <link rel="icon" href="assets/favicon/favicon.svg" type="image/svg+xml">
@@ -43,6 +43,8 @@
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Hotel Perfect Plaza">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ne_NP">
 <meta property="og:title" content="Hotel Perfect Plaza — For Perfect Satisfaction">
 <meta property="og:description" content="A hotel in Janakpurdham, ten minutes' walk from the Janaki Mandir.">
 <meta property="og:url" content="https://www.hotelperfectplaza.com/">
@@ -67,7 +69,72 @@
 }
 </script>
 
-<script type="application/ld+json" data-schema></script>
+<!-- What search engines read about the hotel: its name, address, phone and
+     prices, and the name to show for this website in results. Kept here in
+     the page itself (not written by a script) so every search engine sees
+     it. Keep it in step with SITE_CONFIG in main.js and api/_lib/rooms.js;
+     add Facebook / Google Maps / TripAdvisor links to "sameAs". -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.hotelperfectplaza.com/#website",
+      "url": "https://www.hotelperfectplaza.com/",
+      "name": "Hotel Perfect Plaza",
+      "alternateName": ["Hotel Perfect Plaza Janakpur", "Perfect Plaza", "hotelperfectplaza.com"],
+      "inLanguage": ["en", "ne"],
+      "publisher": { "@id": "https://www.hotelperfectplaza.com/#hotel" }
+    },
+    {
+      "@type": "Hotel",
+      "@id": "https://www.hotelperfectplaza.com/#hotel",
+      "name": "Hotel Perfect Plaza",
+      "alternateName": ["Hotel Perfect Plaza Janakpur", "Perfect Plaza Janakpurdham", "होटल परफेक्ट प्लाजा"],
+      "slogan": "For Perfect Satisfaction",
+      "description": "A hotel at Ramanand Chowk, Janakpurdham (Janakpur), Nepal, ten minutes' walk from the Janaki Mandir: air-conditioned rooms, a restaurant, weddings and functions, and a 24-hour front desk.",
+      "url": "https://www.hotelperfectplaza.com/",
+      "logo": "https://www.hotelperfectplaza.com/assets/images/hotel-logo.png",
+      "image": [
+        "https://www.hotelperfectplaza.com/assets/images/og-image.jpg",
+        "https://www.hotelperfectplaza.com/assets/images/hotel-exterior.jpg",
+        "https://www.hotelperfectplaza.com/assets/images/hotel-lobby.jpg",
+        "https://www.hotelperfectplaza.com/assets/images/room-1.jpg",
+        "https://www.hotelperfectplaza.com/assets/images/restaurant-meal.jpg"
+      ],
+      "telephone": "+977-41-590911",
+      "email": "hotelperfectplaza@gmail.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Ramanand Chowk-9",
+        "addressLocality": "Janakpurdham",
+        "addressRegion": "Madhesh Province",
+        "postalCode": "45600",
+        "addressCountry": "NP"
+      },
+      "hasMap": "https://www.google.com/maps/search/?api=1&query=Hotel+Perfect+Plaza%2C+Ramanand+Chowk%2C+Janakpurdham",
+      "priceRange": "NPR 1,500 – 5,500",
+      "currenciesAccepted": "NPR",
+      "paymentAccepted": "Cash, eSewa",
+      "checkinTime": "14:00",
+      "checkoutTime": "12:00",
+      "numberOfRooms": 18,
+      "availableLanguage": ["English", "Nepali"],
+      "amenityFeature": [
+        { "@type": "LocationFeatureSpecification", "name": "Air conditioning", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Free Wi-Fi", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Restaurant", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Room service", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Airport shuttle", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "24-hour front desk", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Laundry service", "value": true }
+      ],
+      "sameAs": []
+    }
+  ]
+}
+</script>
 </head>
 
 <body class="is-loading">
@@ -142,7 +209,7 @@
 <header class="masthead" data-masthead>
   <div class="masthead__bar">
     <a href="#top" class="brand" aria-label="Hotel Perfect Plaza — home">
-      <img class="brand__logo" src="assets/images/hotel-logo.png" alt="" width="762" height="288">
+      <img class="brand__logo" src="assets/images/hotel-logo.png" alt="Hotel Perfect Plaza" width="762" height="288">
       <span class="brand__tag">Janakpurdham, Nepal</span>
     </a>
 
@@ -233,7 +300,7 @@
         <span class="hero__tour-play" aria-hidden="true"><svg><use href="#i-play"/></svg></span>
         <span>Watch the hotel tour <span class="hero__tour-time">1:12</span></span>
       </a>
-      <h1 class="hero__title hero-in hero-in--2" id="hero-title">For Perfect Satisfaction</h1>
+      <h1 class="hero__title hero-in hero-in--2" id="hero-title"><span class="sr-only">Hotel Perfect Plaza — </span>For Perfect Satisfaction</h1>
       <p class="hero__lede hero-in hero-in--3">
         A hotel ten minutes' walk from the Janaki Mandir — air-conditioned rooms from
         NPR 2,500 a night, our own restaurant, and a front desk open through the night.

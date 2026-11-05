@@ -11,7 +11,7 @@
    ========================================================================== */
 
 window.HPP_NE = {
-  "Hotel Perfect Plaza — Hotel in Janakpurdham, Nepal": "होटल परफेक्ट प्लाजा — जनकपुरधाम, नेपालको होटल",
+  "Hotel Perfect Plaza, Janakpur — Hotel in Janakpurdham, Nepal": "होटल परफेक्ट प्लाजा, जनकपुर — जनकपुरधाम, नेपालको होटल",
   "Skip to content": "मुख्य सामग्रीमा जानुहोस्",
   "Hotel Perfect Plaza — home": "होटल परफेक्ट प्लाजा — गृहपृष्ठ",
   "Janakpurdham, Nepal": "जनकपुरधाम, नेपाल",
@@ -27,6 +27,7 @@ window.HPP_NE = {
   "Mobile": "मोबाइल",
   "Call": "फोन",
   "Watch the hotel tour": "होटलको भिडियो टुर हेर्नुहोस्",
+  "Hotel Perfect Plaza —": "होटल परफेक्ट प्लाजा —",
   "For Perfect Satisfaction": "पूर्ण सन्तुष्टिका लागि",
   "A hotel ten minutes' walk from the Janaki Mandir — air-conditioned rooms from NPR 2,500 a night, our own restaurant, and a front desk open through the night.": "जानकी मन्दिरबाट पैदल दस मिनेटको दूरीमा रहेको होटल — प्रतिरात रु. 2,500 देखि वातानुकूलित कोठा, आफ्नै रेस्टुरेन्ट, र रातभरि खुला रहने रिसेप्सन।",
   "Check availability": "उपलब्धता हेर्नुहोस्",
