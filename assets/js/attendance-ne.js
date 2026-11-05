@@ -160,6 +160,32 @@ window.HPP_NE = (function () {
     "Phone (Telegram name)": "फोन (टेलिग्राम नाम)", "Added": "थपेको", "Gets messages": "सन्देश आउँछ", "Paused": "रोकिएको",
     "Pause": "रोक्नुहोस्", "Resume": "फेरि सुरु गर्नुहोस्",
 
+    /* the roster */
+    "Weekly roster": "साप्ताहिक रोस्टर", "Week before": "अघिल्लो हप्ता", "Week after": "अर्को हप्ता", "Copy last week": "गएको हप्ता जस्तै",
+    "Who works which shift each day. \"Usual\" is the person's own shift (below). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.":
+      "हरेक दिन को कुन सिफ्टमा काम गर्छ। “सामान्य” भनेको त्यो व्यक्तिको आफ्नै सिफ्ट हो (तल)। ढिलो र ओभरटाइम यहाँ छानेको सिफ्ट अनुसार हुन्छ। सिफ्टहरू सेटिङमा मिलाइन्छन्।",
+    "Usual": "सामान्य", "Usual: day off": "सामान्य: बिदा",
+    "Copy last week's roster into this week? This week's choices are replaced.": "गएको हप्ताको रोस्टर यो हप्तामा सार्ने? यो हप्ताको छनोट बदलिन्छ।",
+    "Copied.": "सारियो।", "Morning": "बिहान", "Day": "दिन", "Evening": "बेलुका", "Night": "राति",
+    "Shifts for the roster": "रोस्टरका सिफ्टहरू", "Add a shift": "सिफ्ट थप्नुहोस्", "Shift name": "सिफ्टको नाम", "Starts": "सुरु", "Ends": "सकिने",
+    "SSF from salary (%)": "तलबबाट SSF (%)", "SSF paid by the hotel (%)": "होटलले तिर्ने SSF (%)",
+    "In the Social Security Fund (SSF)": "सामाजिक सुरक्षा कोष (SSF) मा आबद्ध", "SSF": "SSF", "Yes": "छ",
+
+    /* payslips */
+    "Payslip": "तलब पर्ची", "Print payslip": "तलब पर्ची प्रिन्ट", "Print all payslips": "सबै तलब पर्ची प्रिन्ट",
+    "Added": "थपिएको", "Taken off": "कटाइएको",
+    "Advances, bonuses and deductions this month": "यो महिनाको पेस्की, बोनस र कट्टी",
+    "Salary advance (taken off)": "तलब पेस्की (कटाइने)", "Bonus (added)": "बोनस (थपिने)", "Allowance (added)": "भत्ता (थपिने)",
+    "Tax (taken off)": "कर (कटाइने)", "Other deduction (taken off)": "अन्य कट्टी (कटाइने)",
+    "Salary advance": "तलब पेस्की", "Bonus": "बोनस", "Allowance": "भत्ता", "Tax": "कर", "Other deduction": "अन्य कट्टी", "Other deductions": "अन्य कट्टी",
+    "Amount (NPR)": "रकम (रु)", "Amount": "रकम", "e.g. advance for Dashain": "जस्तै: दशैँ पेस्की", "Add": "थप्नुहोस्",
+    "Remove this entry?": "यो हटाउने?", "Nothing this month.": "यो महिना केही छैन।", "Choose what kind it is.": "किसिम छान्नुहोस्।",
+    "Monthly salary": "मासिक तलब", "Days": "दिन", "Half days": "आधा दिन", "Days off & holidays": "बिदा र पर्व",
+    "Earnings": "आम्दानी", "Deductions": "कट्टी", "Basic salary": "आधारभूत तलब", "Total earnings": "जम्मा आम्दानी", "Total deductions": "जम्मा कट्टी",
+    "Net pay": "खुद तलब", "Received by": "बुझ्नेको सही", "For Hotel Perfect Plaza": "होटल पर्फेक्ट प्लाजाको तर्फबाट",
+    "SSF paid by the hotel, on top of this pay": "यो तलबबाहेक होटलले तिर्ने SSF",
+    "How to connect the machine: Hikvision": "मेसिन कसरी जोड्ने: Hikvision", "How to connect the machine: ZKTeco or eSSL": "मेसिन कसरी जोड्ने: ZKTeco वा eSSL",
+
     /* errors (errText in attendance.js) */
     "Choose a staff member (or check the machine number).": "कर्मचारी छान्नुहोस् (वा मेसिन नम्बर जाँच्नुहोस्)।",
     "That date or time isn't right.": "मिति वा समय मिलेन।", "That time hasn't happened yet.": "त्यो समय अझै आएको छैन।",
@@ -230,7 +256,12 @@ window.HPP_NE = (function () {
     [/^Couldn't turn them on here \((.*)\)\.$/, m => "यहाँ खोल्न सकिएन (" + m[1] + ")।"],
     [/^Downloaded: (\d+) staff, (\d+) punches in (\d+)\. Keep the file somewhere safe\.$/, m => `डाउनलोड भयो: ${m[1]} कर्मचारी, ${m[3]} मा ${m[2]} हाजिरी। फाइल सुरक्षित ठाउँमा राख्नुहोस्।`],
     [/^Too many wrong passwords\. Try again in (\d+) minutes\.$/, m => "धेरै पटक गलत पासवर्ड। " + m[1] + " मिनेटपछि फेरि प्रयास गर्नुहोस्।"],
-    [/^(.+) — Hotel Perfect Plaza$/, m => tr(m[1]) + " — होटल पर्फेक्ट प्लाजा"]
+    [/^(.+) — Hotel Perfect Plaza$/, m => tr(m[1]) + " — होटल पर्फेक्ट प्लाजा"],
+    [/^Payslip: (.+)$/, m => "तलब पर्ची: " + m[1]],
+    [/^([\d.]+) unpaid days × Rs ([\d,]+) taken off$/, m => `${m[1]} बेतलबी दिन × रु ${m[2]} कटाइयो`],
+    [/^([\d.]+) hours × Rs ([\d,]+)$/, m => `${m[1]} घण्टा × रु ${m[2]}`],
+    [/^([\d.]+)% of basic salary$/, m => `आधारभूत तलबको ${m[1]}%`],
+    [/^(\S+) (\d{1,2}:\d{2} [AP]M–\d{1,2}:\d{2} [AP]M)$/, m => (W[m[1]] || m[1]) + " " + inline(m[2])]
   ];
 
   /* English → Nepali, or the English back if there's nothing to change.
@@ -253,7 +284,14 @@ window.HPP_NE = (function () {
                      '<li><strong>Server port: 443</strong>, <strong>HTTPS: ON</strong>, <strong>Proxy: OFF</strong>। सेभ गरेर मेसिन फेरि सुरु गर्नुहोस्।</li>' +
                      '<li>एक मिनेटभित्र माथिको तालिकामा मेसिन देखिन्छ। सिरियल नम्बर जाँच्नुहोस् (Menu → System Info → Device Info) र <strong>स्वीकृत गर्नुहोस्</strong> थिच्नुहोस्। त्यसपछि सबै हाजिरी आउँछ, मेसिनमा पहिले नै भएका पनि।</li>' +
                      '<li>मेसिनको मिति र समय जाँच्नुहोस् (Menu → System → Date Time)। देखिने सबै समय मेसिनकै घडीबाट आउँछ।</li>',
-    "tg-open": '<strong>सन्देश चाहिने फोनमा</strong> (टेलिग्राम भएको), यो लिङ्क खोलेर <strong>Start</strong> थिच्नुहोस्:'
+    "tg-open": '<strong>सन्देश चाहिने फोनमा</strong> (टेलिग्राम भएको), यो लिङ्क खोलेर <strong>Start</strong> थिच्नुहोस्:',
+    "hik-steps": '<li>मेसिनलाई होटलको इन्टरनेटमा जोड्नुहोस्: राउटरबाट LAN तार (वा Wi-Fi भएको मोडेलमा Wi-Fi)।</li>' +
+                 '<li>होटलको नेटवर्कमा भएको कम्प्युटरको ब्राउजरमा मेसिनको IP ठेगाना खोल्नुहोस् (मेसिनमा <strong>Communication → Network</strong> मा देखिन्छ) र <strong>admin</strong> ले साइन इन गर्नुहोस्। वा iVMS-4200 मा: <strong>Device Management → मेसिन → Remote Configuration</strong>।</li>' +
+                 '<li><strong>Configuration → Network → Network Service → HTTP Listening</strong> मा जानुहोस् (कुनै फर्मवेयरमा <em>Event Alarm</em> वा <em>Alarm Server</em>)।</li>' +
+                 '<li>Event alarm IP address / domain name: <code>www.hotelperfectplaza.com</code> · URL: <code>/api/hik</code> · Port: <strong>443</strong> · Protocol: <strong>HTTPS</strong>। सेभ गर्नुहोस्। MeroHajir को आफ्नै जडान प्रयोग बन्द नगरेसम्म रहन सक्छ।</li>' +
+                 '<li>मेसिनमा औँला लगाउनुहोस्। एक मिनेटभित्र माथिको तालिकामा <strong>HIK-</strong> र MAC ठेगानासहित देखिन्छ। <strong>स्वीकृत गर्नुहोस्</strong> थिचेर फेरि एक पटक औँला लगाउनुहोस्: स्वीकृतिपछिका हाजिरी मात्र गनिन्छन्।</li>' +
+                 '<li>मेसिनमा हरेक व्यक्तिको <strong>Employee No.</strong> नै ‘कर्मचारी’ मा उसको <strong>मेसिन नं.</strong> हो।</li>' +
+                 '<li>समय: <strong>Configuration → System → Time Settings</strong>: time zone <strong>(GMT+05:45) Kathmandu</strong>, NTP खुला।</li>'
   };
 
   /* Translates a node and everything in it, in place. */

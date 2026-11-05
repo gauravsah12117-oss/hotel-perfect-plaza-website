@@ -22,9 +22,9 @@ with that year's row and correct the row if they differ.
 | Section | What's there |
 |---|---|
 | **Today** | Who came, who is in the hotel now, who is late, who hasn't come, overtime; a timeline per person across the day. Refreshes itself every 30 seconds; ‹ › for other days |
-| **Month** | The register (P / L / A / leave / holiday per person per day), then per person: days present, half days, absent, leave, times and minutes late, hours, overtime, overtime pay, unpaid days and the month's pay. Tap a name for every day. **Download for Excel** and **Print** |
+| **Month** | The register (P / L / A / leave / holiday per person per day), then per person: days present, half days, absent, leave, times and minutes late, hours, overtime, overtime pay, unpaid days, additions, deductions and the month's net pay. Tap a name for every day. **Payslip** per person (with the salary advances, bonuses, allowances, tax and other deductions of that month), **Print all payslips**, **Download for Excel**, **Print** |
 | **Punches** | Every punch exactly as the machine recorded it. Add a punch someone forgot ("by hand", always marked). "Leave out" a wrong punch |
-| **Staff** | Name, job, phone, shift, weekly day off, joining date, salary, overtime rate, notifications on/off, still working here |
+| **Staff** | The **weekly roster** (who works Morning, Day, Evening, Night or has a day off, each day; "Copy last week"), then name, job, phone, usual shift, weekly day off, joining date, salary, overtime rate, SSF, notifications on/off, still working here |
 | **Leave** | Paid, sick and unpaid leave per person; holidays for everyone (Dashain, Tihar…) |
 | **Settings** | Notifications on this phone, installing the app, the fingerprint machines, the hotel's rules (usual shift, late after, overtime from, overtime rate, language of the notifications), backup, Telegram (optional) |
 
@@ -76,7 +76,34 @@ Deployments → ⋯ → **Redeploy**.
 @BotFather, add its token in Vercel as `TELEGRAM_BOT_TOKEN`, redeploy, then Settings → Telegram
 → **Add a phone**. Not needed while the app's notifications work.
 
-### The fingerprint machine
+### The fingerprint machine: Hikvision (the hotel's, from MeroHajir)
+
+Hikvision terminals (DS-K1T320, DS-K1T342, DS-K1T343 and the like) send each punch to the
+website through **HTTP Listening**. No new machine is needed.
+
+1. The terminal on the hotel's internet: a LAN cable to the router (or Wi-Fi on Wi-Fi models).
+2. On a computer on the hotel's network, open the terminal's IP address in a browser (the
+   terminal shows it under Communication → Network) and sign in as **admin**, or use iVMS-4200 →
+   Device Management → the terminal → Remote Configuration.
+3. **Configuration → Network → Network Service → HTTP Listening** (some firmware calls it
+   *Event Alarm* or *Alarm Server*): IP address / domain **`www.hotelperfectplaza.com`**,
+   URL **`/api/hik`**, port **443**, protocol **HTTPS**. Save.
+4. Punch once. Within a minute the terminal shows in **Settings → Fingerprint machines** as
+   **HIK-** and its MAC address. **Approve** it, then punch again: punches before approval are not
+   kept (unlike ZKTeco machines, Hikvision doesn't send them again).
+5. Each person's **Employee No.** on the terminal is their **Machine no.** in Staff.
+6. Time: Configuration → System → Time Settings → **(GMT+05:45) Kathmandu**, NTP on.
+
+MeroHajir's own connection to the terminal can stay until you stop their service. If the terminal
+has no HTTPS option in HTTP Listening, use the bridge (below) with the terminal's URL set to
+`/api/hik` and the bridge computer's address and port 8081.
+
+**First real punches:** this was built from Hikvision's published event format and tested with
+sample events; the first punches from the hotel's terminal are the real test. If they don't
+arrive, the terminal still appears in Settings (with its model in the details), which tells us
+what it sent.
+
+### The fingerprint machine: ZKTeco or eSSL
 
 The system speaks ZKTeco's **ADMS / "Cloud Server"** protocol. Most ZKTeco and eSSL machines sold
 in Nepal have it: K40, K50, MB160, MB20, iClock, uFace, SpeedFace, and eSSL's X990 and
@@ -130,10 +157,23 @@ later. A cheaper long-term fix is a machine with HTTPS.
   overtime.
 - **Overtime pay per hour**: the person's own rate if set in Staff. Otherwise salary ÷ 30 ÷
   shift hours × the overtime rate (default 1.5).
-- **Pay** (whole months only) = salary − unpaid days × (salary ÷ 30) + overtime pay. Unpaid days
-  are absences, unpaid leave, half of each half day, and days before the joining date. Paid
-  leave, sick leave, weekly days off and holidays are paid. Days still to come aren't counted, so
-  in the middle of the month it's "the pay if the rest of the month is worked".
+- **The roster**: a day's shift is the one chosen in the weekly roster, otherwise the person's
+  usual one. A day's punches run from 4 hours before its shift to 4 hours before the next day's,
+  but never end sooner than an hour after the shift does, so a night shift's 6 am punch-out stays
+  with that night even when a morning shift follows.
+- **Pay / the payslip** (whole months only):
+  - *Basic salary* = salary − unpaid days × (salary ÷ 30). Unpaid days are absences, unpaid
+    leave, half of each half day, and days before the joining date. Paid leave, sick leave,
+    weekly days off and holidays are paid. Days still to come aren't counted, so in the middle
+    of the month it's "the pay if the rest of the month is worked".
+  - *Earnings* = basic salary + overtime pay + bonuses + allowances.
+  - *Deductions* = SSF (for staff ticked "In the SSF": 11% of the basic salary, Settings) +
+    salary advances + tax + other deductions. The hotel's own SSF share (20%) is shown on the
+    payslip, not taken from pay.
+  - *Net pay* = earnings − deductions.
+  - Advances, bonuses, allowances, tax and deductions are added on the payslip with a date; they
+    count in the month that date falls in (Nepali month with Nepali dates on). Tax is entered as
+    an amount: work it out with the accountant.
 - **Forgot to punch out**: the day shows *No punch out*. Its hours aren't counted until a punch
   is added by hand in **Punches**.
 - **A wrong punch**: **Leave out** in Punches. Nothing the machine sends is ever deleted.
@@ -165,7 +205,8 @@ to its first and last day.
 |---|---|
 | `attendance.html`, `assets/js/attendance.js`, `assets/css/attendance.css` | The page |
 | `api/attendance.js` | The page's data (needs `ATTENDANCE_PASSWORD`) |
-| `api/iclock.js` | Where the machine sends punches (`/iclock/…`, see `vercel.json`) |
+| `api/iclock.js` | Where a ZKTeco / eSSL machine sends punches (`/iclock/…`, see `vercel.json`) |
+| `api/hik.js` | Where a Hikvision terminal sends punches (`/api/hik`, HTTP Listening) |
 | `api/telegram.js` | The bot: adding phones, `/today`, `/now` |
 | `api/attendance-cron.js` | The 9 pm summary (`vercel.json` → `crons`) |
 | `api/_lib/attendance.js` | The tables, and how days, lateness, overtime and pay are worked out |

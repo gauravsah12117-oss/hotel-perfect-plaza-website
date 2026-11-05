@@ -55,6 +55,7 @@
     exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", money: "Check the salary and overtime amounts.",
     dates: "Check the dates (at most 62 days at once).", telegram: "TELEGRAM_BOT_TOKEN isn't set in Vercel yet (ATTENDANCE.md, step 2).",
     notify: "Turn on notifications on a phone first (Settings → Notifications on this phone).",
+    kind: "Choose what kind it is.",
     webhook: "Telegram didn't accept the website's address. This only works on the real website, not on this computer.", setting: "Check the highlighted numbers." };
   const errText = r => ERR[r.json.error] || "Something went wrong. Try again.";
 
@@ -167,7 +168,7 @@
 
   /* --------------------------------------------------------------- tabs */
   let current = "day";
-  const loaders = { day: () => loadDay(), report: () => loadReport(), punches: () => loadPunches(), staff: () => loadStaff(), leave: () => loadLeave(), settings: () => loadSettings() };
+  const loaders = { day: () => loadDay(), report: () => loadReport(), punches: () => loadPunches(), staff: () => Promise.all([loadStaff(), loadRoster()]), leave: () => loadLeave(), settings: () => loadSettings() };
   const TITLES = { day: "Daily attendance", report: "Monthly report", punches: "Punches", staff: "Staff", leave: "Leave and holidays", settings: "Settings" };
   function show(tab) {
     if (!loaders[tab]) tab = "day";
@@ -198,13 +199,14 @@
     f.textContent = ""; f.append(el("option", { value: "" }, "Everyone"));
     staff.forEach(s => f.append(el("option", { value: s.pin }, name(s))));
     f.value = was;
-    fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", "Day off", ["Salary", "num"], "Messages", "", ["Punches", "num"], ""],
+    fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", "Day off", ["Salary", "num"], "SSF", "Messages", "", ["Punches", "num"], ""],
       staff.map(s => [
         { v: s.pin, cls: "num" },
         { v: s.name || el("span", { className: "warn" }, "No name yet"), cls: "name" },
         s.job, s.shift_start ? `${clock(s.shift_start)} – ${clock(s.shift_end)}` : el("span", { className: "muted" }, "usual hours"),
         s.weekly_off == null ? "—" : DAYS[s.weekly_off],
         { v: s.salary ? rs(s.salary) : "—", cls: "num" },
+        s.ssf ? "Yes" : "—",
         s.notify ? "On" : el("span", { className: "muted" }, "Off"),
         s.active ? "" : el("span", { className: "chip off" }, "Left"),
         { v: s.punches, cls: "num" },
@@ -216,7 +218,7 @@
     for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "joined"]) f[k].value = s[k] || "";
     f.weekly_off.value = s.weekly_off == null ? "" : String(s.weekly_off);
     f.salary.value = s.salary || ""; f.ot_rate.value = s.ot_rate || "";
-    f.notify.checked = s.notify; f.active.checked = s.active;
+    f.notify.checked = s.notify; f.active.checked = s.active; f.ssf.checked = !!s.ssf;
     f.pin.readOnly = true;
     hints();
     $("[data-staff-form-title]").textContent = "Edit " + (s.name || "Staff #" + s.pin);
@@ -237,13 +239,73 @@
     const r = await post("staff", {
       pin: f.pin.value.trim(), name: f.name.value, job: f.job.value, phone: f.phone.value,
       shift_start: f.shift_start.value, shift_end: f.shift_end.value, weekly_off: f.weekly_off.value,
-      salary: f.salary.value, ot_rate: f.ot_rate.value, joined: f.joined.value, notify: f.notify.checked, active: f.active.checked
+      salary: f.salary.value, ot_rate: f.ot_rate.value, joined: f.joined.value, notify: f.notify.checked, active: f.active.checked, ssf: f.ssf.checked
     });
     if (!r.ok) return msg(m, errText(r));
     msg(m, "Saved.", true);
     await loadStaff();
     const s = staff.find(x => x.pin === f.pin.value.trim());
     if (s) editStaff(s);
+  });
+
+  /* ------------------------------------------------------------- roster */
+  /* A week (Sunday to Saturday) per person: their usual shift, a shift from
+     Settings, or a day off. Each change is saved as it is made. */
+  let rosWeek = null;
+  const weekStart = d => addDays(d, -wd(d));
+  const shiftLabel = s => `${s.name} ${clock(s.start)}–${clock(s.end)}`;
+  async function loadRoster() {
+    rosWeek ||= weekStart(today());
+    const j = (await api("roster", { query: { from: rosWeek } })).json;
+    const days = Array.from({ length: 7 }, (_, i) => addDays(rosWeek, i));
+    $("[data-ros-week]").textContent = `${nice(days[0])} – ${nice(days[6])}`;
+    const legend = $("[data-ros-legend]"); legend.textContent = "";
+    j.shifts.forEach((x, i) => legend.append(el("span", { "data-k": String(i) }, el("b", {}, x.name), " ", `${clock(x.start)}–${clock(x.end)}`)));
+    const t = $("[data-roster]"); t.textContent = "";
+    t.append(el("thead", {}, el("tr", {}, el("th", { className: "who" }, "Staff"),
+      days.map(d => { const b = bsOf(d); return el("th", { className: (wd(d) === 6 ? "sat" : "") + (d === today() ? " today" : "") }, WD[wd(d)], el("small", {}, b ? b.d : +d.slice(8))); }))));
+    const body = el("tbody");
+    if (!j.staff.length) body.append(el("tr", {}, el("td", { colspan: 8, className: "muted" }, "No staff yet.")));
+    for (const s of j.staff) {
+      const usual = s.shift_start ? `${clock(s.shift_start)}–${clock(s.shift_end)}` : `${clock(j.usual.start)}–${clock(j.usual.end)}`;
+      const tr = el("tr", {}, el("td", { className: "who" }, s.name || "Staff #" + s.pin, el("small", {}, usual)));
+      for (const d of days) {
+        const e = j.entries.find(x => x.pin === s.pin && x.day === d);
+        const weeklyOff = s.weekly_off != null && Number(s.weekly_off) === wd(d);
+        const sel = el("select", { "aria-label": `${s.name || s.pin}, ${nice(d)}` },
+          el("option", { value: "" }, weeklyOff ? "Usual: day off" : "Usual"),
+          j.shifts.map((x, i) => el("option", { value: String(i) }, x.name)),
+          el("option", { value: "off" }, "Day off"));
+        let v = "";
+        if (e && e.off) v = "off";
+        else if (e) {
+          const i = j.shifts.findIndex(x => x.name === e.name && x.start === e.start && x.end === e.end);
+          if (i >= 0) v = String(i);
+          else { sel.append(el("option", { value: "custom" }, shiftLabel(e))); v = "custom"; }
+        }
+        sel.value = v;
+        const paint = () => { sel.dataset.k = sel.value === "" ? (weeklyOff ? "off" : "") : sel.value; };
+        paint();
+        sel.addEventListener("change", async () => {
+          if (sel.value === "custom") return;
+          const shift = sel.value === "" ? null : sel.value === "off" ? "off" : j.shifts[+sel.value];
+          const r = await post("roster", { pin: s.pin, day: d, shift });
+          msg($("[data-ros-msg]"), r.ok ? "Saved." : errText(r), r.ok);
+          paint();
+        });
+        tr.append(el("td", {}, sel));
+      }
+      body.append(tr);
+    }
+    t.append(body);
+  }
+  $("[data-ros-prev]").addEventListener("click", () => { rosWeek = addDays(rosWeek, -7); loadRoster(); });
+  $("[data-ros-next]").addEventListener("click", () => { rosWeek = addDays(rosWeek, 7); loadRoster(); });
+  $("[data-ros-copy]").addEventListener("click", async () => {
+    if (!confirm("Copy last week's roster into this week? This week's choices are replaced.")) return;
+    const r = await post("roster-copy", { from: rosWeek });
+    msg($("[data-ros-msg]"), r.ok ? "Copied." : errText(r), r.ok);
+    loadRoster();
   });
 
   /* -------------------------------------------------------------- daily */
@@ -491,7 +553,7 @@
     register(report.staff);
     const head = ["Staff", ["Present", "num"], ["Half day", "num"], ["Absent", "num"], ["Paid leave", "num"], ["Unpaid leave", "num"], ["Off & holidays", "num"],
       ["Late (times)", "num"], ["Late (total)", "num"], ["Hours worked", "num"], ["Overtime (h)", "num"], ["Overtime pay", "num"], ["Unpaid days", "num"], ["Salary", "num"]];
-    if (wholeMonth) head.push(["Pay", "num"]);
+    if (wholeMonth) head.push(["Added", "num"], ["Taken off", "num"], ["Pay", "num"], "");
     const S = report.staff;
     const n = (v, cls = "") => ({ v: v || v === 0 ? v : "—", cls: "num " + cls });
     const tot = k => S.reduce((a, s) => a + s.summary[k], 0);
@@ -502,14 +564,103 @@
         n(x.late || "—", x.late ? "warn" : ""), n(x.lateMin ? dur(x.lateMin) : "—"), n(hours(x.worked)), n(x.ot ? hours(x.ot) : "—", x.ot ? "good" : ""),
         n(x.otPay ? rs(x.otPay) : "—"), n(x.unpaidDays || "—"), n(s.salary ? rs(s.salary) : "—")
       ];
-      if (wholeMonth) row.push(n(s.salary ? rs(x.pay) : "—", "pay"));
+      if (wholeMonth) row.push(n(x.bonus + x.allowance ? rs(x.bonus + x.allowance) : "—"), n(x.takenOff ? rs(x.takenOff) : "—"),
+        n(s.salary || x.gross ? rs(x.pay) : "—", "pay"),
+        btn("Payslip", e => { e.stopPropagation(); openSlip(s.pin); }));
       return row;
     });
     const foot = ["Total", n(tot("present")), "", n(tot("absent")), "", "", "", n(tot("late")), "", n(hours(tot("worked"))), n(hours(tot("ot"))), n(rs(tot("otPay"))), "", n(rs(S.reduce((a, s) => a + (s.salary || 0), 0)))];
-    if (wholeMonth) foot.push(n(rs(tot("pay"))));
+    if (wholeMonth) foot.push(n(rs(tot("bonus") + tot("allowance"))), n(rs(tot("takenOff"))), n(rs(tot("pay"))), "");
     fill($("[data-rep-table]"), head, rows, { foot: S.length ? foot : null, rowProps: i => ({ className: "click", title: "See every day", onclick: () => detail(S[i]) }) });
     $("[data-rep-detail]").hidden = true;
+    $("[data-slips-print]").hidden = !wholeMonth || !S.length;
+    if (slipPin && wholeMonth && S.some(s => s.pin === slipPin)) openSlip(slipPin, false); else closeSlip();
   }
+
+  /* ----------------------------------------------------------- payslips */
+  let slipPin = null;
+  const amt = v => v ? Math.round(v).toLocaleString("en-IN") : "—";
+  const KIND = { advance: "Salary advance", bonus: "Bonus", allowance: "Allowance", tax: "Tax", deduction: "Other deduction" };
+
+  /* the month's name: a whole Nepali month, a whole English month, or the dates */
+  function periodName() {
+    const f = report.from, t = report.to, bf = ND && ND.toBS(f), bt = ND && ND.toBS(t);
+    if (cal === "bs" && bf && bt && bf.d === 1 && bt.y === bf.y && bt.m === bf.m && bt.d === ND.daysIn(bt.y, bt.m)) return `${ND.MONTHS[bf.m - 1]} ${bf.y}`;
+    if (f.slice(8) === "01" && t === monthEnd(f.slice(0, 7))) return new Date(f + "T00:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+    return `${nice(f)} – ${nice(t)}`;
+  }
+
+  /* one payslip, ready to show or print */
+  function slipDoc(s) {
+    const x = s.summary, emp = report.ssf.employee, hotel = report.ssf.employer;
+    const pair = (k, v) => el("div", {}, el("dt", {}, k), el("dd", {}, v));
+    const stat = (k, v) => el("div", {}, el("span", {}, k), el("b", {}, String(v)));
+    const line = (label, small, v) => el("tr", {}, el("td", {}, el("span", {}, label), small ? el("small", {}, small) : null), el("td", { className: "num" }, v));
+    const table = (title, rows, totalLabel, total) => el("table", {},
+      el("thead", {}, el("tr", {}, el("th", {}, title), el("th", { className: "num" }, "Rs"))), el("tbody", {}, rows),
+      el("tfoot", {}, el("tr", {}, el("td", {}, totalLabel), el("td", { className: "num" }, amt(total)))));
+    return el("article", { className: "slip" },
+      el("header", { className: "slip__head" },
+        el("img", { src: "assets/images/hotel-logo.png", alt: "Hotel Perfect Plaza", className: "slip__logo" }),
+        el("div", { className: "slip__title" }, el("b", {}, "Payslip"), el("span", {}, periodName()), el("small", {}, `${nice(report.from)} – ${nice(report.to)}`))),
+      el("p", { className: "slip__addr" }, el("span", {}, "Ramanand Chowk, Janakpurdham"), " · +977-41-590911"),
+      el("dl", { className: "slip__who" }, pair("Name", s.displayName), pair("Job", s.job || "—"), pair("Machine no.", s.pin), pair("Monthly salary", rs(s.salary))),
+      el("div", { className: "slip__days" }, stat("Days", x.days), stat("Present", x.present), stat("Half days", x.half), stat("Absent", x.absent),
+        stat("Paid leave", x.paidLeave), stat("Unpaid leave", x.unpaidLeave), stat("Days off & holidays", x.off + x.holiday), stat("Late", x.late), stat("Overtime (h)", hours(x.ot))),
+      el("div", { className: "slip__cols" },
+        table("Earnings", [
+          line("Basic salary", x.unpaidDays ? `${x.unpaidDays} unpaid days × Rs ${x.dayRate} taken off` : null, amt(x.basicEarned)),
+          line("Overtime", x.ot ? `${hours(x.ot)} hours × Rs ${x.otHourly}` : null, amt(x.otPay)),
+          line("Bonus", null, amt(x.bonus)), line("Allowance", null, amt(x.allowance))], "Total earnings", x.gross),
+        table("Deductions", [
+          line("SSF", s.ssf ? `${emp}% of basic salary` : null, amt(x.ssf)),
+          line("Salary advance", null, amt(x.advance)), line("Tax", null, amt(x.tax)), line("Other deductions", null, amt(x.otherDeduction))], "Total deductions", x.takenOff)),
+      el("p", { className: "slip__net" }, el("span", {}, "Net pay"), el("b", {}, rs(x.pay))),
+      s.ssf ? el("p", { className: "slip__note" }, el("span", {}, "SSF paid by the hotel, on top of this pay"), " ", el("b", {}, `${rs(x.ssfEmployer)} (${hotel}%)`)) : null,
+      el("div", { className: "slip__sign" }, el("span", {}, "Received by"), el("span", {}, "For Hotel Perfect Plaza")));
+  }
+
+  function openSlip(pin, scroll = true) {
+    const s = report.staff.find(x => x.pin === pin);
+    if (!s) return;
+    slipPin = pin;
+    $("[data-slip-title]").textContent = `Payslip: ${s.displayName}`;
+    const doc = $("[data-slip-doc]"); doc.textContent = ""; doc.append(slipDoc(s));
+    fill($("[data-slip-adj]"), ["Date", "Kind", ["Amount", "num"], "Note", ""], s.summary.adjustments.map(a => [
+      nice(a.day), KIND[a.kind], { v: rs(a.amount), cls: "num" }, a.note,
+      btn("Remove", async () => { if (confirm("Remove this entry?")) { await post("adjust-delete", { id: a.id }); loadReport(); } }, DANGER)
+    ]), { empty: "Nothing this month." });
+    const f = $("[data-adj-form]"), t = today();
+    if (!f.day.value || f.day.value < report.from || f.day.value > report.to) f.day.value = t >= report.from && t <= report.to ? t : report.to;
+    hints();
+    $("[data-slip]").hidden = false;
+    if (scroll) $("[data-slip]").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function closeSlip() { slipPin = null; $("[data-slip]").hidden = true; }
+  $("[data-slip-close]").addEventListener("click", closeSlip);
+
+  $("[data-adj-form]").addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = e.target, m = $("[data-adj-msg]");
+    const r = await post("adjust", { pin: slipPin, day: f.day.value, kind: f.kind.value, amount: f.amount.value, note: f.note.value });
+    if (!r.ok) return msg(m, errText(r));
+    msg(m, "Added.", true);
+    f.amount.value = ""; f.note.value = "";
+    loadReport();
+  });
+
+  /* printing: just the payslip(s), one to a page */
+  async function printSlips(list) {
+    const area = $("[data-printarea]"); area.textContent = "";
+    list.forEach(s => area.append(slipDoc(s)));
+    area.hidden = false;
+    document.body.classList.add("printing");
+    await new Promise(r => setTimeout(r, 120));                       /* let the Nepali translation and the logo catch up */
+    window.print();
+  }
+  addEventListener("afterprint", () => { document.body.classList.remove("printing"); $("[data-printarea]").hidden = true; });
+  $("[data-slip-print]").addEventListener("click", () => { const s = report.staff.find(x => x.pin === slipPin); if (s) printSlips([s]); });
+  $("[data-slips-print]").addEventListener("click", () => printSlips(report.staff.filter(s => s.salary || s.summary.gross)));
 
   /* The paper register: a row per person, a mark per day. */
   function mark(d) {
@@ -635,6 +786,9 @@
       if (!f[k]) continue;
       if (f[k].type === "checkbox") f[k].checked = v === "1"; else f[k].value = v;
     }
+    let shifts = []; try { shifts = JSON.parse(j.settings.shifts); } catch (e) {}
+    $("[data-shifts]").textContent = "";
+    shifts.forEach(addShiftRow);
     const tg = $("[data-tg-status]"); tg.textContent = "";
     tg.append(j.telegram.ready
       ? el("p", {}, "Bot: ", el("strong", {}, j.telegram.bot ? "@" + j.telegram.bot : "(couldn't reach Telegram)"), ". Every phone below gets a message the moment someone punches.")
@@ -663,6 +817,17 @@
     machinePill(j.machines);
     renderPush(j).catch(e => console.error(e));
   }
+
+  /* the roster's shifts: a name, when it starts and when it ends */
+  function addShiftRow(s = { name: "", start: "", end: "" }) {
+    const row = el("div", { className: "shiftrow" },
+      el("input", { type: "text", value: s.name, maxlength: 24, "aria-label": "Shift name", placeholder: "Shift name" }),
+      el("input", { type: "time", value: s.start, "aria-label": "Starts" }),
+      el("input", { type: "time", value: s.end, "aria-label": "Ends" }));
+    row.append(btn("Remove", () => row.remove(), DANGER));
+    $("[data-shifts]").append(row);
+  }
+  $("[data-shift-add]").addEventListener("click", () => addShiftRow());
 
   /* --------------------------------------------------------------- backup */
   function backupYears() {
@@ -742,7 +907,11 @@
     e.preventDefault();
     const f = e.target, m = $("[data-set-msg]"), settings = {};
     for (const k of ["notify_in", "notify_out", "notify_summary"]) settings[k] = f[k].checked ? "1" : "0";
-    for (const k of ["lang", "shift_start", "shift_end", "grace", "ot_min", "ot_multiplier"]) settings[k] = f[k].value;
+    for (const k of ["lang", "shift_start", "shift_end", "grace", "ot_min", "ot_multiplier", "ssf_employee", "ssf_employer"]) settings[k] = f[k].value;
+    settings.shifts = JSON.stringify($$("[data-shifts] .shiftrow").map(row => {
+      const [name, start, end] = $$("input", row).map(i => i.value.trim());
+      return { name, start, end };
+    }).filter(s => s.name && s.start && s.end));
     const r = await post("settings", { settings });
     if (!r.ok) { msg(m, errText(r)); if (r.json.key && f[r.json.key]) f[r.json.key].focus(); return; }
     msg(m, "Saved.", true);

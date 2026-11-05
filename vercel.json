@@ -17,7 +17,7 @@
       ]
     },
     {
-      "source": "/api/(attendance|attendance-cron|telegram|iclock)",
+      "source": "/api/(attendance|attendance-cron|telegram|iclock|hik)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },

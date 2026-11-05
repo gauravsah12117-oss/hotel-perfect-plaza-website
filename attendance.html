@@ -165,6 +165,7 @@
             <div class="card__head">
               <h2>Totals and pay</h2>
               <div class="row actions">
+                <button type="button" class="btn btn--ghost" data-slips-print>Print all payslips</button>
                 <button type="button" class="btn btn--ghost" data-rep-csv>Download for Excel</button>
                 <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
               </div>
@@ -172,6 +173,36 @@
             <div class="scroll"><table class="att report" data-rep-table></table></div>
             <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>
           </div>
+          <!-- one person's payslip for the month, and the money to put on it -->
+          <div class="card slipcard" data-slip hidden>
+            <div class="card__head">
+              <h2 data-slip-title>Payslip</h2>
+              <div class="row actions">
+                <button type="button" class="btn" data-slip-print>Print payslip</button>
+                <button type="button" class="btn btn--plain btn--small" data-slip-close>Close</button>
+              </div>
+            </div>
+            <div data-slip-doc></div>
+            <h3>Advances, bonuses and deductions this month</h3>
+            <div class="scroll"><table class="att" data-slip-adj></table></div>
+            <form class="form" data-adj-form>
+              <label>Date <input name="day" type="date" required></label>
+              <label>Kind
+                <select name="kind">
+                  <option value="advance">Salary advance (taken off)</option>
+                  <option value="bonus">Bonus (added)</option>
+                  <option value="allowance">Allowance (added)</option>
+                  <option value="tax">Tax (taken off)</option>
+                  <option value="deduction">Other deduction (taken off)</option>
+                </select>
+              </label>
+              <label>Amount (NPR) <input name="amount" type="number" min="1" step="1" required></label>
+              <label class="wide">Note <input name="note" type="text" placeholder="e.g. advance for Dashain"></label>
+              <button class="btn" type="submit">Add</button>
+              <p class="msg wide" data-adj-msg role="status"></p>
+            </form>
+          </div>
+
           <div class="card" data-rep-detail hidden>
             <div class="card__head">
               <h2 data-rep-detail-title></h2>
@@ -212,6 +243,22 @@
 
         <!-- ================================================= STAFF -->
         <section data-panel="staff" hidden>
+          <div class="card rostercard">
+            <div class="card__head">
+              <h2>Weekly roster</h2>
+              <div class="pick">
+                <button type="button" class="btn btn--plain btn--icon" data-ros-prev aria-label="Week before">‹</button>
+                <span class="ros-week" data-ros-week></span>
+                <button type="button" class="btn btn--plain btn--icon" data-ros-next aria-label="Week after">›</button>
+                <button type="button" class="btn btn--ghost btn--small" data-ros-copy>Copy last week</button>
+              </div>
+            </div>
+            <p class="hint">Who works which shift each day. "Usual" is the person's own shift (below). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.</p>
+            <p class="legend ros-legend" data-ros-legend></p>
+            <div class="scroll"><table class="roster" data-roster></table></div>
+            <p class="msg" data-ros-msg role="status"></p>
+          </div>
+
           <div class="card">
             <h2 data-staff-form-title>Add staff</h2>
             <p class="hint">"Machine no." is the user ID the person was given when their finger was enrolled on the machine. Anyone who punches before being added here appears as "Staff #" and their number: fill in their name here.</p>
@@ -231,6 +278,7 @@
               <label>Joined <input name="joined" type="date"></label>
               <label>Monthly salary (NPR) <input name="salary" type="number" min="0" step="1"></label>
               <label>Overtime per hour (NPR) <input name="ot_rate" type="number" min="0" step="1" placeholder="from salary"></label>
+              <label class="check"><input name="ssf" type="checkbox"> In the Social Security Fund (SSF)</label>
               <label class="check"><input name="notify" type="checkbox" checked> Notify when this person punches</label>
               <label class="check"><input name="active" type="checkbox" checked> Still working here</label>
               <p class="hint wide">Leave the shift empty to use the hotel's usual hours (Settings). If overtime per hour is empty, it is worked out from the salary × the overtime rate in Settings.</p>
@@ -332,7 +380,19 @@
             <div class="scroll"><table class="att" data-dev-table></table></div>
             <p class="msg" data-dev-msg role="status"></p>
             <details class="howto" data-dev-howto>
-              <summary>How to connect the machine</summary>
+              <summary>How to connect the machine: Hikvision</summary>
+              <ol data-ne="hik-steps">
+                <li>Connect the terminal to the hotel's internet: a LAN cable to the router (or its Wi-Fi, on Wi-Fi models).</li>
+                <li>On a computer on the hotel's network, open the terminal's IP address in a browser (shown on the terminal under <strong>Communication → Network</strong>) and sign in as <strong>admin</strong>. Or in iVMS-4200: <strong>Device Management → the terminal → Remote Configuration</strong>.</li>
+                <li>Go to <strong>Configuration → Network → Network Service → HTTP Listening</strong> (on some firmware: <em>Event Alarm</em> or <em>Alarm Server</em>).</li>
+                <li>Event alarm IP address / domain name: <code>www.hotelperfectplaza.com</code> · URL: <code>/api/hik</code> · Port: <strong>443</strong> · Protocol: <strong>HTTPS</strong>. Save. MeroHajir's own connection can stay until you stop using it.</li>
+                <li>Put a finger on the terminal. Within a minute it appears in the table above as <strong>HIK-</strong> and its MAC address. Press <strong>Approve</strong>, then punch once more: punches only count from approval.</li>
+                <li>Each person's <strong>Employee No.</strong> on the terminal is their <strong>Machine no.</strong> in Staff.</li>
+                <li>Time: <strong>Configuration → System → Time Settings</strong>: time zone <strong>(GMT+05:45) Kathmandu</strong>, NTP on.</li>
+              </ol>
+            </details>
+            <details class="howto">
+              <summary>How to connect the machine: ZKTeco or eSSL</summary>
               <ol data-ne="machine-steps">
                 <li>Connect the machine to the hotel's internet: a LAN cable to the router. On the machine: <strong>Menu → Comm. → Ethernet → DHCP: ON</strong>.</li>
                 <li>On the machine: <strong>Menu → Comm. → Cloud Server Setting</strong> (on some models: <em>ADMS</em>).</li>
@@ -358,6 +418,13 @@
               <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" required></label>
               <label>Overtime counts from (minutes) <input name="ot_min" type="number" min="0" max="600" required></label>
               <label>Overtime rate (× hourly pay) <input name="ot_multiplier" type="number" min="0.1" max="10" step="0.05" required></label>
+              <label>SSF from salary (%) <input name="ssf_employee" type="number" min="0" max="50" step="0.01" required></label>
+              <label>SSF paid by the hotel (%) <input name="ssf_employer" type="number" min="0" max="50" step="0.01" required></label>
+              <div class="wide shiftset">
+                <h3>Shifts for the roster</h3>
+                <div data-shifts></div>
+                <button type="button" class="btn btn--plain btn--small" data-shift-add>Add a shift</button>
+              </div>
               <p class="hint wide">"Late after 10" means 9:10 is on time and 9:11 is 11 minutes late. "Overtime from 30" means staying 20 minutes extra isn't overtime, and 45 minutes is.</p>
               <button class="btn" type="submit">Save</button>
               <p class="msg wide" data-set-msg role="status"></p>
@@ -397,6 +464,9 @@
     </main>
   </div>
 </div>
+
+<!-- what is printed when printing payslips (attendance.js fills it) -->
+<div class="printarea" data-printarea hidden></div>
 
 <script src="assets/js/nepali-date.js" defer></script>
 <script src="assets/js/attendance-ne.js" defer></script>

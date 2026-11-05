@@ -8,6 +8,8 @@ import { makeDriver } from "../pglite-driver.mjs";
 import { useDriver } from "../../api/_lib/db.js";
 import { attendance, dayRecord, nowNepal, wallText, addDays, dayOf, MIN } from "../../api/_lib/attendance.js";
 import * as iclock from "../../api/iclock.js";
+import * as hikRoute from "../../api/hik.js";
+import { nepalTime as hikTime } from "../../api/hik.js";
 import attendanceRoute from "../../api/attendance.js";
 import telegramRoute from "../../api/telegram.js";
 import cronRoute from "../../api/attendance-cron.js";
@@ -359,6 +361,97 @@ test("the Nepali calendar: known dates, every day there and back, and the summar
   assert.equal(ND.toBS("2017-01-01"), null);                               /* before the table: English dates */
   assert.equal(nepDate("2026-11-05", "en"), "Thu 5 Nov (19 Kartik 2083)");
   assert.equal(nepDate("2026-11-05", "ne"), "बिहीबार, कात्तिक १९, २०८३");
+});
+
+/* ------------------------------------------------- a Hikvision terminal */
+const MAC = "c0:56:e3:aa:bb:cc";
+const hikEvent = (pin, at, extra = {}) => ({ ipAddress: "192.168.1.64", macAddress: MAC, dateTime: at, eventType: "AccessControllerEvent",
+  AccessControllerEvent: { deviceName: "Access Controller", majorEventType: 5, subEventType: 38, employeeNoString: pin, ...extra } });
+const hik = (body, type = "application/json") => hikRoute.POST(new Request("https://hotel.test/api/hik", { method: "POST", body, headers: { "content-type": type } }));
+const nepalIso = minAgo => new Date(Date.now() - minAgo * MIN).toISOString().slice(0, 19) + "Z";
+
+test("Hikvision: JSON, multipart with a face photo, and XML; kept only once approved", async () => {
+  await addPhone();
+  await hik(JSON.stringify(hikEvent("21", nepalIso(2))));                   /* not approved yet: not kept */
+  const sn = "HIK-" + MAC.toUpperCase();
+  assert.equal((await owner("settings")).json.machines[0].sn, sn);
+  assert.equal((await owner("staff")).json.staff.length, 0);
+  await owner("device", { method: "POST", body: { sn, approved: true } });
+  sent = [];
+  const boundary = "MIME_boundary";
+  const multipart = `--${boundary}\r\nContent-Disposition: form-data; name="event_log"\r\nContent-Type: application/json\r\n\r\n` +
+    JSON.stringify(hikEvent("21", nepalIso(1))) + `\r\n--${boundary}\r\nContent-Disposition: form-data; name="Picture"; filename="face.jpg"\r\nContent-Type: image/jpeg\r\n\r\n\xff\xd8\xff\xe0JPEGDATA\r\n--${boundary}--\r\n`;
+  assert.equal((await hik(multipart, `multipart/form-data; boundary=${boundary}`)).status, 200);
+  const xml = `<?xml version="1.0"?><EventNotificationAlert><ipAddress>192.168.1.64</ipAddress><macAddress>${MAC}</macAddress>` +
+    `<dateTime>${addDays(dayOf(nowNepal()), -3)}T09:05:00+05:45</dateTime><eventType>AccessControllerEvent</eventType><AccessControllerEvent>` +
+    `<employeeNoString>22</employeeNoString><subEventType>75</subEventType></AccessControllerEvent></EventNotificationAlert>`;
+  await hik(xml, "application/xml");
+  await hik(JSON.stringify({ macAddress: MAC, eventType: "heartBeat", dateTime: nepalIso(0) }));      /* only "seen" */
+  await hik(JSON.stringify(hikEvent("", nepalIso(0), { subEventType: 39 })));                          /* a finger not recognised */
+  const p = (await owner("punches", { query: { from: addDays(dayOf(nowNepal()), -3), to: dayOf(nowNepal()) } })).json.punches;
+  assert.equal(p.length, 2);
+  assert.deepEqual(p.map(x => x.pin).sort(), ["21", "22"]);
+  assert.equal(p.find(x => x.pin === "22").at, addDays(dayOf(nowNepal()), -3) + " 09:05:00");        /* the terminal's time, in Nepal time */
+  assert.equal(p.find(x => x.pin === "22").verify, 15);                        /* face */
+  assert.equal(sent.length, 1);                                                /* a notification for the punch just now */
+  assert.match(sent[0].text, /came in at/);
+});
+
+test("Hikvision times: with a time zone they are exact, without one the terminal's clock is taken as Nepal time", () => {
+  assert.equal(hikTime("2026-11-05T03:17:07Z"), "2026-11-05 09:02:07");
+  assert.equal(hikTime("2026-11-05T09:02:07+05:45"), "2026-11-05 09:02:07");
+  assert.equal(hikTime("2026-11-05T09:02:07"), "2026-11-05 09:02:07");
+  assert.equal(hikTime("nonsense"), null);
+});
+
+/* ------------------------------------------------------------ the roster */
+test("the roster: a rostered night shift and day off are what lateness, overtime and absence follow", async () => {
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", joined: "2026-01-01" } });       /* usually 09:00–18:00 */
+  /* Tue 1 Sep: night 22:00–06:00; Wed 2 Sep: off; Thu 3 Sep: usual */
+  await owner("roster", { method: "POST", body: { pin: "1", day: "2026-09-01", shift: { name: "Night", start: "22:00", end: "06:00" } } });
+  await owner("roster", { method: "POST", body: { pin: "1", day: "2026-09-02", shift: "off" } });
+  for (const [d, t] of [["2026-09-01", "22:20"], ["2026-09-02", "06:45"], ["2026-09-03", "09:00"], ["2026-09-03", "18:00"]])
+    await owner("punch", { method: "POST", body: { pin: "1", day: d, time: t } });
+  const days = (await owner("report", { query: { from: "2026-09-01", to: "2026-09-03" } })).json.staff[0].days;
+  assert.equal(days[0].shiftStart, "22:00");
+  assert.equal(days[0].late, 20);
+  assert.equal(days[0].out, "06:45");                                          /* the next morning, same night */
+  assert.equal(days[0].worked, 505);
+  assert.equal(days[0].ot, 0);                                                 /* 25 minutes extra: under 30 */
+  assert.equal(days[1].status, "off");
+  assert.equal(days[2].status, "present");
+  assert.equal(days[2].late, 0);
+  /* "copy last week": the week of Sun 30 Aug copied into the week of Sun 6 Sep */
+  await owner("roster-copy", { method: "POST", body: { from: "2026-09-06" } });
+  const next = (await owner("roster", { query: { from: "2026-09-06" } })).json.entries;
+  assert.deepEqual(next.map(e => [e.day, e.off ? "off" : e.start]).sort(), [["2026-09-08", "22:00"], ["2026-09-09", "off"]]);
+  await owner("roster", { method: "POST", body: { pin: "1", day: "2026-09-09", shift: null } });   /* back to usual */
+  assert.equal((await owner("roster", { query: { from: "2026-09-06" } })).json.entries.length, 1);
+});
+
+/* -------------------------------------------------------------- payslips */
+test("payslips: bonus and allowance added, SSF, advance, tax and deductions taken off", async () => {
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", salary: 30000, joined: "2026-01-01", ssf: true } });
+  for (let d = 1; d <= 30; d++) {
+    const day = `2026-09-${String(d).padStart(2, "0")}`;
+    if (d === 15) continue;                                                     /* one day absent */
+    for (const t of ["09:00", "18:00"]) await owner("punch", { method: "POST", body: { pin: "1", day, time: t } });
+  }
+  const add = (kind, amount, day = "2026-09-10") => owner("adjust", { method: "POST", body: { pin: "1", day, kind, amount, note: kind } });
+  await add("advance", 5000); await add("bonus", 1000); await add("allowance", 500); await add("tax", 300); await add("deduction", 200);
+  await add("advance", 9999, "2026-10-02");                                    /* next month: not on this payslip */
+  assert.equal((await add("salary", 100)).status, 400);
+  const s = (await owner("report", { query: { from: "2026-09-01", to: "2026-09-30" } })).json.staff[0].summary;
+  assert.equal(s.absent, 1);
+  assert.equal(s.basicEarned, 29000);
+  assert.equal(s.ssf, Math.round(29000 * 0.11));
+  assert.equal(s.ssfEmployer, Math.round(29000 * 0.20));
+  assert.equal(s.gross, 29000 + 1000 + 500);
+  assert.equal(s.takenOff, s.ssf + 5000 + 300 + 200);
+  assert.equal(s.pay, s.gross - s.takenOff);
+  assert.equal(s.adjustments.length, 5);
+  const list = (await owner("adjust", { query: { from: "2026-09-01", to: "2026-09-30" } })).json.adjustments;
+  assert.equal((await owner("adjust-delete", { method: "POST", body: { id: list[0].id } })).status, 200);
 });
 
 test("the owner's page needs the password", async () => {

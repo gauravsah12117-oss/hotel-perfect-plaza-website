@@ -26,6 +26,12 @@
    POST action=device   { sn, approved, name, remove }
    POST action=telegram-link            a one-time link to add a phone
    POST action=chat     { chat_id, active, remove }
+   GET  action=roster&from=             a week's roster (from = its first day)
+   POST action=roster   { pin, day, shift: { name, start, end } | "off" | null }   null: their usual shift
+   POST action=roster-copy { from }     the week before from, copied into the week from
+   GET  action=adjust&from=&to=         advances, bonuses, allowances, tax, deductions
+   POST action=adjust   { pin, day, kind, amount, note }
+   POST action=adjust-delete { id }
    POST action=push-subscribe { subscription, name }  app notifications on this phone
    POST action=push-remove { endpoint }  …and off
    POST action=notify-test              a test to every phone (app and Telegram) */
@@ -33,7 +39,7 @@
 import { createHash, createHmac, timingSafeEqual, randomBytes } from "node:crypto";
 import { q } from "./_lib/db.js";
 import {
-  attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER,
+  attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER, shiftList,
   okDay, addDays, dayStart, wall, wallText, toMin, nowNepal, dayOf, DAY
 } from "./_lib/attendance.js";
 import { telegramReady, botName, tg, webhookSecret } from "./_lib/telegram.js";
@@ -137,7 +143,7 @@ export default handle(async (req, res) => {
   if (get && action === "report") {
     const { from, to } = range(req.query, 62);
     const r = await attendance(from, to);
-    return json(res, 200, { from: r.from, to: r.to, now: r.now, staff: r.staff });
+    return json(res, 200, { from: r.from, to: r.to, now: r.now, staff: r.staff, ssf: { employee: r.set.ssf_employee, employer: r.set.ssf_employer } });
   }
 
   if (get && action === "punches") {
@@ -186,14 +192,14 @@ export default handle(async (req, res) => {
       const salary = money(b.salary, 10000000), otRate = money(b.ot_rate, 100000);
       if (salary === false || otRate === false) return json(res, 400, { error: "money" });
       const joined = okDay(b.joined) ? b.joined : null;
-      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12)
+      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify, ssf)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12, $13)
         ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, job = EXCLUDED.job, phone = EXCLUDED.phone,
           shift_start = EXCLUDED.shift_start, shift_end = EXCLUDED.shift_end, weekly_off = EXCLUDED.weekly_off,
           salary = EXCLUDED.salary, ot_rate = EXCLUDED.ot_rate, joined = COALESCE($10::date, staff.joined),
-          active = EXCLUDED.active, notify = EXCLUDED.notify`,
+          active = EXCLUDED.active, notify = EXCLUDED.notify, ssf = EXCLUDED.ssf`,
         [b.pin, clean(b.name, 80), clean(b.job, 60), clean(b.phone, 30), shiftStart, shiftEnd, off, salary, otRate, joined,
-         b.active !== false, b.notify !== false]);
+         b.active !== false, b.notify !== false, b.ssf === true]);
     }
     const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
     return json(res, 200, { staff: rows });
@@ -240,7 +246,9 @@ export default handle(async (req, res) => {
         grace: s => /^\d{1,3}$/.test(s), ot_min: s => /^\d{1,3}$/.test(s),
         ot_multiplier: s => /^\d{1,2}(\.\d{1,2})?$/.test(s) && Number(s) > 0,
         notify_in: s => /^[01]$/.test(s), notify_out: s => /^[01]$/.test(s), notify_summary: s => /^[01]$/.test(s),
-        lang: s => s === "en" || s === "ne"
+        lang: s => s === "en" || s === "ne",
+        ssf_employee: s => /^\d{1,2}(\.\d{1,2})?$/.test(s), ssf_employer: s => /^\d{1,2}(\.\d{1,2})?$/.test(s),
+        shifts: s => { try { const l = JSON.parse(s); return Array.isArray(l) && l.length <= 8 && l.every(x => x && typeof x.name === "string" && x.name.trim() && x.name.length <= 24 && toMin(x.start) !== null && toMin(x.end) !== null); } catch (e) { return false; } }
       };
       for (const [k, ok] of Object.entries(checks)) if (k in v && !ok(String(v[k]))) return json(res, 400, { error: "setting", key: k });
       for (const k of Object.keys(checks)) if (k in v) await setSetting(k, String(v[k]));
@@ -253,6 +261,62 @@ export default handle(async (req, res) => {
     return json(res, 200, { settings: Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, set[k]])), machines: devs, chats, devices: subs,
       telegram: { ready: telegramReady(), bot }, push: { ready: pushReady(), key: pushPublicKey() },
       server: { host: String(req.headers["x-forwarded-host"] || req.headers.host || "") } });
+  }
+
+  /* the weekly roster */
+  if (get && action === "roster") {
+    const from = okDay(req.query.from) ? req.query.from : dayOf(nowNepal());
+    const to = addDays(from, 6);
+    const [set, staffRows, entries] = await Promise.all([getSettings(),
+      q(`SELECT pin, name, job, shift_start, shift_end, weekly_off FROM staff WHERE active ${STAFF_ORDER}`),
+      q(`SELECT pin, day::text AS day, name, start, finish, off FROM roster WHERE day BETWEEN $1::date AND $2::date`, [from, to])]);
+    return json(res, 200, { from, to, shifts: shiftList(set), usual: { start: set.shift_start, end: set.shift_end },
+      staff: staffRows, entries: entries.map(e => ({ pin: e.pin, day: e.day, name: e.name, start: e.start, end: e.finish, off: e.off })) });
+  }
+
+  if (post && action === "roster") {
+    if (!okPin(b.pin) || !okDay(b.day)) return json(res, 400, { error: "dates" });
+    if (b.shift == null) await q(`DELETE FROM roster WHERE pin = $1 AND day = $2::date`, [b.pin, b.day]);
+    else {
+      const off = b.shift === "off", s = off ? {} : b.shift;
+      if (!off && (toMin(s.start) === null || toMin(s.end) === null)) return json(res, 400, { error: "shift" });
+      await q(`INSERT INTO roster (pin, day, name, start, finish, off) VALUES ($1, $2::date, $3, $4, $5, $6)
+        ON CONFLICT (pin, day) DO UPDATE SET name = EXCLUDED.name, start = EXCLUDED.start, finish = EXCLUDED.finish, off = EXCLUDED.off`,
+        [b.pin, b.day, off ? "" : clean(s.name, 24), off ? "" : s.start, off ? "" : s.end, off]);
+    }
+    return json(res, 200, { ok: true });
+  }
+
+  if (post && action === "roster-copy") {
+    if (!okDay(b.from)) return json(res, 400, { error: "dates" });
+    const to = addDays(b.from, 6);
+    await q(`DELETE FROM roster WHERE day BETWEEN $1::date AND $2::date`, [b.from, to]);
+    await q(`INSERT INTO roster (pin, day, name, start, finish, off)
+      SELECT pin, day + 7, name, start, finish, off FROM roster WHERE day BETWEEN $1::date - 7 AND $2::date - 7`, [b.from, to]);
+    return json(res, 200, { ok: true });
+  }
+
+  /* money for the payslips */
+  if (get && action === "adjust") {
+    const { from, to } = range(req.query, 400);
+    const rows = await q(`SELECT a.id, a.pin, s.name, a.day::text AS day, a.kind, a.amount, a.note FROM pay_adjust a LEFT JOIN staff s ON s.pin = a.pin
+      WHERE a.day BETWEEN $1::date AND $2::date ORDER BY a.day, a.id`, [from, to]);
+    return json(res, 200, { from, to, adjustments: rows.map(r => ({ ...r, id: Number(r.id) })) });
+  }
+
+  if (post && action === "adjust") {
+    if (!okPin(b.pin) || !okDay(b.day)) return json(res, 400, { error: "dates" });
+    if (!["advance", "bonus", "allowance", "tax", "deduction"].includes(b.kind)) return json(res, 400, { error: "kind" });
+    const amount = Math.round(Number(b.amount));
+    if (!(amount > 0 && amount <= 10000000)) return json(res, 400, { error: "money" });
+    const rows = await q(`INSERT INTO pay_adjust (pin, day, kind, amount, note) VALUES ($1, $2::date, $3, $4, $5) RETURNING id`,
+      [b.pin, b.day, b.kind, amount, clean(b.note, 120)]);
+    return json(res, 200, { id: Number(rows[0].id) });
+  }
+
+  if (post && action === "adjust-delete") {
+    const rows = await q(`DELETE FROM pay_adjust WHERE id = $1 RETURNING id`, [Number(b.id) || 0]);
+    return json(res, rows.length ? 200 : 404, rows.length ? { ok: true } : { error: "unknown" });
   }
 
   /* this phone's app notifications: on (its push address) or off */

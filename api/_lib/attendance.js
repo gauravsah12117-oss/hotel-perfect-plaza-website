@@ -16,6 +16,10 @@
      push_subs      the phones that get app notifications (push.js)
      att_login_fails wrong passwords per address: 5 in 15 minutes locks it
                     out for 15 minutes (api/attendance.js)
+     roster         one person's shift on one day when it isn't their usual
+                    one: a shift from Settings (Morning, Night…) or a day off
+     pay_adjust     money for the payslip on a date: an advance, a bonus, an
+                    allowance, tax or another deduction
 
    Times are Nepal wall-clock times, as the machine's clock shows them, kept
    in "timestamp" columns (no time zone) and handled here as milliseconds
@@ -88,6 +92,26 @@ addSchema([
      active   boolean NOT NULL DEFAULT true,
      added_at timestamptz NOT NULL DEFAULT now()
    )`,
+  `CREATE TABLE IF NOT EXISTS roster (
+     pin   text NOT NULL,
+     day   date NOT NULL,
+     name  text NOT NULL DEFAULT '',
+     start text NOT NULL DEFAULT '',
+     finish text NOT NULL DEFAULT '',
+     off   boolean NOT NULL DEFAULT false,
+     PRIMARY KEY (pin, day)
+   )`,
+  `CREATE TABLE IF NOT EXISTS pay_adjust (
+     id         bigserial PRIMARY KEY,
+     pin        text NOT NULL,
+     day        date NOT NULL,
+     kind       text NOT NULL CHECK (kind IN ('advance','bonus','allowance','tax','deduction')),
+     amount     integer NOT NULL CHECK (amount > 0),
+     note       text NOT NULL DEFAULT '',
+     created_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  `CREATE INDEX IF NOT EXISTS pay_adjust_day ON pay_adjust (day)`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS ssf boolean NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS att_login_fails (
      ip           text PRIMARY KEY,
      fails        integer NOT NULL DEFAULT 0,
@@ -136,7 +160,12 @@ export const DEFAULTS = {
   ot_min: "30",           /* overtime shorter than this isn't counted */
   ot_multiplier: "1.5",   /* overtime pay per hour = ordinary hourly pay × this */
   notify_in: "1", notify_out: "1", notify_summary: "1",
-  lang: "en"              /* the messages: en or ne */
+  lang: "en",             /* the messages: en or ne */
+  /* the shifts the roster offers (Staff → Weekly roster) */
+  shifts: JSON.stringify([{ name: "Morning", start: "06:00", end: "14:00" }, { name: "Day", start: "09:00", end: "18:00" },
+    { name: "Evening", start: "14:00", end: "22:00" }, { name: "Night", start: "22:00", end: "06:00" }]),
+  ssf_employee: "11",     /* Social Security Fund, % of the basic salary earned: taken from pay */
+  ssf_employer: "20"      /* … and paid by the hotel on top (shown on the payslip) */
 };
 
 export async function getSettings() {
@@ -156,7 +185,7 @@ const rules = set => ({
 /* ------------------------------------------------------- shifts and days */
 
 export const STAFF_COLS = `pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate,
-  joined::text AS joined, active, notify`;
+  joined::text AS joined, active, notify, ssf`;
 export const STAFF_ORDER = `ORDER BY (pin !~ '^[0-9]+$'), lpad(pin, 20, '0'), pin`;
 
 export function shiftOf(staff, set) {
@@ -167,6 +196,38 @@ export function shiftOf(staff, set) {
 }
 export const workDayOf = (t, shift) => dayOf(t - shift.from * MIN);
 export const dayWindow = (day, shift) => { const a = dayStart(day) + shift.from * MIN; return [a, a + DAY]; };
+
+/* A person's shift day by day: the roster's entry for that day if there is
+   one (a shift, or a day off), otherwise their usual shift and weekly day
+   off. roster: Map "YYYY-MM-DD" → { name, start, end, off }. */
+export function planFor(staff, set, roster = null) {
+  const base = shiftOf(staff, set);
+  return day => {
+    const r = roster && roster.get(day);
+    if (r && !r.off) {
+      const start = toMin(r.start), end = toMin(r.end);
+      if (start !== null && end !== null) return { start, len: ((end - start + 1440) % 1440) || 1440, off: false, name: r.name || "" };
+    }
+    const weeklyOff = staff.weekly_off != null && Number(staff.weekly_off) === new Date(dayStart(day)).getUTCDay();
+    return { start: base.start, len: base.len, off: r ? !!r.off : weeklyOff, name: r && r.off ? "off" : "" };
+  };
+}
+
+/* Which punches belong to which day. A day's window ends 4 hours before the
+   next day's shift starts, but never sooner than an hour after its own shift
+   ends — so a night shift (10 pm to 6 am) followed by a morning shift keeps
+   its 6 am punch-out. With one fixed shift this is the same as before:
+   4 hours before the shift, to 4 hours before the next one. */
+export function windowOf(plan, day) {
+  const s = d => dayStart(d) + plan(d).start * MIN;
+  const after = d => Math.max(s(addDays(d, 1)) - 240 * MIN, s(d) + plan(d).len * MIN + 60 * MIN);
+  return [after(addDays(day, -1)), after(day)];
+}
+export function workDayIn(plan, t) {
+  const d = dayOf(t);
+  for (const k of [0, -1, 1]) { const day = addDays(d, k), [a, b] = windowOf(plan, day); if (t >= a && t < b) return day; }
+  return d;
+}
 
 /* Drops a press that comes within two minutes of the one before it. */
 export function realPunches(list) {
@@ -180,15 +241,16 @@ export function realPunches(list) {
    status: present | late | half | absent | leave | holiday | off |
            upcoming (not yet due, or a day still to come) | none (before
            they joined) */
-export function dayRecord({ staff, day, punches, set, leave = null, holiday = null, now }) {
-  const shift = shiftOf(staff, set), r = rules(set);
+export function dayRecord({ staff, day, punches, set, leave = null, holiday = null, now, plan = null }) {
+  plan = plan || planFor(staff, set);
+  const shift = plan(day), r = rules(set), [winA, winB] = windowOf(plan, day);
   const ps = realPunches(punches);
   const startT = dayStart(day) + shift.start * MIN, endT = startT + shift.len * MIN;
-  const off = staff.weekly_off != null && Number(staff.weekly_off) === new Date(dayStart(day)).getUTCDay();
+  const off = shift.off;
   const scheduled = !off && !holiday;
-  const current = workDayOf(now, shift) === day;
+  const current = now >= winA && now < winB;
   const rec = {
-    day, shiftStart: hhmm(startT), shiftEnd: hhmm(endT), shiftLen: shift.len,
+    day, shiftStart: hhmm(startT), shiftEnd: hhmm(endT), shiftLen: shift.len, shiftName: shift.name,
     punches: ps.map(p => ({ id: p.id, time: hhmm(p.t), at: wallText(p.t), manual: p.source === "manual" })),
     in: null, out: null, worked: 0, late: 0, early: 0, ot: 0,
     inside: false, missing: false, manual: ps.some(p => p.source === "manual"),
@@ -196,7 +258,7 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
   };
 
   if (!ps.length) {
-    rec.status = day > workDayOf(now, shift) ? "upcoming"             /* a day still to come (leave etc. still shown) */
+    rec.status = now < winA ? "upcoming"                              /* a day still to come (leave etc. still shown) */
       : holiday ? "holiday" : leave ? "leave" : off ? "off" : day < staff.joined ? "none"
       : current && now < startT + r.grace * MIN ? "upcoming" : "absent";
     return rec;
@@ -230,8 +292,9 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
   return rec;
 }
 
-/* A person's totals over a run of days, and what they come to in rupees. */
-export function summarise(staff, days, set) {
+/* A person's totals over a run of days, and what they come to in rupees.
+   adj: their pay_adjust rows dated in those days. */
+export function summarise(staff, days, set, adj = []) {
   const s = { days: 0, present: 0, late: 0, half: 0, absent: 0, paidLeave: 0, unpaidLeave: 0, off: 0, holiday: 0,
     notJoined: 0, extraDays: 0, lateMin: 0, earlyTimes: 0, worked: 0, ot: 0, missing: 0, manual: 0 };
   for (const d of days) {
@@ -261,7 +324,18 @@ export function summarise(staff, days, set) {
   s.otHourly = Math.round(otHourly);
   s.otPay = Math.round(s.ot / 60 * otHourly);
   s.deduction = Math.round(s.unpaidDays * dayRate);
-  s.pay = salary ? Math.max(0, salary - s.deduction) + s.otPay : 0;
+  /* the payslip: what was earned, then what is taken off */
+  const sum = kind => adj.filter(a => a.kind === kind).reduce((x, a) => x + Number(a.amount), 0);
+  s.basicEarned = salary ? Math.max(0, salary - s.deduction) : 0;
+  s.bonus = sum("bonus"); s.allowance = sum("allowance");
+  s.advance = sum("advance"); s.tax = sum("tax"); s.otherDeduction = sum("deduction");
+  const pct = k => Math.max(0, Number(set[k]) || 0) / 100;
+  s.ssf = staff.ssf ? Math.round(s.basicEarned * pct("ssf_employee")) : 0;
+  s.ssfEmployer = staff.ssf ? Math.round(s.basicEarned * pct("ssf_employer")) : 0;
+  s.gross = s.basicEarned + s.otPay + s.bonus + s.allowance;
+  s.takenOff = s.ssf + s.advance + s.tax + s.otherDeduction;
+  s.pay = salary || s.gross ? s.gross - s.takenOff : 0;
+  s.adjustments = adj.map(a => ({ id: Number(a.id), day: a.day, kind: a.kind, amount: Number(a.amount), note: a.note }));
   return s;
 }
 
@@ -270,13 +344,16 @@ export function summarise(staff, days, set) {
 export async function attendance(from, to, { now = nowNepal(), staffRows = null } = {}) {
   const set = await getSettings();
   const staff = staffRows || await q(`SELECT ${STAFF_COLS} FROM staff WHERE active ${STAFF_ORDER}`);
-  const [punches, leave, hols] = await Promise.all([
+  const [punches, leave, hols, rosterRows, adjust] = await Promise.all([
     q(`SELECT id, pin, to_char(at, 'YYYY-MM-DD HH24:MI:SS') AS at, source FROM punches
        WHERE NOT ignored AND at >= $1::timestamp AND at < $2::timestamp ORDER BY at, id`,
       [wallText(dayStart(from) - DAY), wallText(dayStart(to) + 2 * DAY)]),
     q(`SELECT pin, day::text AS day, kind FROM staff_leave WHERE day BETWEEN $1::date AND $2::date`, [from, to]),
-    q(`SELECT day::text AS day, name FROM holidays WHERE day BETWEEN $1::date AND $2::date`, [from, to])
+    q(`SELECT day::text AS day, name FROM holidays WHERE day BETWEEN $1::date AND $2::date`, [from, to]),
+    q(`SELECT pin, day::text AS day, name, start, finish, off FROM roster WHERE day BETWEEN $1::date AND $2::date`, [addDays(from, -2), addDays(to, 2)]),
+    q(`SELECT id, pin, day::text AS day, kind, amount, note FROM pay_adjust WHERE day BETWEEN $1::date AND $2::date ORDER BY day, id`, [from, to])
   ]);
+  const rosterOf = rosterMaps(rosterRows);
   const byPin = new Map();
   for (const p of punches) {
     if (!byPin.has(p.pin)) byPin.set(p.pin, []);
@@ -290,15 +367,32 @@ export async function attendance(from, to, { now = nowNepal(), staffRows = null 
   return {
     set, from, to, now: wallText(now),
     staff: staff.map(st => {
-      const shift = shiftOf(st, set), mine = byPin.get(st.pin) || [];
+      const plan = planFor(st, set, rosterOf.get(st.pin)), mine = byPin.get(st.pin) || [];
       const days = dates.map(day => {
-        const [a, b] = dayWindow(day, shift);
-        return dayRecord({ staff: st, day, set, now, punches: mine.filter(p => p.t >= a && p.t < b),
+        const [a, b] = windowOf(plan, day);
+        return dayRecord({ staff: st, day, set, now, plan, punches: mine.filter(p => p.t >= a && p.t < b),
           leave: leaveOf.get(st.pin + "|" + day) || null, holiday: holidayOf.get(day) || null });
       });
-      return { ...st, displayName: staffName(st), days, summary: summarise(st, days, set) };
+      return { ...st, displayName: staffName(st), currentDay: workDayIn(plan, now), days,
+        summary: summarise(st, days, set, adjust.filter(a => a.pin === st.pin)) };
     })
   };
+}
+
+/* roster rows → Map pin → Map day → { name, start, end, off } */
+export function rosterMaps(rows) {
+  const out = new Map();
+  for (const r of rows) {
+    if (!out.has(r.pin)) out.set(r.pin, new Map());
+    out.get(r.pin).set(r.day, { name: r.name, start: r.start, end: r.finish, off: r.off });
+  }
+  return out;
+}
+
+/* the shifts the roster offers, from Settings */
+export function shiftList(set) {
+  try { const l = JSON.parse(set.shifts); if (Array.isArray(l)) return l; } catch (e) {}
+  return JSON.parse(DEFAULTS.shifts);
 }
 
 /* Today for everyone: each person's current work day (a night guard's
@@ -307,8 +401,7 @@ export async function today(now = nowNepal()) {
   const d = dayOf(now);
   const res = await attendance(addDays(d, -1), d, { now });
   const rows = res.staff.map(st => {
-    const cur = workDayOf(now, shiftOf(st, res.set));
-    const rec = st.days.find(x => x.day === cur) || st.days[st.days.length - 1];
+    const rec = st.days.find(x => x.day === st.currentDay) || st.days[st.days.length - 1];
     return { pin: st.pin, name: st.displayName, job: st.job, rec };
   });
   return { set: res.set, day: d, now: res.now, rows };
@@ -361,7 +454,10 @@ export async function recordPunches(rows, sn, now = nowNepal()) {
 export async function punchEvent(pin, at, set) {
   const [st] = await q(`SELECT ${STAFF_COLS} FROM staff WHERE pin = $1`, [pin]);
   if (!st || !st.active) return null;
-  const shift = shiftOf(st, set), t = wall(at), day = workDayOf(t, shift), [a, b] = dayWindow(day, shift);
+  const t = wall(at), near = dayOf(t);
+  const rosterRows = await q(`SELECT pin, day::text AS day, name, start, finish, off FROM roster WHERE pin = $1 AND day BETWEEN $2::date AND $3::date`,
+    [pin, addDays(near, -3), addDays(near, 3)]);
+  const plan = planFor(st, set, rosterMaps(rosterRows).get(pin)), day = workDayIn(plan, t), [a, b] = windowOf(plan, day);
   const [ps, hol] = await Promise.all([
     q(`SELECT id, to_char(at, 'YYYY-MM-DD HH24:MI:SS') AS at, source FROM punches
        WHERE pin = $1 AND NOT ignored AND at >= $2::timestamp AND at <= $3::timestamp ORDER BY at, id`, [pin, wallText(a), wallText(Math.min(t, b - 1))]),
@@ -370,7 +466,7 @@ export async function punchEvent(pin, at, set) {
   const upto = ps.map(p => ({ id: Number(p.id), t: wall(p.at), source: p.source }));
   const real = realPunches(upto);
   if (!real.length || real[real.length - 1].t !== t) return null;
-  const rec = dayRecord({ staff: st, day, punches: upto, set, holiday: hol[0] ? hol[0].name || "Holiday" : null, now: t });
+  const rec = dayRecord({ staff: st, day, punches: upto, set, plan, holiday: hol[0] ? hol[0].name || "Holiday" : null, now: t });
   const n = real.length - 1;
   return { kind: n === 0 ? "in" : n % 2 ? "out" : "back", staff: st, name: staffName(st), t, rec };
 }

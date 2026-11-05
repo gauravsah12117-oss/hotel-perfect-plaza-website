@@ -305,6 +305,66 @@ th { color: var(--ink-3); font-weight: 600; font-size: .78rem; vertical-align: b
 code { padding: .05rem .35rem; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); font-size: .9em; }
 .signout-mobile { display: none; }
 
+/* the weekly roster: a shift per person per day */
+[data-panel="staff"] > .rostercard { order: -2; }
+.ros-week { min-width: 11rem; text-align: center; font-weight: 600; color: var(--ink); font-size: .9rem; }
+.roster { width: auto; min-width: 100%; }
+.roster th, .roster td { padding: .35rem .3rem; text-align: center; vertical-align: middle; white-space: nowrap; }
+.roster th small { display: block; font-weight: 400; color: var(--ink-3); }
+.roster th.sat { color: var(--brand); }
+.roster th.today { box-shadow: inset 0 -3px 0 var(--brand); color: var(--ink); }
+.roster .who { position: sticky; left: 0; z-index: 1; background: var(--surface); text-align: left; min-width: 9rem; padding-left: 0; font-weight: 650; color: var(--ink); }
+.roster th.who { background: var(--surface-2); }
+.roster td.who small { display: block; font-weight: 400; font-size: .74rem; color: var(--ink-3); }
+.ros-legend { margin: 0 0 .8rem; }
+.ros-legend span { padding: .15rem .55rem; border-radius: 99px; border: 1px solid var(--line); background: var(--surface-2); }
+.ros-legend span[data-k="0"] { background: #FFF6DA; } .ros-legend span[data-k="1"] { background: var(--ok-bg); }
+.ros-legend span[data-k="2"] { background: #FBE7D9; } .ros-legend span[data-k="3"] { background: var(--ot-bg); }
+.ros-legend b { color: var(--ink); font-weight: 650; }
+.roster select { width: 7.6rem; min-height: 2.3rem; padding: .3rem .35rem; font-size: .8rem; border-radius: 8px; }
+.roster select[data-k="0"] { background: #FFF6DA; border-color: #EBD48F; }
+.roster select[data-k="1"] { background: var(--ok-bg); border-color: #BFDDC6; }
+.roster select[data-k="2"] { background: #FBE7D9; border-color: #EBC3A6; }
+.roster select[data-k="3"] { background: var(--ot-bg); border-color: #BCCDE2; }
+.roster select[data-k="off"] { background: var(--surface-2); color: var(--ink-3); }
+.roster select[data-k="4"], .roster select[data-k="5"], .roster select[data-k="6"], .roster select[data-k="7"], .roster select[data-k="custom"] { background: var(--holiday-bg); border-color: #D8C3E6; }
+
+/* Settings: the roster's shifts */
+.shiftset h3 { margin-top: .4rem; }
+.shiftrow { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+.shiftrow input[type=text] { flex: 1 1 9rem; }
+.shiftrow input[type=time] { flex: 0 1 8.5rem; }
+
+/* the payslip */
+.slipcard h3 { margin-top: 1.4rem; }
+.slip { max-width: 46rem; margin: 0 auto; padding: 1.4rem 1.6rem; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; color: var(--ink); }
+.slip__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding-bottom: .8rem; border-bottom: 3px solid var(--brand); }
+.slip__logo { width: 11rem; height: auto; }
+.slip__title { display: grid; justify-items: end; text-align: right; }
+.slip__title b { font-size: 1.35rem; letter-spacing: .02em; color: var(--brand-2); }
+.slip__title span { font-size: 1.05rem; font-weight: 650; }
+.slip__title small { color: var(--ink-3); }
+.slip__addr { margin: .45rem 0 1rem; font-size: .82rem; color: var(--ink-3); }
+.slip__who { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .5rem 1rem; margin: 0 0 1rem; }
+.slip__who dt { font-size: .74rem; color: var(--ink-3); }
+.slip__who dd { margin: 0; font-weight: 650; }
+.slip__days { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: .4rem; margin-bottom: 1.1rem; padding: .7rem; border-radius: 10px; background: var(--surface-2); }
+.slip__days div { display: grid; }
+.slip__days span { font-size: .72rem; color: var(--ink-3); }
+.slip__days b { font-size: 1rem; }
+.slip__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem 1.6rem; }
+.slip__cols table { font-size: .9rem; }
+.slip__cols th { background: none; border-bottom: 2px solid var(--line-2); color: var(--ink); font-size: .82rem; }
+.slip__cols td { white-space: normal; }
+.slip__cols td small { display: block; font-size: .74rem; color: var(--ink-3); }
+.slip__cols .num { text-align: right; white-space: nowrap; }
+.slip__cols tfoot td { font-weight: 700; border-top: 2px solid var(--line-2); border-bottom: 0; }
+.slip__net { display: flex; justify-content: space-between; align-items: baseline; margin: 1.1rem 0 .4rem; padding: .8rem 1rem; border-radius: 10px; background: var(--ok-bg); color: var(--ok-ink); font-weight: 650; }
+.slip__net b { font-size: 1.45rem; }
+.slip__note { font-size: .82rem; color: var(--ink-3); }
+.slip__sign { display: flex; justify-content: space-between; gap: 2rem; margin-top: 2.6rem; }
+.slip__sign span { flex: 1; padding-top: .4rem; border-top: 1px solid var(--ink-3); font-size: .8rem; color: var(--ink-3); text-align: center; }
+
 /* Today: the hotel's lobby, and a greeting */
 .welcome { display: flex; flex-direction: column; justify-content: flex-end; min-height: 9.5rem; padding: 1.3rem 1.6rem; border-radius: 16px; overflow: hidden; color: #fff; box-shadow: var(--shadow);
   background: linear-gradient(90deg, rgba(46, 26, 19, .9) 0%, rgba(46, 26, 19, .62) 40%, rgba(46, 26, 19, .05) 85%), var(--walnut) url("../images/hotel-lobby.jpg") center 42% / cover no-repeat; }
@@ -355,8 +415,18 @@ html[lang="ne"] .welcome__hello { font: 600 clamp(1.35rem, 2.6vw, 1.85rem)/1.3 v
 }
 @media (max-width: 420px) { .pill { display: none; } }
 
+/* printing payslips: only the payslips, one to a page */
+@media print {
+  body.printing > :not([data-printarea]) { display: none !important; }
+  body.printing [data-printarea] { display: block !important; }
+  body.printing .slip { border: 0; padding: 0; max-width: none; break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body.printing .slip:last-child { break-after: auto; }
+}
+.printarea { display: none; }
+
 /* the printed month: register and totals only */
 @media print {
+  [data-slip], .rostercard { display: none !important; }
   .side, .topbar, .signin, [data-panel]:not([data-panel="report"]), .actions, .pick, .hint, .link, [data-setup], [data-rep-detail] { display: none !important; }
   .shell { display: block; }
   body, .card { background: #fff; box-shadow: none; }
