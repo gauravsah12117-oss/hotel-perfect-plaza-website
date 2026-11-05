@@ -2,341 +2,392 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- The owner's page: staff attendance from the fingerprint machine.
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The owner's app: staff attendance from the fingerprint machine.
      Password: ATTENDANCE_PASSWORD in Vercel's settings (see ATTENDANCE.md).
      Never linked from the site, and kept out of search. -->
 <meta name="robots" content="noindex, nofollow">
-<title>Staff Register — Hotel Perfect Plaza</title>
+<title>Staff Attendance — Hotel Perfect Plaza</title>
 <!-- an app on the phone's home screen: attendance.webmanifest, attendance-sw.js -->
 <link rel="manifest" href="attendance.webmanifest">
-<meta name="theme-color" content="#0C2850">
+<meta name="theme-color" content="#FFFFFF">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="हाजिरी">
 <link rel="apple-touch-icon" href="assets/icons/register-180.png">
 <link rel="icon" href="assets/icons/register.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&family=Tiro+Devanagari+Hindi&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Inter:wght@400;500;600;700&family=Tiro+Devanagari+Hindi&display=swap">
 <link rel="stylesheet" href="assets/css/attendance.css">
 </head>
 <body>
 
-<header class="mast">
-  <div class="mast__in">
-    <div>
-      <p class="mast__hotel">Hotel Perfect Plaza</p>
-      <h1 class="mast__title">Staff register <span lang="ne">कर्मचारी हाजिरी</span></h1>
+<!-- the icons, drawn once -->
+<svg class="sprite" width="0" height="0" aria-hidden="true">
+  <defs>
+    <symbol id="i-day" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-month" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2"/></symbol>
+    <symbol id="i-finger" viewBox="0 0 24 24"><path d="M6.2 9.3A6.5 6.5 0 0 1 18.4 9"/><path d="M8.6 18.6c.8-1.6 1.2-3.3 1.2-5.1v-1.3a2.2 2.2 0 0 1 4.4 0v1.6"/><path d="M5.6 15.6c.5-1 .7-2.1.7-3.3V12a5.7 5.7 0 0 1 11.4 0v1.5c0 1.6-.3 3.2-.8 4.6"/><path d="M12 12.4v1.2c0 2.6-.8 5-2.2 7"/><path d="M14.2 17c-.2 1.3-.6 2.5-1.2 3.6"/></symbol>
+    <symbol id="i-staff" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.3 2.9-5.2 5.5-5.2s4.9 1.9 5.5 5.2"/><circle cx="17.2" cy="9" r="2.4"/><path d="M16.6 14.2c2.2.2 3.6 1.9 3.9 4.6"/></symbol>
+    <symbol id="i-leave" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 17 0z"/><path d="M12 12v6.5a2 2 0 0 0 4 0"/><path d="M12 3.5V2.8"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M10 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H10"/><path d="M14.5 8l4 4-4 4M18.5 12H9"/></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
+  </defs>
+</svg>
+
+<!-- ================================================= SIGN IN -->
+<section class="signin" data-signin>
+  <div class="signin__photo">
+    <div class="signin__caption">
+      <p class="signin__motto">For Perfect Satisfaction</p>
+      <p class="signin__place">Ramanand Chowk, Janakpurdham</p>
     </div>
-    <div class="mast__side">
-      <p class="mast__clock" data-clock aria-live="off"></p>
-      <p class="mast__meta">
+  </div>
+  <div class="signin__panel">
+    <form class="signin__form" data-login>
+      <img class="signin__logo" src="assets/images/hotel-logo.png" alt="Hotel Perfect Plaza" width="762" height="288">
+      <h1>Staff Attendance <span lang="ne">कर्मचारी हाजिरी</span></h1>
+      <p class="signin__lede">For the owner and management. Staff sign in and out on the fingerprint machine at the staff entrance.</p>
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <label class="check"><input type="checkbox" data-remember checked> Keep me signed in on this phone</label>
+      <button class="btn btn--block" type="submit">Sign in</button>
+      <p class="msg" data-login-msg role="status"></p>
+    </form>
+    <p class="signin__foot">Hotel Perfect Plaza, Janakpurdham · +977-41-590911</p>
+  </div>
+</section>
+
+<!-- ================================================= THE APP -->
+<div class="shell" data-shell hidden>
+  <aside class="side">
+    <div class="side__brand">
+      <img src="assets/images/hotel-logo.png" alt="Hotel Perfect Plaza" width="762" height="288">
+      <p>Staff Attendance</p>
+    </div>
+    <nav class="nav" role="tablist" aria-label="Sections" data-tabs>
+      <button type="button" role="tab" data-tab="day" aria-selected="true"><svg><use href="#i-day"/></svg><span>Today</span></button>
+      <button type="button" role="tab" data-tab="report"><svg><use href="#i-month"/></svg><span>Month</span></button>
+      <button type="button" role="tab" data-tab="punches"><svg><use href="#i-finger"/></svg><span>Punches</span></button>
+      <button type="button" role="tab" data-tab="staff"><svg><use href="#i-staff"/></svg><span>Staff</span></button>
+      <button type="button" role="tab" data-tab="leave"><svg><use href="#i-leave"/></svg><span>Leave</span></button>
+      <button type="button" role="tab" data-tab="settings"><svg><use href="#i-settings"/></svg><span>Settings</span></button>
+    </nav>
+    <div class="side__foot">
+      <button type="button" class="side__link" data-install hidden><svg><use href="#i-install"/></svg>Install the app</button>
+      <button type="button" class="side__link" data-logout><svg><use href="#i-out"/></svg>Sign out</button>
+      <p class="side__hotel">Hotel Perfect Plaza<br>Janakpurdham</p>
+    </div>
+  </aside>
+
+  <div class="work">
+    <header class="topbar">
+      <img class="topbar__logo" src="assets/images/hotel-logo.png" alt="Hotel Perfect Plaza" width="762" height="288">
+      <h1 class="topbar__title" data-page-title>Today</h1>
+      <div class="topbar__meta">
         <span class="pill" data-machine-pill hidden></span>
-        <button type="button" class="btn btn--small btn--install" data-install hidden>Install app</button>
-        <button type="button" class="link link--light" data-logout hidden>Sign out</button>
-      </p>
-    </div>
-  </div>
-</header>
-
-<nav class="tabs" role="tablist" data-tabs hidden>
-  <div class="tabs__in">
-    <button type="button" role="tab" data-tab="day" aria-selected="true">Today</button>
-    <button type="button" role="tab" data-tab="report">Month</button>
-    <button type="button" role="tab" data-tab="punches">Punches</button>
-    <button type="button" role="tab" data-tab="staff">Staff</button>
-    <button type="button" role="tab" data-tab="leave">Leave &amp; holidays</button>
-    <button type="button" role="tab" data-tab="settings">Settings</button>
-  </div>
-</nav>
-
-<main>
-  <p class="offline" data-offline role="status" hidden>No internet on this phone. What you see may be out of date; it updates once you're back online.</p>
-  <form class="card login" data-login>
-    <h2>Sign in</h2>
-    <p class="hint">The owner's page for staff attendance.</p>
-    <label for="pw">Password</label>
-    <input id="pw" type="password" autocomplete="current-password" required>
-    <label class="check"><input type="checkbox" data-remember checked> Keep me signed in on this phone</label>
-    <button class="btn" type="submit">Sign in</button>
-    <p class="msg" data-login-msg role="status"></p>
-  </form>
-
-  <div data-app hidden>
-    <!-- ================================================= DAILY -->
-    <section data-panel="day">
-      <div class="card setup" data-setup hidden>
-        <h2>Still to set up</h2>
-        <ul data-setup-list></ul>
+        <span class="topbar__clock" data-clock></span>
       </div>
+    </header>
 
-      <div class="dayhead">
-        <div>
-          <h2 class="display" data-day-title>Today</h2>
-          <p class="lede" data-day-lede></p>
-        </div>
-        <div class="dayhead__pick">
-          <button type="button" class="btn btn--plain btn--icon" data-day-prev aria-label="Day before">‹</button>
-          <input type="date" data-day-date aria-label="Date">
-          <button type="button" class="btn btn--plain btn--icon" data-day-next aria-label="Day after">›</button>
-          <button type="button" class="btn btn--plain" data-day-today hidden>Today</button>
-        </div>
-      </div>
+    <main>
+      <p class="offline" data-offline role="status" hidden>No internet on this phone. What you see may be out of date; it updates once you're back online.</p>
 
-      <div class="card card--flush">
-        <div class="board" data-board></div>
-      </div>
-      <p class="key" data-day-key>
-        <span><i class="k k--shift"></i>Shift</span>
-        <span><i class="k k--bar"></i>At work</span>
-        <span><i class="k k--late"></i>Late</span>
-        <span><i class="k k--ot"></i>Overtime</span>
-        <span><i class="k k--now"></i>Now</span>
-        <span><i class="k k--hand"></i>Added by hand</span>
-      </p>
-    </section>
+      <div data-app>
+        <!-- ================================================= TODAY -->
+        <section data-panel="day">
+          <div class="card setup" data-setup hidden>
+            <h2>Still to set up</h2>
+            <ul data-setup-list></ul>
+          </div>
 
-    <!-- ================================================= REPORT -->
-    <section data-panel="report" hidden>
-      <div class="dayhead">
-        <div>
-          <h2 class="display">Month</h2>
-          <p class="lede" data-rep-note></p>
-        </div>
-        <div class="dayhead__pick wrap">
-          <label class="inline">Month <input type="month" data-rep-month></label>
-          <label class="inline">From <input type="date" data-rep-from></label>
-          <label class="inline">To <input type="date" data-rep-to></label>
-        </div>
-      </div>
+          <div class="pagehead">
+            <h2 class="pagehead__title" data-day-title>Today</h2>
+            <div class="pick">
+              <button type="button" class="btn btn--plain btn--icon" data-day-prev aria-label="Day before">‹</button>
+              <input type="date" data-day-date aria-label="Date">
+              <button type="button" class="btn btn--plain btn--icon" data-day-next aria-label="Day after">›</button>
+              <button type="button" class="btn btn--plain" data-day-today hidden>Today</button>
+            </div>
+          </div>
 
-      <div class="card">
-        <div class="row">
-          <h2>Register</h2>
-          <p class="legend">
-            <span><b class="r r--p">P</b>present</span><span><b class="r r--l">L</b>late</span><span><b class="r r--h">½</b>half day</span>
-            <span><b class="r r--a">A</b>absent</span><span><b class="r r--v">Lv</b>leave</span><span><b class="r r--o">–</b>day off</span>
-            <span><b class="r r--hol">H</b>holiday</span>
+          <div class="stats" data-day-lede></div>
+
+          <div class="card card--flush">
+            <div class="card__head"><h2>Who came, and when</h2><span class="card__note" data-board-note></span></div>
+            <div class="board" data-board></div>
+          </div>
+          <p class="key">
+            <span><i class="k k--shift"></i>Shift</span>
+            <span><i class="k k--bar"></i>At work</span>
+            <span><i class="k k--late"></i>Late</span>
+            <span><i class="k k--ot"></i>Overtime</span>
+            <span><i class="k k--now"></i>Now</span>
+            <span><i class="k k--hand"></i>Added by hand</span>
           </p>
-        </div>
-        <div class="scroll"><table class="register" data-rep-register></table></div>
-      </div>
+        </section>
 
-      <div class="card">
-        <div class="row">
-          <h2>Totals and pay</h2>
-          <div class="row actions">
-            <button type="button" class="btn btn--ghost" data-rep-csv>Download for Excel</button>
-            <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
+        <!-- ================================================= MONTH -->
+        <section data-panel="report" hidden>
+          <div class="pagehead">
+            <p class="pagehead__note" data-rep-note></p>
+            <div class="pick wrap">
+              <label class="inline">Month <input type="month" data-rep-month></label>
+              <label class="inline">From <input type="date" data-rep-from></label>
+              <label class="inline">To <input type="date" data-rep-to></label>
+            </div>
           </div>
-        </div>
-        <div class="scroll"><table class="att report" data-rep-table></table></div>
-        <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>
-      </div>
-      <div class="card" data-rep-detail hidden>
-        <div class="row">
-          <h2 data-rep-detail-title></h2>
-          <button type="button" class="link" data-rep-detail-close>Close</button>
-        </div>
-        <div class="scroll"><table class="att" data-rep-detail-table></table></div>
-      </div>
-    </section>
 
-    <!-- ================================================= PUNCHES -->
-    <section data-panel="punches" hidden>
-      <div class="card">
-        <h2>Add a forgotten punch</h2>
-        <p class="hint">When someone forgot to put their finger on the machine. It shows as "by hand" everywhere, so it can always be told apart.</p>
-        <form class="form" data-punch-form>
-          <label>Staff <select name="pin" data-staff-select required></select></label>
-          <label>Date <input name="day" type="date" required></label>
-          <label>Time <input name="time" type="time" required></label>
-          <label class="wide">Why <input name="note" type="text" placeholder="e.g. forgot when leaving, told the manager"></label>
-          <button class="btn" type="submit">Add punch</button>
-          <p class="msg wide" data-punch-msg role="status"></p>
-        </form>
-      </div>
-      <div class="card">
-        <div class="row">
-          <h2>Every punch</h2>
-          <label class="inline">From <input type="date" data-pun-from></label>
-          <label class="inline">To <input type="date" data-pun-to></label>
-          <label class="inline">Staff <select data-pun-staff><option value="">Everyone</option></select></label>
-        </div>
-        <p class="hint">Exactly what the machine recorded. "Leave out" takes a wrong punch out of the sums without deleting it.</p>
-        <div class="scroll"><table class="att" data-pun-table></table></div>
-        <p class="msg" data-pun-msg role="status"></p>
-      </div>
-    </section>
-
-    <!-- ================================================= STAFF -->
-    <section data-panel="staff" hidden>
-      <div class="card">
-        <h2 data-staff-form-title>Add staff</h2>
-        <p class="hint">"Machine no." is the user ID the person was given when their finger was enrolled on the machine. Anyone who punches before being added here appears as "Staff #" and their number. Fill in their name here.</p>
-        <form class="form" data-staff-form>
-          <label>Machine no. <input name="pin" type="text" inputmode="numeric" pattern="[0-9A-Za-z]{1,20}" required></label>
-          <label>Name <input name="name" type="text" required></label>
-          <label>Job <input name="job" type="text" placeholder="e.g. Kitchen, Reception"></label>
-          <label>Phone <input name="phone" type="tel"></label>
-          <label>Shift starts <input name="shift_start" type="time"></label>
-          <label>Shift ends <input name="shift_end" type="time"></label>
-          <label>Weekly day off
-            <select name="weekly_off">
-              <option value="">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
-              <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
-            </select>
-          </label>
-          <label>Joined <input name="joined" type="date"></label>
-          <label>Monthly salary (NPR) <input name="salary" type="number" min="0" step="1"></label>
-          <label>Overtime per hour (NPR) <input name="ot_rate" type="number" min="0" step="1" placeholder="from salary"></label>
-          <label class="check"><input name="notify" type="checkbox" checked> Send messages for this person</label>
-          <label class="check"><input name="active" type="checkbox" checked> Still working here</label>
-          <p class="hint wide">Leave the shift empty to use the hotel's usual hours (Settings). If overtime per hour is empty, it is worked out from the salary × the overtime rate in Settings.</p>
-          <div class="wide row">
-            <button class="btn" type="submit">Save</button>
-            <button class="btn btn--ghost" type="reset" data-staff-new>New person</button>
+          <div class="card">
+            <div class="card__head">
+              <h2>Register</h2>
+              <p class="legend">
+                <span><b class="r r--p">P</b>present</span><span><b class="r r--l">L</b>late</span><span><b class="r r--h">½</b>half day</span>
+                <span><b class="r r--a">A</b>absent</span><span><b class="r r--v">Lv</b>leave</span><span><b class="r r--o">–</b>day off</span>
+                <span><b class="r r--hol">H</b>holiday</span>
+              </p>
+            </div>
+            <div class="scroll"><table class="register" data-rep-register></table></div>
           </div>
-          <p class="msg wide" data-staff-msg role="status"></p>
-        </form>
-      </div>
-      <div class="card">
-        <h2>Staff</h2>
-        <div class="scroll"><table class="att" data-staff-table></table></div>
-      </div>
-    </section>
 
-    <!-- ================================================= LEAVE -->
-    <section data-panel="leave" hidden>
-      <div class="card">
-        <h2>Leave</h2>
-        <form class="form" data-leave-form>
-          <label>Staff <select name="pin" data-staff-select required></select></label>
-          <label>From <input name="from" type="date" required></label>
-          <label>To <input name="to" type="date"></label>
-          <label>Kind
-            <select name="kind">
-              <option value="paid">Paid leave</option><option value="sick">Sick leave (paid)</option>
-              <option value="unpaid">Unpaid leave</option><option value="none">Remove leave</option>
-            </select>
-          </label>
-          <label class="wide">Note <input name="note" type="text"></label>
-          <button class="btn" type="submit">Save leave</button>
-          <p class="msg wide" data-leave-msg role="status"></p>
-        </form>
-      </div>
-      <div class="card">
-        <h2>Holidays for everyone</h2>
-        <p class="hint">Dashain, Tihar, Chhath… A holiday is paid; anyone who works on it gets the whole day as overtime.</p>
-        <form class="form" data-hol-form>
-          <label>Date <input name="day" type="date" required></label>
-          <label>Name <input name="name" type="text" placeholder="e.g. Tihar"></label>
-          <button class="btn" type="submit">Add holiday</button>
-          <p class="msg wide" data-hol-msg role="status"></p>
-        </form>
-      </div>
-      <div class="card">
-        <div class="row">
-          <h2>Booked</h2>
-          <label class="inline">From <input type="date" data-lv-from></label>
-          <label class="inline">To <input type="date" data-lv-to></label>
-        </div>
-        <div class="cols">
-          <div><h3>Leave</h3><div class="scroll"><table class="att" data-lv-table></table></div></div>
-          <div><h3>Holidays</h3><div class="scroll"><table class="att" data-hol-table></table></div></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================================================= SETTINGS -->
-    <section data-panel="settings" hidden>
-      <div class="card appcard" data-appcard>
-        <img src="assets/icons/register-192.png" alt="" width="64" height="64">
-        <div>
-          <h2>The app on a phone</h2>
-          <p class="hint" data-app-done hidden>This is the app. It's on this phone's home screen, and opens signed in.</p>
-          <div data-app-howto>
-            <p class="hint">Put this page on the home screen of your phone, or your father's, as an app called <strong lang="ne">हाजिरी</strong>. It opens full screen and stays signed in. Open <strong data-app-url></strong> on that phone, sign in, then:</p>
-            <ul class="howlist">
-              <li><strong>Android:</strong> press <strong>Install app</strong> at the top of the page. If it isn't there: Chrome's <strong>⋮</strong> menu → <strong>Add to Home screen</strong> → <strong>Install</strong>.</li>
-              <li><strong>iPhone:</strong> in Safari, press <strong>Share</strong> (the square with the arrow) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
-            </ul>
-            <p class="hint">With Telegram on the same phone, he gets the arrival messages there, and opens the app for the full day or the month.</p>
+          <div class="card">
+            <div class="card__head">
+              <h2>Totals and pay</h2>
+              <div class="row actions">
+                <button type="button" class="btn btn--ghost" data-rep-csv>Download for Excel</button>
+                <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
+              </div>
+            </div>
+            <div class="scroll"><table class="att report" data-rep-table></table></div>
+            <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>
           </div>
-          <button type="button" class="btn" data-install-card hidden>Install app on this device</button>
-        </div>
-      </div>
+          <div class="card" data-rep-detail hidden>
+            <div class="card__head">
+              <h2 data-rep-detail-title></h2>
+              <button type="button" class="btn btn--plain btn--small" data-rep-detail-close>Close</button>
+            </div>
+            <div class="scroll"><table class="att" data-rep-detail-table></table></div>
+          </div>
+        </section>
 
-      <div class="card notecard">
-        <h2>Notifications on this phone</h2>
-        <p class="hint">The app pops up a notification the moment someone puts their finger on the machine: who, what time, and if they're late. Free, and nothing else to install. Turn it on once on each phone that should get them.</p>
-        <p class="notestate" data-push-state></p>
-        <div class="row actions">
-          <button type="button" class="btn" data-push-on hidden>Turn on notifications</button>
-          <button type="button" class="btn btn--plain" data-push-off hidden>Turn off on this phone</button>
-          <button type="button" class="btn btn--ghost" data-push-test hidden>Send a test</button>
-        </div>
-        <p class="msg" data-push-msg role="status"></p>
-        <h3>Phones that get notifications</h3>
-        <div class="scroll"><table class="att" data-push-table></table></div>
-      </div>
+        <!-- ================================================= PUNCHES -->
+        <section data-panel="punches" hidden>
+          <div class="card">
+            <h2>Add a forgotten punch</h2>
+            <p class="hint">When someone forgot to put their finger on the machine. It shows as "by hand" everywhere, so it can always be told apart.</p>
+            <form class="form" data-punch-form>
+              <label>Staff <select name="pin" data-staff-select required></select></label>
+              <label>Date <input name="day" type="date" required></label>
+              <label>Time <input name="time" type="time" required></label>
+              <label class="wide">Why <input name="note" type="text" placeholder="e.g. forgot when leaving, told the manager"></label>
+              <button class="btn" type="submit">Add punch</button>
+              <p class="msg wide" data-punch-msg role="status"></p>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card__head">
+              <h2>Every punch</h2>
+              <div class="pick wrap">
+                <label class="inline">From <input type="date" data-pun-from></label>
+                <label class="inline">To <input type="date" data-pun-to></label>
+                <label class="inline">Staff <select data-pun-staff><option value="">Everyone</option></select></label>
+              </div>
+            </div>
+            <p class="hint">Exactly what the machine recorded. "Leave out" takes a wrong punch out of the sums without deleting it.</p>
+            <div class="scroll"><table class="att" data-pun-table></table></div>
+            <p class="msg" data-pun-msg role="status"></p>
+          </div>
+        </section>
 
-      <div class="card">
-        <h2>Messages on Telegram <span class="optional">optional</span></h2>
-        <div data-tg-status></div>
-        <div class="row actions">
-          <button type="button" class="btn" data-tg-link>Add a phone</button>
-          <button type="button" class="btn btn--ghost" data-tg-test>Send a test message</button>
-        </div>
-        <div class="linkbox" data-tg-linkbox hidden>
-          <p><strong>On the phone that should get the messages</strong> (Telegram installed), open this link and press <strong>Start</strong>:</p>
-          <p><a data-tg-url target="_blank" rel="noopener"></a> <button type="button" class="btn btn--small btn--plain" data-tg-copy>Copy</button></p>
-          <p class="hint">Send the link to that phone on WhatsApp or Viber if you're not holding it. It works once, within an hour. After pressing Start, the phone appears in the list below. <button type="button" class="link" data-tg-refresh>Check now</button></p>
-        </div>
-        <p class="msg" data-tg-msg role="status"></p>
-        <div class="scroll"><table class="att" data-chat-table></table></div>
-      </div>
+        <!-- ================================================= STAFF -->
+        <section data-panel="staff" hidden>
+          <div class="card">
+            <h2 data-staff-form-title>Add staff</h2>
+            <p class="hint">"Machine no." is the user ID the person was given when their finger was enrolled on the machine. Anyone who punches before being added here appears as "Staff #" and their number: fill in their name here.</p>
+            <form class="form" data-staff-form>
+              <label>Machine no. <input name="pin" type="text" inputmode="numeric" pattern="[0-9A-Za-z]{1,20}" required></label>
+              <label>Name <input name="name" type="text" required></label>
+              <label>Job <input name="job" type="text" placeholder="e.g. Kitchen, Reception"></label>
+              <label>Phone <input name="phone" type="tel"></label>
+              <label>Shift starts <input name="shift_start" type="time"></label>
+              <label>Shift ends <input name="shift_end" type="time"></label>
+              <label>Weekly day off
+                <select name="weekly_off">
+                  <option value="">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+                  <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+                </select>
+              </label>
+              <label>Joined <input name="joined" type="date"></label>
+              <label>Monthly salary (NPR) <input name="salary" type="number" min="0" step="1"></label>
+              <label>Overtime per hour (NPR) <input name="ot_rate" type="number" min="0" step="1" placeholder="from salary"></label>
+              <label class="check"><input name="notify" type="checkbox" checked> Notify when this person punches</label>
+              <label class="check"><input name="active" type="checkbox" checked> Still working here</label>
+              <p class="hint wide">Leave the shift empty to use the hotel's usual hours (Settings). If overtime per hour is empty, it is worked out from the salary × the overtime rate in Settings.</p>
+              <div class="wide row">
+                <button class="btn" type="submit">Save</button>
+                <button class="btn btn--plain" type="reset" data-staff-new>New person</button>
+              </div>
+              <p class="msg wide" data-staff-msg role="status"></p>
+            </form>
+          </div>
+          <div class="card">
+            <h2>Staff</h2>
+            <div class="scroll"><table class="att" data-staff-table></table></div>
+          </div>
+        </section>
 
-      <div class="card">
-        <h2>What gets sent, and the hotel's rules</h2>
-        <form class="form" data-set-form>
-          <label class="check"><input name="notify_in" type="checkbox"> A message when someone arrives</label>
-          <label class="check"><input name="notify_out" type="checkbox"> A message when someone leaves or comes back</label>
-          <label class="check"><input name="notify_summary" type="checkbox"> The day's summary at about 9 pm</label>
-          <label>Language of the messages
-            <select name="lang"><option value="en">English</option><option value="ne">नेपाली</option></select>
-          </label>
-          <label>Usual shift starts <input name="shift_start" type="time" required></label>
-          <label>Usual shift ends <input name="shift_end" type="time" required></label>
-          <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" required></label>
-          <label>Overtime counts from (minutes) <input name="ot_min" type="number" min="0" max="600" required></label>
-          <label>Overtime rate (× hourly pay) <input name="ot_multiplier" type="number" min="0.1" max="10" step="0.05" required></label>
-          <p class="hint wide">"Late after 10" means 9:10 is on time and 9:11 is 11 minutes late. "Overtime from 30" means staying 20 minutes extra isn't overtime, and 45 minutes is.</p>
-          <button class="btn" type="submit">Save</button>
-          <p class="msg wide" data-set-msg role="status"></p>
-        </form>
-      </div>
+        <!-- ================================================= LEAVE -->
+        <section data-panel="leave" hidden>
+          <div class="card">
+            <h2>Leave</h2>
+            <form class="form" data-leave-form>
+              <label>Staff <select name="pin" data-staff-select required></select></label>
+              <label>From <input name="from" type="date" required></label>
+              <label>To <input name="to" type="date"></label>
+              <label>Kind
+                <select name="kind">
+                  <option value="paid">Paid leave</option><option value="sick">Sick leave (paid)</option>
+                  <option value="unpaid">Unpaid leave</option><option value="none">Remove leave</option>
+                </select>
+              </label>
+              <label class="wide">Note <input name="note" type="text"></label>
+              <button class="btn" type="submit">Save leave</button>
+              <p class="msg wide" data-leave-msg role="status"></p>
+            </form>
+          </div>
+          <div class="card">
+            <h2>Holidays for everyone</h2>
+            <p class="hint">Dashain, Tihar, Chhath… A holiday is paid; anyone who works on it gets the whole day as overtime.</p>
+            <form class="form" data-hol-form>
+              <label>Date <input name="day" type="date" required></label>
+              <label>Name <input name="name" type="text" placeholder="e.g. Tihar"></label>
+              <button class="btn" type="submit">Add holiday</button>
+              <p class="msg wide" data-hol-msg role="status"></p>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card__head">
+              <h2>Booked</h2>
+              <div class="pick wrap">
+                <label class="inline">From <input type="date" data-lv-from></label>
+                <label class="inline">To <input type="date" data-lv-to></label>
+              </div>
+            </div>
+            <div class="cols">
+              <div><h3>Leave</h3><div class="scroll"><table class="att" data-lv-table></table></div></div>
+              <div><h3>Holidays</h3><div class="scroll"><table class="att" data-hol-table></table></div></div>
+            </div>
+          </div>
+        </section>
 
-      <div class="card">
-        <h2>Fingerprint machines</h2>
-        <div class="scroll"><table class="att" data-dev-table></table></div>
-        <p class="msg" data-dev-msg role="status"></p>
-        <details class="howto" data-dev-howto>
-          <summary>How to connect the machine</summary>
-          <ol>
-            <li>Connect the machine to the hotel's internet: a LAN cable to the router, or Wi-Fi if the model has it (Menu → Comm → Ethernet / Wireless).</li>
-            <li>On the machine: <strong>Menu → Comm. → Cloud Server Setting</strong> (on some models: <em>ADMS</em>).</li>
-            <li>Turn on <strong>Enable Domain Name</strong> and type the server address: <code data-dev-host></code></li>
-            <li>Turn on <strong>HTTPS</strong> if the machine has that option, and set the port to <strong>443</strong>. If it has no HTTPS option, see "Machine without HTTPS" in ATTENDANCE.md.</li>
-            <li>Leave <em>Proxy server</em> off. Save and restart the machine.</li>
-            <li>Within a minute it appears in the table above. Press <strong>Approve</strong>, and every punch arrives from then on, including the ones it stored before.</li>
-            <li>Check the machine's date and time are right (Menu → System → Date Time). Messages use the machine's clock.</li>
-          </ol>
-        </details>
+        <!-- ================================================= SETTINGS -->
+        <section data-panel="settings" hidden>
+          <div class="card notecard">
+            <div class="card__icon"><svg><use href="#i-bell"/></svg></div>
+            <div>
+              <h2>Notifications on this phone</h2>
+              <p class="hint">A notification the moment someone puts their finger on the machine: who, what time, and if they're late. Free; turn it on once on each phone that should get them.</p>
+              <p class="notestate" data-push-state></p>
+              <div class="row actions">
+                <button type="button" class="btn" data-push-on hidden>Turn on notifications</button>
+                <button type="button" class="btn btn--plain" data-push-off hidden>Turn off on this phone</button>
+                <button type="button" class="btn btn--ghost" data-push-test hidden>Send a test</button>
+              </div>
+              <p class="msg" data-push-msg role="status"></p>
+              <h3>Phones that get notifications</h3>
+              <div class="scroll"><table class="att" data-push-table></table></div>
+            </div>
+          </div>
+
+          <div class="card appcard" data-appcard>
+            <img src="assets/icons/register-192.png" alt="" width="64" height="64">
+            <div>
+              <h2>The app on a phone</h2>
+              <p class="hint" data-app-done hidden>This is the app: it's on this phone's home screen, and opens signed in.</p>
+              <div data-app-howto>
+                <p class="hint">Put this page on the home screen as an app called <strong lang="ne">हाजिरी</strong>. It opens full screen and stays signed in. Open <strong data-app-url></strong> on that phone, sign in, then:</p>
+                <ul class="howlist">
+                  <li><strong>Android:</strong> press <strong>Install the app</strong>. If it isn't there: Chrome's <strong>⋮</strong> menu → <strong>Add to Home screen</strong> → <strong>Install</strong>.</li>
+                  <li><strong>iPhone:</strong> in Safari, press <strong>Share</strong> (the square with the arrow) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+                </ul>
+                <p class="hint">Then open it from the home screen and turn on notifications above.</p>
+              </div>
+              <button type="button" class="btn" data-install-card hidden>Install the app on this device</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Fingerprint machines</h2>
+            <div class="scroll"><table class="att" data-dev-table></table></div>
+            <p class="msg" data-dev-msg role="status"></p>
+            <details class="howto" data-dev-howto>
+              <summary>How to connect the machine</summary>
+              <ol>
+                <li>Connect the machine to the hotel's internet: a LAN cable to the router. On the machine: <strong>Menu → Comm. → Ethernet → DHCP: ON</strong>.</li>
+                <li>On the machine: <strong>Menu → Comm. → Cloud Server Setting</strong> (on some models: <em>ADMS</em>).</li>
+                <li><strong>Enable Domain Name: ON</strong>, server address <code data-dev-host>www.hotelperfectplaza.com</code> (with the www).</li>
+                <li><strong>Server port: 443</strong>, <strong>HTTPS: ON</strong>, <strong>Proxy: OFF</strong>. Save and restart the machine.</li>
+                <li>Within a minute it appears in the table above. Check the serial number (Menu → System Info → Device Info) and press <strong>Approve</strong>. Every punch arrives from then on, including the ones it stored before.</li>
+                <li>Check the machine's date and time (Menu → System → Date Time). Every time shown comes from the machine's clock.</li>
+              </ol>
+            </details>
+          </div>
+
+          <div class="card">
+            <h2>The hotel's rules, and what gets notified</h2>
+            <form class="form" data-set-form>
+              <label class="check"><input name="notify_in" type="checkbox"> Notify when someone arrives</label>
+              <label class="check"><input name="notify_out" type="checkbox"> Notify when someone leaves or comes back</label>
+              <label class="check"><input name="notify_summary" type="checkbox"> The day's summary at about 9 pm</label>
+              <label>Language of the notifications
+                <select name="lang"><option value="en">English</option><option value="ne">नेपाली</option></select>
+              </label>
+              <label>Usual shift starts <input name="shift_start" type="time" required></label>
+              <label>Usual shift ends <input name="shift_end" type="time" required></label>
+              <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" required></label>
+              <label>Overtime counts from (minutes) <input name="ot_min" type="number" min="0" max="600" required></label>
+              <label>Overtime rate (× hourly pay) <input name="ot_multiplier" type="number" min="0.1" max="10" step="0.05" required></label>
+              <p class="hint wide">"Late after 10" means 9:10 is on time and 9:11 is 11 minutes late. "Overtime from 30" means staying 20 minutes extra isn't overtime, and 45 minutes is.</p>
+              <button class="btn" type="submit">Save</button>
+              <p class="msg wide" data-set-msg role="status"></p>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Backup</h2>
+            <p class="hint">A copy of every record on this device: the staff, their leave, the holidays, the settings and a year's punches. Download one every few months and keep it safe (email it to yourself, or a pen drive).</p>
+            <div class="row actions">
+              <label class="inline">Year <select data-backup-year></select></label>
+              <button type="button" class="btn btn--ghost" data-backup>Download backup</button>
+            </div>
+            <p class="msg" data-backup-msg role="status"></p>
+          </div>
+
+          <details class="card tgcard">
+            <summary><h2>Telegram messages <span class="optional">optional</span></h2></summary>
+            <p class="hint">Not needed: the app's own notifications above do the same. Only if someone prefers the messages in Telegram.</p>
+            <div data-tg-status></div>
+            <div class="row actions">
+              <button type="button" class="btn" data-tg-link>Add a phone</button>
+              <button type="button" class="btn btn--ghost" data-tg-test>Send a test message</button>
+            </div>
+            <div class="linkbox" data-tg-linkbox hidden>
+              <p><strong>On the phone that should get the messages</strong> (Telegram installed), open this link and press <strong>Start</strong>:</p>
+              <p><a data-tg-url target="_blank" rel="noopener"></a> <button type="button" class="btn btn--small btn--plain" data-tg-copy>Copy</button></p>
+              <p class="hint">It works once, within an hour. After pressing Start, the phone appears in the list below. <button type="button" class="link" data-tg-refresh>Check now</button></p>
+            </div>
+            <p class="msg" data-tg-msg role="status"></p>
+            <div class="scroll"><table class="att" data-chat-table></table></div>
+          </details>
+
+          <button type="button" class="btn btn--plain signout-mobile" data-logout><svg><use href="#i-out"/></svg>Sign out of this phone</button>
+        </section>
       </div>
-    </section>
+    </main>
   </div>
-</main>
+</div>
 
 <script src="assets/js/attendance.js" defer></script>
 </body>

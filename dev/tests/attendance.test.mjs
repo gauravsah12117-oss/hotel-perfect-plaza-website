@@ -302,6 +302,46 @@ test("a wrong punch can be left out, and a hand-added one removed", async () => 
   assert.equal((await owner("punch", { method: "POST", body: { pin: "1", day: addDays(dayOf(nowNepal()), 2), time: "09:00" } })).status, 400);
 });
 
+test("signing in gives a pass the phone keeps instead of the password; a new password signs every phone out", async () => {
+  const pass = (await owner("login", { method: "POST" })).json.token;
+  assert.match(pass, /^v1\./);
+  const withPass = () => call(attendanceRoute, { query: { action: "staff" }, headers: { authorization: "Bearer " + pass } });
+  assert.equal((await withPass()).status, 200);
+  assert.equal((await call(attendanceRoute, { query: { action: "staff" }, headers: { authorization: "Bearer " + pass.slice(0, -2) + "xx" } })).status, 401);
+  process.env.ATTENDANCE_PASSWORD = "a-new-password";
+  try { assert.equal((await withPass()).status, 401); }
+  finally { process.env.ATTENDANCE_PASSWORD = "owner-pass"; }
+});
+
+test("five wrong passwords lock that address out for 15 minutes, even with the right one", async () => {
+  const from = ip => ({ "x-forwarded-for": ip });
+  const tryPw = (pw, ip) => call(attendanceRoute, { query: { action: "staff" }, headers: { authorization: "Bearer " + pw, ...from(ip) } });
+  for (let i = 0; i < 4; i++) assert.equal((await tryPw("guess" + i, "1.2.3.4")).status, 401);
+  assert.equal((await tryPw("owner-pass", "1.2.3.4")).status, 200);          /* right before the fifth: clears the count */
+  for (let i = 0; i < 5; i++) await tryPw("guess" + i, "1.2.3.4");
+  const locked = await tryPw("owner-pass", "1.2.3.4");
+  assert.equal(locked.status, 429);
+  assert.equal(locked.json.minutes, 15);
+  assert.equal((await tryPw("owner-pass", "5.6.7.8")).status, 200);          /* another address isn't affected */
+});
+
+test("the backup has everyone, their leave and holidays, and the year's punches", async () => {
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", salary: 20000 } });
+  await owner("punch", { method: "POST", body: { pin: "1", day: "2026-09-01", time: "09:00", note: "forgot" } });
+  await owner("holiday", { method: "POST", body: { day: "2026-10-20", name: "Dashain" } });
+  const b = (await owner("backup", { query: { year: "2026" } })).json;
+  assert.equal(b.staff[0].name, "Ram");
+  assert.deepEqual(b.punches, [["1", "2026-09-01 09:00:00", "manual", 0, "forgot"]]);
+  assert.equal(b.holidays[0].name, "Dashain");
+  assert.deepEqual(b.years, [2026]);
+});
+
+test("a stray first punch after the shift ended isn't counted as hours late", () => {
+  const d = dayRecord({ staff: staff(), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-02 00:33") });
+  assert.equal(d.late, 0);
+  assert.equal(d.missing, true);
+});
+
 test("the owner's page needs the password", async () => {
   assert.equal((await call(attendanceRoute, { query: { action: "today" } })).status, 401);
   const t = await owner("today");

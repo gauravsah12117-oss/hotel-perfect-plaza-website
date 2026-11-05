@@ -1,14 +1,16 @@
-/* attendance.html — the owner's staff attendance page. Talks to
-   /api/attendance with the password signed in with (kept for this browser
-   tab only). The Daily tab refreshes itself every 30 seconds. */
+/* attendance.html — the hotel's staff attendance app. Talks to
+   /api/attendance. Signing in swaps the password for a sign-in pass
+   (api/attendance.js, action=login); only the pass is kept on the device:
+   "Keep me signed in on this phone" keeps it in localStorage (it stays after
+   the app is closed), otherwise sessionStorage (this tab only). Today
+   refreshes itself every 30 seconds. */
 
 (function () {
   "use strict";
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const KEY = "hpp-attendance";
-  /* "Keep me signed in on this phone" keeps the password in localStorage
-     (stays after the app is closed); otherwise sessionStorage (this tab only). */
+  const MACHINE_HOST = "www.hotelperfectplaza.com";
   let pass = null;
   try { pass = localStorage.getItem(KEY) || sessionStorage.getItem(KEY); } catch (e) {}
 
@@ -44,13 +46,13 @@
   }
   /* head: ["Name", ["Worked", "num"]…]; rows: arrays of cells: text, a node,
      or { v, cls }; rowProps per row (optional) */
-  function fill(table, head, rows, { foot, rowProps } = {}) {
+  function fill(table, head, rows, { foot, rowProps, empty } = {}) {
     table.textContent = "";
     const th = h => Array.isArray(h) ? el("th", { className: h[1] }, h[0]) : el("th", {}, h);
     const td = c => c && typeof c === "object" && !(c instanceof Node) && !Array.isArray(c) ? el("td", { className: c.cls }, c.v) : el("td", {}, c);
     table.append(el("thead", {}, el("tr", {}, head.map(th))));
     const body = el("tbody");
-    if (!rows.length) body.append(el("tr", {}, el("td", { colspan: head.length, className: "muted" }, "Nothing here yet.")));
+    if (!rows.length) body.append(el("tr", {}, el("td", { colspan: head.length, className: "muted" }, empty || "Nothing here yet.")));
     rows.forEach((r, i) => body.append(el("tr", rowProps ? rowProps(i) : {}, r.map(td))));
     table.append(body);
     if (foot) table.append(el("tfoot", {}, el("tr", {}, foot.map(td))));
@@ -80,7 +82,8 @@
     }
     $("[data-offline]").hidden = true;
     let json = {}; try { json = await res.json(); } catch (e) {}
-    if (res.status === 401) { signOut("Wrong password."); throw new Error("password"); }
+    if (res.status === 401) { signOut(String(pass || "").startsWith("v1.") ? "Signed out: the password was changed. Sign in with the new one." : "Wrong password."); throw new Error("password"); }
+    if (res.status === 429) { signOut(`Too many wrong passwords. Try again in ${json.minutes || 15} minutes.`); throw new Error("locked"); }
     if (res.status === 503 && json.error === "setup") { signOut("Attendance isn't set up yet: ATTENDANCE_PASSWORD or the database is missing in Vercel."); throw new Error("setup"); }
     return { ok: res.ok, status: res.status, json };
   }
@@ -91,11 +94,15 @@
   function signOut(text) {
     pass = null; try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch (e) {}
     clearInterval(timer);
-    $("[data-app]").hidden = true; $("[data-tabs]").hidden = true; $("[data-login]").hidden = false; $("[data-logout]").hidden = true; $("[data-machine-pill]").hidden = true;
+    $("[data-shell]").hidden = true; $("[data-signin]").hidden = false;
+    $("#pw").value = "";
     msg($("[data-login-msg]"), text || "");
   }
+  const keep = token => { try { (localStorage.getItem(KEY) || $("[data-remember]").checked ? localStorage : sessionStorage).setItem(KEY, token); } catch (e) {} };
   async function start() {
-    $("[data-login]").hidden = true; $("[data-app]").hidden = false; $("[data-tabs]").hidden = false; $("[data-logout]").hidden = false;
+    $("[data-signin]").hidden = true; $("[data-shell]").hidden = false;
+    /* a device still holding a password from before sign-in passes: swap it */
+    if (!String(pass).startsWith("v1.")) { const r = await post("login"); if (r.ok) { pass = r.json.token; keep(pass); } }
     const t = today();
     $("[data-day-date]").value ||= t;
     $("[data-rep-month]").value ||= t.slice(0, 7);
@@ -115,20 +122,32 @@
   }
   $("[data-login]").addEventListener("submit", async e => {
     e.preventDefault();
+    const button = $("[data-login] button[type=submit]");
     pass = $("#pw").value;
+    button.disabled = true; msg($("[data-login-msg]"), "");
     try {
-      const r = await api("staff");
-      if (r.ok) { try { ($("[data-remember]").checked ? localStorage : sessionStorage).setItem(KEY, pass); } catch (err) {} start(); }
+      const r = await post("login");
+      if (r.ok) {
+        pass = r.json.token;
+        try { localStorage.removeItem(KEY); sessionStorage.removeItem(KEY); ($("[data-remember]").checked ? localStorage : sessionStorage).setItem(KEY, pass); } catch (err) {}
+        $("#pw").value = "";
+        start();
+      }
     } catch (err) { /* message already shown */ }
+    finally { button.disabled = false; }
   });
-  $("[data-logout]").addEventListener("click", () => signOut(""));
+  $$("[data-logout]").forEach(b => b.addEventListener("click", () => signOut("")));
 
   /* --------------------------------------------------------------- tabs */
   let current = "day";
   const loaders = { day: () => loadDay(), report: () => loadReport(), punches: () => loadPunches(), staff: () => loadStaff(), leave: () => loadLeave(), settings: () => loadSettings() };
+  const TITLES = { day: "Daily attendance", report: "Monthly report", punches: "Punches", staff: "Staff", leave: "Leave and holidays", settings: "Settings" };
   function show(tab) {
     if (!loaders[tab]) tab = "day";
     current = tab;
+    $("[data-page-title]").textContent = TITLES[tab];
+    document.title = TITLES[tab] + " — Hotel Perfect Plaza";
+    scrollTo(0, 0);
     $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     $$("[data-panel]").forEach(p => { p.hidden = p.dataset.panel !== tab; });
     try { history.replaceState(null, "", "#" + tab); } catch (e) {}
@@ -241,9 +260,10 @@
       rows = r.json.staff.map(s => ({ pin: s.pin, name: s.displayName, job: s.job, rec: s.days[0] }));
       $("[data-setup]").hidden = true;
     }
-    $("[data-day-title]").textContent = isToday ? "Today" : longDay(d);
+    $("[data-day-title]").textContent = isToday ? "Today, " + longDay(d) : longDay(d);
     $("[data-day-today]").hidden = isToday;
     $("[data-day-next]").disabled = isToday;
+    $("[data-board-note]").textContent = isToday ? "Updates by itself every 30 seconds" : "";
     lede(rows, isToday);
     lastBoard = [rows, isToday ? ms(nowStamp) : null, isToday];
     board(...lastBoard);
@@ -263,23 +283,21 @@
   const hourLabel = t => { const h = new Date(t).getUTCHours(); return h === 0 ? "midnight" : h === 12 ? "noon" : `${h % 12} ${h < 12 ? "am" : "pm"}`; };
   let nowStamp = "";
 
-  /* One sentence for the day, in place of a row of numbers. */
+  /* The day's numbers, each with the names behind it. */
   function lede(rows, isToday) {
-    const p = $("[data-day-lede]"); p.textContent = "";
-    if (!rows.length) return;
+    const box = $("[data-day-lede]"); box.textContent = "";
     const pick = f => rows.filter(r => f(r.rec));
     const came = pick(x => x.punches.length), late = pick(x => x.late), away = pick(x => x.status === "absent");
     const inside = pick(x => x.inside), leave = pick(x => x.status === "leave");
     const ot = rows.reduce((a, r) => a + r.rec.ot, 0);
-    const b = (text, cls) => el("b", { className: cls }, text);
     const names = list => list.map(r => r.name).join(", ");
-    p.append(b(came.length), ` of ${rows.length} ${isToday ? "have come" : "came"}.`);
-    if (isToday && inside.length) p.append(" ", b(inside.length, "good"), ` ${inside.length === 1 ? "is" : "are"} in the hotel now.`);
-    if (late.length) p.append(" ", b(late.length, "warn"), ` ${isToday ? (late.length === 1 ? "was" : "were") : (late.length === 1 ? "was" : "were")} late.`);
-    if (away.length) p.append(" ", b(away.length, "bad"), isToday ? ` not come yet: ${names(away)}.` : ` absent: ${names(away)}.`);
-    else if (came.length) p.append(isToday ? " Nobody missing." : " Nobody absent.");
-    if (leave.length) p.append(` ${leave.length} on leave.`);
-    if (ot) p.append(" ", b(dur(ot)), " overtime.");
+    const stat = (cls, label, num, sub) => box.append(el("div", { className: "stat stat--" + cls },
+      el("p", { className: "stat__label" }, label), el("p", { className: "stat__num" }, num), el("p", { className: "stat__sub" }, sub || "")));
+    stat("ok", isToday ? "Came today" : "Came", [String(came.length), el("small", {}, " / " + rows.length)], rows.length ? (came.length === rows.length ? "Everyone" : "") : "No staff yet");
+    if (isToday) stat("in", "In the hotel now", String(inside.length), names(inside));
+    stat("late", "Late", String(late.length), late.map(r => `${r.name} ${dur(r.rec.late)}`).join(", "));
+    stat("absent", isToday ? "Not come" : "Absent", String(away.length), names(away) + (leave.length ? (away.length ? "; " : "") + `${leave.length} on leave` : ""));
+    stat("ot", "Overtime", ot ? dur(ot) : "—", names(pick(x => x.ot > 0)));
   }
 
   /* The day as a strip per person: the shift (dashed), time at work (green),
@@ -352,7 +370,7 @@
       }[x.status] || ["—"];
       return [el("span", { className: "times" }, "—"), el("span", { className: say[1] }, say[0])];
     }
-    const parts = [el("span", {}, dur(x.worked) + " worked")];
+    const parts = [el("span", {}, x.worked ? dur(x.worked) + " worked" : x.inside ? "just arrived" : "no time worked")];
     if (x.late) parts.push(el("span", { className: "late" }, dur(x.late) + " late"));
     if (x.early) parts.push(el("span", { className: "late" }, "left " + dur(x.early) + " early"));
     if (x.ot) parts.push(el("span", { className: "ot" }, "+" + dur(x.ot) + " overtime"));
@@ -560,14 +578,16 @@
     const tg = $("[data-tg-status]"); tg.textContent = "";
     tg.append(j.telegram.ready
       ? el("p", {}, "Bot: ", el("strong", {}, j.telegram.bot ? "@" + j.telegram.bot : "(couldn't reach Telegram)"), ". Every phone below gets a message the moment someone punches.")
-      : el("p", { className: "bad" }, "Not set up: add TELEGRAM_BOT_TOKEN in Vercel (ATTENDANCE.md, step 2), then come back here."));
-    $("[data-tg-link]").disabled = $("[data-tg-test]").disabled = !j.telegram.ready;
+      : el("p", { className: "hint" }, "Not in use. To use it: create a bot with @BotFather in Telegram and add its token in Vercel as TELEGRAM_BOT_TOKEN (ATTENDANCE.md)."));
+    $("[data-tg-link]").hidden = $("[data-tg-test]").hidden = !j.telegram.ready;
+    $(".tgcard").open = j.telegram.ready && j.chats.length > 0;
     fill($("[data-chat-table]"), ["Phone (Telegram name)", "Added", "", ""], j.chats.map(c => [
       { v: c.name, cls: "name" }, nice(c.added), c.active ? el("span", { className: "chip present" }, "Gets messages") : el("span", { className: "chip off" }, "Paused"),
       [btn(c.active ? "Pause" : "Resume", async () => { await post("chat", { chat_id: c.chat_id, active: !c.active }); loadSettings(); }),
        btn("Remove", async () => { if (confirm(`Stop sending messages to ${c.name}?`)) { await post("chat", { chat_id: c.chat_id, remove: true }); loadSettings(); } }, DANGER)]
     ]));
-    $("[data-dev-host]").textContent = j.server.host || location.host;
+    $("[data-dev-host]").textContent = MACHINE_HOST;
+    backupYears();
     fill($("[data-dev-table]"), ["Machine (serial no.)", "Status", "Last connected", "Clock", ""], j.machines.map(m => [
       { v: [m.name || m.sn, m.name ? el("small", {}, m.sn) : null], cls: "name" },
       m.approved ? (m.ago > 3600 ? el("span", { className: "chip absent" }, "Offline") : el("span", { className: "chip present" }, "Online"))
@@ -578,11 +598,29 @@
                   : btn("Approve", async () => { await post("device", { sn: m.sn, approved: true }); loadSettings(); }, "btn btn--small btn--plain good"),
        btn("Name", async () => { const n = prompt("A name for this machine (e.g. Staff entrance)", m.name); if (n != null) { await post("device", { sn: m.sn, name: n }); loadSettings(); } }),
        btn("Remove", async () => { if (confirm("Remove this machine from the list? It will appear again, waiting for approval, the next time it connects.")) { await post("device", { sn: m.sn, remove: true }); loadSettings(); } }, DANGER)]
-    ]));
+    ]), { empty: "No machine has connected yet. Follow \"How to connect the machine\" below; it appears here within a minute." });
     $("[data-dev-howto]").open = !j.machines.length;
     machinePill(j.machines);
     renderPush(j).catch(e => console.error(e));
   }
+
+  /* --------------------------------------------------------------- backup */
+  function backupYears() {
+    const sel = $("[data-backup-year]"), now = +today().slice(0, 4);
+    if (sel.options.length) return;
+    for (let y = now; y >= 2026; y--) sel.append(el("option", { value: String(y) }, String(y)));
+  }
+  $("[data-backup]").addEventListener("click", async () => {
+    const m = $("[data-backup-msg]"), year = $("[data-backup-year]").value;
+    msg(m, "Preparing…", true);
+    const r = await api("backup", { query: { year } });
+    if (!r.ok) return msg(m, errText(r));
+    const blob = new Blob([JSON.stringify(r.json, null, 1)], { type: "application/json" });
+    const a = el("a", { href: URL.createObjectURL(blob), download: `hotel-perfect-plaza-attendance-backup-${year}-made-${today()}.json` });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    msg(m, `Downloaded: ${r.json.staff.length} staff, ${r.json.punches.length} punches in ${year}. Keep the file somewhere safe.`, true);
+  });
 
   /* ------------------------------------- app notifications on this phone */
   const canPush = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -670,7 +708,7 @@
 
   /* ---------------------------------------------------------- the app */
   const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-  $("[data-app-url]").textContent = location.host + "/attendance.html";
+  $("[data-app-url]").textContent = MACHINE_HOST + "/attendance.html";
   $("[data-app-done]").hidden = !standalone;
   $("[data-app-howto]").hidden = standalone;
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("/attendance-sw.js", { scope: "/attendance" }).catch(() => {});

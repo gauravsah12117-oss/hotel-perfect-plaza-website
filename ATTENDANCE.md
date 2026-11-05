@@ -1,92 +1,70 @@
 # Staff attendance
 
 The fingerprint machine at the staff entrance sends every punch to the website the moment it
-happens. The website keeps it, works out the day, and sends a **Telegram message** to the
-owner's phone: *"✅ Hari Yadav came in at 9:22 AM · Kitchen · 22 min late"*.
+happens. The website keeps it, works out the day, and the owner's phone pops up a
+**notification**: *"✅ Hari Yadav came in at 9:22 AM · Kitchen · 22 min late"*.
 
-Everything is on one private page: **`/attendance.html`**
-(**https://www.hotelperfectplaza.com/attendance.html**). It works on a phone too.
+Everything is in one private app: **https://www.hotelperfectplaza.com/attendance.html**, which
+installs on a phone's home screen as **हाजिरी**. Password: `ATTENDANCE_PASSWORD` in Vercel.
 
-| Tab | What's there |
+| Section | What's there |
 |---|---|
-| **Daily** | Who came, when, who is late, who hasn't come, who is in the hotel right now, hours worked, overtime. Today's view refreshes itself every 30 seconds; pick any date to look back |
-| **Monthly report** | Per person: days present, half days, absent, leave, days off and holidays, times late and minutes late, hours worked, overtime hours, overtime pay, unpaid days, and the month's pay. Tap a name for every day. **Download for Excel** and **Print** |
+| **Today** | Who came, who is in the hotel now, who is late, who hasn't come, overtime; a timeline per person across the day. Refreshes itself every 30 seconds; ‹ › for other days |
+| **Month** | The register (P / L / A / leave / holiday per person per day), then per person: days present, half days, absent, leave, times and minutes late, hours, overtime, overtime pay, unpaid days and the month's pay. Tap a name for every day. **Download for Excel** and **Print** |
 | **Punches** | Every punch exactly as the machine recorded it. Add a punch someone forgot ("by hand", always marked). "Leave out" a wrong punch |
-| **Staff** | Name, job, phone, shift, weekly day off, joining date, salary, overtime rate, messages on/off, still working here |
-| **Leave & holidays** | Paid, sick and unpaid leave per person; holidays for everyone (Dashain, Tihar…) |
-| **Settings** | Telegram phones, which messages are sent and in which language (English / नेपाली), the hotel's rules (usual shift, late after, overtime from, overtime rate), the fingerprint machines |
+| **Staff** | Name, job, phone, shift, weekly day off, joining date, salary, overtime rate, notifications on/off, still working here |
+| **Leave** | Paid, sick and unpaid leave per person; holidays for everyone (Dashain, Tihar…) |
+| **Settings** | Notifications on this phone, installing the app, the fingerprint machines, the hotel's rules (usual shift, late after, overtime from, overtime rate, language of the notifications), backup, Telegram (optional) |
 
-**Messages on Telegram**
+**Notifications**
 - When someone arrives (on time, or how late), leaves (hours worked, overtime, left early), or
-  comes back from a break
+  comes back from a break; in English or Nepali (Settings)
 - At about 9 pm, the day's summary: present, late, absent, on leave, still in, overtime,
   forgotten punch-outs, and a warning if the machine has gone offline
-- Send **/today** to the bot at any time for the summary so far, **/now** for who is in the hotel
 - If the machine loses its internet, it keeps its punches and sends them when it's back. They
-  come as one message ("the machine was offline…") rather than twenty
+  come as one notification ("the machine was offline…") rather than twenty
+
+**Safety**
+- Signing in swaps the password for a *sign-in pass* that the phone keeps (400 days); the
+  password itself is never stored. A new `ATTENDANCE_PASSWORD` in Vercel signs every phone out.
+- Five wrong passwords from one place in 15 minutes lock it out for 15 minutes.
+- The app's pages can't be shown inside another website, and only load the hotel's own files.
+- Only a fingerprint machine approved in Settings can add punches.
+
+**Backup**: Settings → *Backup* → **Download backup** saves every record (staff, leave,
+holidays, settings and a year's punches) as a file. Do it every few months and keep the file
+safe.
 
 ---
 
 ## Setting it up (once)
 
-### 1. A password for the page
+Done already (November 2026): the password, `CRON_SECRET` (the 9 pm summary), the notification
+keys (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`), the domain. Don't change the
+`VAPID_` keys: every phone would have to turn notifications on again. To change the password:
+Vercel → the project → Settings → Environment Variables → `ATTENDANCE_PASSWORD` → Edit, then
+Deployments → ⋯ → **Redeploy**.
 
-Vercel → the project → **Settings → Environment Variables** → add:
+### Your father's phone
 
-| Name | Value |
-|---|---|
-| `ATTENDANCE_PASSWORD` | A long password only you (and your father) know. **Not** the front desk's `ADMIN_PASSWORD`: this page shows salaries |
-| `CRON_SECRET` | Any long random text. Stops anyone else triggering the 9 pm summary |
-
-### 2. The Telegram bot (5 minutes, free)
-
-1. Install Telegram on your phone, open it and search for **@BotFather** (the one with the blue tick).
-2. Send it `/newbot`. Give it a name, e.g. *Hotel Perfect Plaza Staff*, and then a username ending
-   in `bot`, e.g. *PerfectPlazaStaffBot*.
-3. BotFather replies with a **token** like `7412345678:AAH…`. In Vercel add
-   `TELEGRAM_BOT_TOKEN` = that token. Keep it private: whoever has it can send as the bot.
-4. Redeploy (Vercel → Deployments → ⋯ → **Redeploy**) so steps 1 and 2 take effect.
-
-### 3. Your father's phone
-
-1. Open `/attendance.html` and sign in → **Settings** → **Add a phone**.
-2. A link appears. Send it to your father's phone (WhatsApp or Viber is fine). He needs Telegram
-   installed. He opens the link and presses **Start**. The bot answers "Connected".
-3. Press **Check now**: his name appears in the list. Press **Send a test message**.
-
-Add as many phones as you like (yours, a manager's): each one needs its own new link. **Pause**
-stops messages to a phone for a while; **Remove** stops them for good.
-
-### 3½. The app on his phone
-
-The page can also sit on the home screen as an app called **हाजिरी**, with its own icon. It
-opens full screen, stays signed in, and keeps itself up to date. There's nothing to download
-from the Play Store or App Store. On his phone:
-
-1. Open **www.hotelperfectplaza.com/attendance.html** and sign in, with *Keep me
-   signed in on this phone* ticked.
-2. **Android** (Chrome): press **Install app** at the top. If it isn't there, open Chrome's
-   **⋮** menu → **Add to Home screen** → **Install**.
+1. Open **www.hotelperfectplaza.com/attendance.html** and sign in, with *Keep me signed in on
+   this phone* ticked.
+2. Put it on the home screen. **Android** (Chrome): Settings → **Install the app on this
+   device**, or Chrome's **⋮** menu → **Add to Home screen** → **Install**.
    **iPhone** (Safari): **Share** → **Add to Home Screen** → **Add**.
-3. From then on he taps **हाजिरी** on the home screen. Telegram brings the messages the moment
-   someone punches. The app is for the whole day, the month and the register.
+3. Open **हाजिरी** from the home screen → **Settings → Notifications on this phone → Turn on
+   notifications** → **Allow**. Type a name ("Father's phone"). Press **Send a test**.
 
-*Sign out* on that phone, or a new `ATTENDANCE_PASSWORD` in Vercel, signs the app out.
+- **Android:** if notifications stop, check that Chrome and हाजिरी are allowed notifications in
+  the phone's settings, and not limited by battery saver.
+- **iPhone:** only from the app on the home screen, on iOS 16.4 or newer.
+- Each phone turns them on for itself. **Remove** in that list stops a phone.
 
-**Notifications from the app** (free, no Telegram needed): on his phone, in the app, go to
-**Settings → Notifications on this phone → Turn on notifications** and choose **Allow**. From then
-on the phone pops up "✅ Hari Yadav came in at 9:22 AM · 22 min late" the moment someone punches,
-even with the app closed. Tapping it opens Today.
-- **Android:** works in Chrome, installed or not. If they don't arrive, check that Chrome and
-  हाजिरी are allowed notifications in the phone's settings, and not limited by battery saver.
-- **iPhone:** only from the app on the home screen (step 2 above), on iOS 16.4 or newer.
-- Turn it on separately on each phone that should get them. **Remove** in that list stops a
-  phone. Settings → **Send a test** checks it.
+**Telegram (optional):** the same messages can also go to Telegram. Create a bot with
+@BotFather, add its token in Vercel as `TELEGRAM_BOT_TOKEN`, redeploy, then Settings → Telegram
+→ **Add a phone**. Not needed while the app's notifications work.
 
-The website's notification keys are `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`
-in Vercel. Don't change them: every phone would have to turn notifications on again.
-
-### 4. The fingerprint machine
+### The fingerprint machine
 
 The system speaks ZKTeco's **ADMS / "Cloud Server"** protocol. Most ZKTeco and eSSL machines sold
 in Nepal have it: K40, K50, MB160, MB20, iClock, uFace, SpeedFace, and eSSL's X990 and
@@ -103,7 +81,7 @@ Magnum, among others. Ask the shop for *"ADMS / Push / Cloud Server"* support, a
    Press **Approve**. From then on every punch arrives, including the ones already stored in the
    machine (the old ones are kept without sending messages).
 6. Check the machine's date and time (**Menu → System → Date Time**). Every time shown comes
-   from the machine's clock. If the clock runs fast, the Daily tab warns you.
+   from the machine's clock. If the clock runs fast, Today warns you.
 
 **Machine without HTTPS?** Some older machines only speak plain `http://`, and the website only
 answers on `https://`. Then use the small *bridge* in `attendance-bridge/` on any computer at the
@@ -112,7 +90,7 @@ the server address to that computer's IP address (the bridge shows it), port **8
 domain name off. That computer must stay on. If it's off, punches wait in the machine and arrive
 later. A cheaper long-term fix is a machine with HTTPS.
 
-### 5. The staff
+### The staff
 
 1. Enrol each person's finger on the machine as usual. The machine gives each person a **user
    number** (1, 2, 3…).
@@ -155,12 +133,15 @@ to its first and last day.
 
 ## Good to know
 
-- **Cost**: nothing extra. It uses the website's existing Vercel and Neon database, and Telegram
-  is free.
-- **Privacy**: the page isn't linked from the website and is hidden from search engines. Only a
-  machine you approved can add punches, and only phones that used a one-time link get messages.
-- **Messages need**: the machine online (its internet), `TELEGRAM_BOT_TOKEN` set, and at least
-  one phone added. The Daily tab lists anything still missing under *Still to set up*.
+- **Cost**: nothing extra. It uses the website's existing Vercel and Neon database; the
+  notifications are free and unlimited.
+- **Privacy**: the app isn't linked from the website and is hidden from search engines. Only a
+  machine you approved can add punches, and only phones that turned notifications on in the
+  signed-in app get them.
+- **Notifications need**: the machine online (its internet) and at least one phone that turned
+  them on. Today lists anything still missing under *Still to set up*.
+- **The domain** `hotelperfectplaza.com` is paid until 3 October 2029 at Hostinger: turn on
+  auto-renew. If it lapses, the app and the machine stop with the website.
 - **9 pm summary**: Vercel's free plan runs it some time between 9:00 and 10:00 pm.
 - **Trying it without a machine**: on this computer, `npm run dev`, then in another window
   `node dev/fake-machine.mjs` (connect), approve it in Settings, then `node dev/fake-machine.mjs demo`

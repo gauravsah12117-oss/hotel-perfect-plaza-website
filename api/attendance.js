@@ -1,6 +1,14 @@
 /* /api/attendance?action=…  — for the owner's page, attendance.html.
-   Every call needs the header  Authorization: Bearer <ATTENDANCE_PASSWORD>.
+   Every call needs the header  Authorization: Bearer <pass>, where the pass
+   is the ATTENDANCE_PASSWORD (only to sign in) or the sign-in pass that
+   action=login gives back. The page keeps the pass, never the password. A
+   pass lasts 400 days and is signed with the password, so a new password
+   in Vercel signs every phone out.
+   Five wrong passwords from one address within 15 minutes lock that address
+   out for 15 minutes (att_login_fails).
 
+   POST action=login                    → { token }: the sign-in pass
+   GET  action=backup&year=             everything, and that year's punches
    GET  action=today                    everyone's day so far, and the machines
    GET  action=report&from=&to=         every person's days and totals
    GET  action=punches&from=&to=&pin=   the punches themselves
@@ -22,7 +30,7 @@
    POST action=push-remove { endpoint }  …and off
    POST action=notify-test              a test to every phone (app and Telegram) */
 
-import { createHash, timingSafeEqual, randomBytes } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual, randomBytes } from "node:crypto";
 import { q } from "./_lib/db.js";
 import {
   attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER,
@@ -34,11 +42,43 @@ import { notifyAll, notifyReady } from "./_lib/notify.js";
 import { json, body, handle, clean, origin } from "./_lib/http.js";
 
 const digest = s => createHash("sha256").update(String(s)).digest();
+const same = (a, b) => timingSafeEqual(digest(a), digest(b));
+
+/* the sign-in pass: "v1.<expiry>.<signature>" */
+const PASS_DAYS = 400;
+const signer = () => createHash("sha256").update("hpp-attendance-pass:" + process.env.ATTENDANCE_PASSWORD).digest();
+const sign = body => createHmac("sha256", signer()).update(body).digest("base64url");
+export function makePass(now = Date.now()) {
+  const body = "v1." + (now + PASS_DAYS * 86400000).toString(36);
+  return body + "." + sign(body);
+}
+function passOk(given) {
+  const m = /^(v1\.([0-9a-z]{1,12}))\.([A-Za-z0-9_-]{43})$/.exec(given);
+  return !!m && parseInt(m[2], 36) > Date.now() && same(m[3], sign(m[1]));
+}
+
+/* null: not set up; "pass": a valid sign-in pass; "password"; false */
 function authorised(req) {
   const pass = process.env.ATTENDANCE_PASSWORD;
   if (!pass) return null;
   const given = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  return given.length > 0 && timingSafeEqual(digest(given), digest(pass));
+  if (!given) return false;
+  if (passOk(given)) return "pass";
+  return same(given, pass) ? "password" : false;
+}
+
+const ipOf = req => String(req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "").split(",")[0].trim().slice(0, 64);
+async function lockedFor(ip) {
+  const [r] = await q(`SELECT ceil(EXTRACT(EPOCH FROM (locked_until - now())) / 60)::int AS min FROM att_login_fails WHERE ip = $1 AND locked_until > now()`, [ip]);
+  return r ? r.min : 0;
+}
+async function failed(ip) {
+  await q(`INSERT INTO att_login_fails (ip, fails, first_at) VALUES ($1, 1, now())
+    ON CONFLICT (ip) DO UPDATE SET
+      fails = CASE WHEN att_login_fails.first_at < now() - interval '15 minutes' THEN 1 ELSE att_login_fails.fails + 1 END,
+      first_at = CASE WHEN att_login_fails.first_at < now() - interval '15 minutes' THEN now() ELSE att_login_fails.first_at END,
+      locked_until = CASE WHEN att_login_fails.first_at >= now() - interval '15 minutes' AND att_login_fails.fails + 1 >= 5
+                          THEN now() + interval '15 minutes' ELSE NULL END`, [ip]);
 }
 
 const okPin = s => /^[0-9A-Za-z]{1,20}$/.test(String(s || ""));
@@ -55,11 +95,38 @@ function range(query, maxDays) {
 export default handle(async (req, res) => {
   const auth = authorised(req);
   if (auth === null) return json(res, 503, { error: "setup" });
-  if (!auth) { await new Promise(r => setTimeout(r, 600)); return json(res, 401, { error: "password" }); }
+  if (auth !== "pass") {                                  /* a password, right or wrong: the lock applies */
+    const ip = ipOf(req), min = await lockedFor(ip);
+    if (min) return json(res, 429, { error: "locked", minutes: min });
+    if (!auth) { await failed(ip); await new Promise(r => setTimeout(r, 600)); return json(res, 401, { error: "password" }); }
+    await q(`DELETE FROM att_login_fails WHERE ip = $1`, [ip]);
+  }
 
   const action = String(req.query.action || "");
   const b = body(req);
   const get = req.method === "GET", post = req.method === "POST";
+
+  if (post && action === "login") return json(res, 200, { token: makePass() });
+
+  if (get && action === "backup") {
+    const year = /^\d{4}$/.test(String(req.query.year || "")) ? +req.query.year : +dayOf(nowNepal()).slice(0, 4);
+    const [staff, leave, holidays, settings, machinesRows, punches, years] = await Promise.all([
+      q(`SELECT ${STAFF_COLS} FROM staff ${STAFF_ORDER}`),
+      q(`SELECT pin, day::text AS day, kind, note FROM staff_leave ORDER BY day, pin`),
+      q(`SELECT day::text AS day, name FROM holidays ORDER BY day`),
+      q(`SELECT key, value FROM att_settings WHERE key <> 'tg_link' ORDER BY key`),
+      q(`SELECT sn, name, approved FROM att_devices ORDER BY sn`),
+      q(`SELECT pin, to_char(at, 'YYYY-MM-DD HH24:MI:SS') AS at, source, ignored, note FROM punches
+         WHERE at >= $1::timestamp AND at < $2::timestamp ORDER BY at, id`, [`${year}-01-01 00:00:00`, `${year + 1}-01-01 00:00:00`]),
+      q(`SELECT DISTINCT EXTRACT(YEAR FROM at)::int AS y FROM punches ORDER BY y`)
+    ]);
+    return json(res, 200, {
+      hotel: "Hotel Perfect Plaza", made: wallText(nowNepal()), year, years: years.map(r => r.y),
+      staff, leave, holidays, settings, machines: machinesRows,
+      punchColumns: ["pin", "at", "source", "ignored", "note"],
+      punches: punches.map(p => [p.pin, p.at, p.source, p.ignored ? 1 : 0, p.note])
+    });
+  }
 
   if (get && action === "today") {
     const [t, devs] = await Promise.all([today(), machines()]);

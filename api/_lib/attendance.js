@@ -14,6 +14,8 @@
      att_settings   the hotel's rules and message switches
      telegram_chats who gets the messages on Telegram
      push_subs      the phones that get app notifications (push.js)
+     att_login_fails wrong passwords per address: 5 in 15 minutes locks it
+                    out for 15 minutes (api/attendance.js)
 
    Times are Nepal wall-clock times, as the machine's clock shows them, kept
    in "timestamp" columns (no time zone) and handled here as milliseconds
@@ -85,6 +87,12 @@ addSchema([
      name     text NOT NULL DEFAULT '',
      active   boolean NOT NULL DEFAULT true,
      added_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  `CREATE TABLE IF NOT EXISTS att_login_fails (
+     ip           text PRIMARY KEY,
+     fails        integer NOT NULL DEFAULT 0,
+     first_at     timestamptz NOT NULL DEFAULT now(),
+     locked_until timestamptz
    )`,
   `CREATE TABLE IF NOT EXISTS push_subs (
      endpoint text PRIMARY KEY,
@@ -206,8 +214,10 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
   if (lastOut && !rec.inside) rec.out = hhmm(lastOut.t);
 
   if (scheduled) {
+    /* a first punch after the shift has ended isn't a late arrival (a stray
+       press at midnight, say); it shows, but isn't counted as hours late */
     const lateBy = Math.round((first.t - startT) / MIN);
-    rec.late = lateBy > r.grace ? lateBy : 0;
+    rec.late = lateBy > r.grace && first.t < endT ? lateBy : 0;
     if (lastOut && !rec.inside) {
       const early = Math.round((endT - lastOut.t) / MIN);
       rec.early = early > r.grace ? early : 0;
