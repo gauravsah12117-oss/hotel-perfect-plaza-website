@@ -90,6 +90,7 @@
       <div class="topbar__meta">
         <span class="pill" data-machine-pill hidden></span>
         <span class="topbar__clock" data-clock></span>
+        <button type="button" class="langbtn" data-cal data-no-tr title="Nepali or English dates">वि.सं.</button>
         <button type="button" class="langbtn" data-lang data-no-tr>नेपाली</button>
       </div>
     </header>
@@ -141,7 +142,8 @@
           <div class="pagehead">
             <p class="pagehead__note" data-rep-note></p>
             <div class="pick wrap">
-              <label class="inline">Month <input type="month" data-rep-month></label>
+              <label class="inline" data-rep-ad>Month <input type="month" data-rep-month></label>
+              <span class="inline" data-rep-bs hidden>Month <select data-rep-bs-month aria-label="Nepali month"></select> <select data-rep-bs-year aria-label="Nepali year"></select></span>
               <label class="inline">From <input type="date" data-rep-from></label>
               <label class="inline">To <input type="date" data-rep-to></label>
             </div>
@@ -396,6 +398,7 @@
   </div>
 </div>
 
+<script src="assets/js/nepali-date.js" defer></script>
 <script src="assets/js/attendance-ne.js" defer></script>
 <script src="assets/js/attendance.js" defer></script>
 </body>

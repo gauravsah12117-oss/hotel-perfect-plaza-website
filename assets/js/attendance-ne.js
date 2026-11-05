@@ -60,7 +60,7 @@ window.HPP_NE = (function () {
     "still in": "अझै भित्र", "now": "अहिले",
 
     /* month */
-    "From": "देखि", "To": "सम्म", "Register": "हाजिरी रजिस्टर",
+    "From": "देखि", "To": "सम्म", "Register": "हाजिरी रजिस्टर", "Nepali month": "नेपाली महिना", "Nepali year": "नेपाली वर्ष",
     "present": "उपस्थित", "late": "ढिलो", "half day": "आधा दिन", "absent": "अनुपस्थित", "leave": "बिदा", "day off": "साप्ताहिक बिदा", "holiday": "पर्व बिदा",
     "Su": "आ", "Mo": "सो", "Tu": "मं", "We": "बु", "Th": "बि", "Fr": "शु", "Sa": "श",
     "No staff yet.": "कर्मचारी छैनन्।",
@@ -180,6 +180,8 @@ window.HPP_NE = (function () {
   const WK = { Sun: "आइत", Mon: "सोम", Tue: "मंगल", Wed: "बुध", Thu: "बिही", Fri: "शुक्र", Sat: "शनि" };
   const MONTH = { January: "जनवरी", February: "फेब्रुअरी", March: "मार्च", April: "अप्रिल", May: "मे", June: "जुन", July: "जुलाई",
     August: "अगस्ट", September: "सेप्टेम्बर", October: "अक्टोबर", November: "नोभेम्बर", December: "डिसेम्बर" };
+  const BSM = { Baisakh: "बैशाख", Jestha: "जेठ", Asar: "असार", Shrawan: "साउन", Bhadra: "भदौ", Asoj: "असोज", Kartik: "कात्तिक",
+    Mangsir: "मंसिर", Poush: "पुस", Magh: "माघ", Falgun: "फागुन", Chaitra: "चैत" };
   const MON = { Jan: "जनवरी", Feb: "फेब्रुअरी", Mar: "मार्च", Apr: "अप्रिल", Jun: "जुन", Jul: "जुलाई", Aug: "अगस्ट", Sep: "सेप्टेम्बर", Oct: "अक्टोबर", Nov: "नोभेम्बर", Dec: "डिसेम्बर" };
   const part = h => h < 4 ? "राति" : h < 12 ? "बिहान" : h < 16 ? "दिउँसो" : h < 20 ? "बेलुका" : "राति";
   const alt = o => new RegExp("\\b(" + Object.keys(o).join("|") + ")\\b", "g");
@@ -188,7 +190,7 @@ window.HPP_NE = (function () {
     return s
       .replace(/\b(\d{1,2}):(\d{2}) (AM|PM)\b/g, (_, h, m, ap) => part(+h % 12 + (ap === "PM" ? 12 : 0)) + " " + h + ":" + m)
       .replace(/\b(\d+)h (\d+)m\b/g, "$1 घण्टा $2 मिनेट").replace(/\b(\d+)h\b/g, "$1 घण्टा").replace(/\b(\d+)m\b/g, "$1 मिनेट")
-      .replace(alt(WEEK), w => WEEK[w]).replace(alt(MONTH), w => MONTH[w])
+      .replace(alt(WEEK), w => WEEK[w]).replace(alt(MONTH), w => MONTH[w]).replace(alt(BSM), w => BSM[w])
       .replace(alt(WK), w => WK[w]).replace(alt(MON), w => MON[w])
       .replace(/\bRs\b/g, "रु").replace(/\(by hand\)/g, "(हातैले)").replace(/\b(\d+) on leave\b/g, "$1 जना बिदामा");
   }

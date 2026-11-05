@@ -29,7 +29,23 @@
   const monthEnd = m => addDays(addDays(m + "-01", 32).slice(0, 7) + "-01", -1);
   const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const nice = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+
+  /* Dates in the Nepali calendar (वि.सं., nepali-date.js) or the English one,
+     per device: the वि.सं. / AD button. Dates are kept and sent as English
+     (AD) dates throughout; only what is shown changes. Nepali-language
+     phones start on Nepali dates. */
+  const ND = window.NepaliDate || null;
+  const CAL_KEY = "hpp-attendance-cal";
+  let cal = lang === "ne" ? "bs" : "ad";
+  try { cal = localStorage.getItem(CAL_KEY) || cal; } catch (e) {}
+  if (!ND) cal = "ad";
+  const bsOf = d => cal === "bs" ? ND.toBS(d) : null;          /* null outside the calendar's years: English */
+  const bsText = d => { const b = ND && ND.toBS(d); return b ? `${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}` : ""; };
+  const wd = d => new Date(d + "T00:00:00Z").getUTCDay();
+  const nice = d => { const b = bsOf(d); return b ? `${WD[wd(d)]}, ${b.d} ${ND.MONTHS[b.m - 1]}`
+    : new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }); };
+  const longDay = d => { const b = bsOf(d); return b ? `${DAYS[wd(d)]} ${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}`
+    : new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }); };
   const rs = n => "Rs " + Math.round(Number(n) || 0).toLocaleString("en-IN");
   const clock = s => { if (!s) return ""; const [h, m] = s.split(":").map(Number); return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
   const dur = min => { if (!min) return "—"; const h = Math.floor(min / 60), m = min % 60; return (h ? h + "h " : "") + (m || !h ? m + "m" : "").trim(); };
@@ -71,9 +87,8 @@
 
   /* the masthead's clock: Nepal time, whatever the phone's own time zone */
   function tickClock() {
-    const d = new Date(Date.now() + 345 * 60000);
-    $("[data-clock]").textContent = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }) +
-      ", " + clock(d.toISOString().slice(11, 16));
+    const d = new Date(Date.now() + 345 * 60000).toISOString();
+    $("[data-clock]").textContent = longDay(d.slice(0, 10)) + ", " + clock(d.slice(11, 16));
   }
   tickClock(); setInterval(tickClock, 15000);
 
@@ -114,15 +129,18 @@
     if (!String(pass).startsWith("v1.")) { const r = await post("login"); if (r.ok) { pass = r.json.token; keep(pass); } }
     const t = today();
     $("[data-day-date]").value ||= t;
-    $("[data-rep-month]").value ||= t.slice(0, 7);
-    $("[data-rep-from]").value ||= t.slice(0, 8) + "01";
-    $("[data-rep-to]").value ||= monthEnd(t.slice(0, 7));
+    const tb = bsOf(t);
+    if (!$("[data-rep-from]").value) {
+      if (tb) bsMonth(tb.y, tb.m);                                     /* this Nepali month */
+      else { $("[data-rep-month]").value = t.slice(0, 7); $("[data-rep-from]").value = t.slice(0, 8) + "01"; $("[data-rep-to]").value = monthEnd(t.slice(0, 7)); }
+    }
     $("[data-pun-from]").value ||= addDays(t, -6);
     $("[data-pun-to]").value ||= t;
     $("[data-lv-from]").value ||= t.slice(0, 8) + "01";
     $("[data-lv-to]").value ||= addDays(t, 90);
     $("[data-punch-form]").day.value ||= t;
     $("[data-leave-form]").from.value ||= t;
+    hints();
     await loadStaff();
     show((location.hash.slice(1) || "day"));
     if (current !== "day") api("today").then(r => machinePill(r.json.machines)).catch(() => {});
@@ -200,6 +218,7 @@
     f.salary.value = s.salary || ""; f.ot_rate.value = s.ot_rate || "";
     f.notify.checked = s.notify; f.active.checked = s.active;
     f.pin.readOnly = true;
+    hints();
     $("[data-staff-form-title]").textContent = "Edit " + (s.name || "Staff #" + s.pin);
     msg($("[data-staff-msg]"), "");
     f.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -208,7 +227,7 @@
     const f = $("[data-staff-form]");
     f.pin.readOnly = false;
     $("[data-staff-form-title]").textContent = "Add staff";
-    setTimeout(() => { f.notify.checked = true; f.active.checked = true; });
+    setTimeout(() => { f.notify.checked = true; f.active.checked = true; hints(); });
   });
   $("[data-staff-form]").addEventListener("submit", async e => {
     e.preventDefault();
@@ -287,7 +306,6 @@
   $("[data-day-next]").addEventListener("click", () => go(1));
   $("[data-day-today]").addEventListener("click", () => { $("[data-day-date]").value = today(); loadDay(); });
 
-  const longDay = d => new Date(d + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
   const ms = s => Date.parse(s.slice(0, 19).replace(" ", "T") + "Z");      /* Nepal wall time → ms */
   const at = (day, hm) => Date.parse(`${day}T${hm}:00Z`);
   const HOUR = 3600000;
@@ -431,6 +449,36 @@
   });
   ["[data-rep-from]", "[data-rep-to]"].forEach(s => $(s).addEventListener("change", () => { $("[data-rep-month]").value = ""; loadReport(); }));
 
+  /* a Nepali month: its first and last day as the report's From and To */
+  function bsMonth(y, m) {
+    const ys = $("[data-rep-bs-year]"), ms = $("[data-rep-bs-month]");
+    if (!ys.options.length) {
+      const [first, last] = ND.years(), now = ND.toBS(today());
+      for (let k = Math.min(last, (now ? now.y : last) + 1); k >= Math.max(first, 2080); k--) ys.append(el("option", { value: String(k) }, String(k)));
+      ND.MONTHS.forEach((n, i) => ms.append(el("option", { value: String(i + 1) }, n)));
+    }
+    ys.value = String(y); ms.value = String(m);
+    $("[data-rep-from]").value = ND.toAD(y, m, 1);
+    $("[data-rep-to]").value = ND.toAD(y, m, ND.daysIn(y, m));
+    $("[data-rep-month]").value = "";
+  }
+  ["[data-rep-bs-year]", "[data-rep-bs-month]"].forEach(s => $(s).addEventListener("change", () => {
+    bsMonth(+$("[data-rep-bs-year]").value, +$("[data-rep-bs-month]").value);
+    loadReport();
+  }));
+
+  /* under each date box in a form, the Nepali date it is */
+  function hints() {
+    $$(".form input[type=date]").forEach(i => {
+      let h = i.nextElementSibling;
+      if (!h || !h.classList.contains("bshint")) { h = el("small", { className: "bshint" }); i.after(h); }
+      const b = cal === "bs" && i.value ? ND.toBS(i.value) : null;
+      h.textContent = b ? `वि.सं. ${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}` : "";
+      h.hidden = !b;
+    });
+  }
+  ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.matches && e.target.matches(".form input[type=date]")) hints(); }));
+
   async function loadReport() {
     const r = await api("report", { query: { from: $("[data-rep-from]").value, to: $("[data-rep-to]").value } });
     report = r.json;
@@ -479,7 +527,7 @@
     if (!S.length) { t.append(el("tbody", {}, el("tr", {}, el("td", { className: "who" }, "No staff yet.")))); return; }
     const days = S[0].days.map(d => d.day);
     t.append(el("thead", {}, el("tr", {}, el("th", { className: "who" }, ""),
-      days.map(d => { const w = new Date(d + "T00:00:00Z").getUTCDay(); return el("th", { className: (w === 6 ? "sat" : "") + (d === today() ? " today" : ""), title: d === today() ? "Today" : null }, +d.slice(8), el("small", {}, WD[w].slice(0, 2))); }),
+      days.map(d => { const w = wd(d), b = bsOf(d); return el("th", { className: (w === 6 ? "sat" : "") + (d === today() ? " today" : ""), title: d === today() ? "Today" : null }, b ? b.d : +d.slice(8), el("small", {}, WD[w].slice(0, 2))); }),
       el("th", {}, ""))));
     t.append(el("tbody", {}, S.map(s => {
       const x = s.summary;
@@ -509,13 +557,13 @@
   $("[data-rep-csv]").addEventListener("click", () => {
     if (!report) return;
     const q = v => { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    const lines = [[`Hotel Perfect Plaza staff attendance ${report.from} to ${report.to}`], [],
+    const lines = [[`Hotel Perfect Plaza staff attendance ${report.from} to ${report.to}` + (ND && ND.toBS(report.from) ? ` (BS ${bsText(report.from)} to ${bsText(report.to)})` : "")], [],
       ["No.", "Name", "Job", "Present", "Half days", "Absent", "Paid leave", "Unpaid leave", "Days off", "Holidays", "Late (times)", "Late (minutes)",
        "Hours worked", "Overtime (hours)", "Overtime pay", "Unpaid days", "Deduction", "Salary", "Pay"]];
     report.staff.forEach(s => { const x = s.summary; lines.push([s.pin, s.displayName, s.job, x.present, x.half, x.absent, x.paidLeave, x.unpaidLeave, x.off, x.holiday,
       x.late, x.lateMin, hours(x.worked), hours(x.ot), x.otPay, x.unpaidDays, x.deduction, s.salary, x.pay]); });
-    lines.push([], ["Every day"], ["No.", "Name", "Date", "Day", "Status", "In", "Out", "Worked (min)", "Late (min)", "Left early (min)", "Overtime (min)", "Punches", "Added by hand"]);
-    report.staff.forEach(s => s.days.forEach(x => lines.push([s.pin, s.displayName, x.day, WD[new Date(x.day + "T00:00:00Z").getUTCDay()],
+    lines.push([], ["Every day"], ["No.", "Name", "Date", "Date (BS)", "Day", "Status", "In", "Out", "Worked (min)", "Late (min)", "Left early (min)", "Overtime (min)", "Punches", "Added by hand"]);
+    report.staff.forEach(s => s.days.forEach(x => lines.push([s.pin, s.displayName, x.day, bsText(x.day), WD[wd(x.day)],
       x.status === "leave" ? LEAVE[x.leave] : x.status === "holiday" ? x.holiday : STATUS[x.status], x.in, x.out, x.worked, x.late, x.early, x.ot,
       x.punches.map(p => p.time).join(" "), x.manual ? "yes" : ""])));
     const blob = new Blob(["﻿" + lines.map(l => l.map(q).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" });
@@ -576,7 +624,7 @@
     const r = await post("holiday", { day: f.day.value, name: f.name.value });
     if (!r.ok) return msg(m, errText(r));
     msg(m, "Added.", true);
-    f.reset(); loadLeave();
+    f.reset(); hints(); loadLeave();
   });
 
   /* ----------------------------------------------------------- settings */
@@ -758,6 +806,18 @@
     lang = "ne"; applyLang();
   }));
   applyLang();
+
+  /* ------------------------------------------------------------ calendar */
+  function applyCal() {
+    const bs = cal === "bs";
+    $$("[data-cal]").forEach(b => { b.hidden = !ND; b.textContent = bs ? "AD" : "वि.सं."; b.title = bs ? "Show English (AD) dates" : "Show Nepali (वि.सं.) dates"; });
+    $("[data-rep-ad]").hidden = bs; $("[data-rep-bs]").hidden = !bs;
+  }
+  $$("[data-cal]").forEach(b => b.addEventListener("click", () => {
+    try { localStorage.setItem(CAL_KEY, cal === "bs" ? "ad" : "bs"); } catch (e) {}
+    location.reload();                                              /* every date on the page, redrawn */
+  }));
+  applyCal();
 
   if (pass) start().catch(() => {});
 })();

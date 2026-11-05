@@ -8,6 +8,16 @@ Everything is in one private app: **https://www.hotelperfectplaza.com/attendance
 installs on a phone's home screen as **हाजिरी**. Password: `ATTENDANCE_PASSWORD` in Vercel.
 The **नेपाली / English** button at the top switches the whole app's language on that phone
 (each phone remembers its own); the words are in `assets/js/attendance-ne.js`.
+The **वि.सं. / AD** button switches every date between the Nepali calendar (Bikram Sambat) and
+the English one. With Nepali dates, **Month** picks a Nepali month (e.g. कात्तिक 2083) and
+works out the register and the pay for exactly that month; each date box in a form shows the
+Nepali date under it; the Excel download always has both dates; the 9 pm summary shows both.
+
+**The Nepali calendar's table** is in `assets/js/nepali-date.js` (BS 2075–2090). 2075–2083
+were checked day by day against four independent calendar libraries. **2084 onwards are the
+best available projection**: each year, when the official calendar for the next year is
+published (Nepal Panchanga Nirnayak Samiti, usually around Chaitra), compare its month lengths
+with that year's row and correct the row if they differ.
 
 | Section | What's there |
 |---|---|

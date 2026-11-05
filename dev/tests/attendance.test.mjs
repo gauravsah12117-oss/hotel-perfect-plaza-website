@@ -13,6 +13,7 @@ import telegramRoute from "../../api/telegram.js";
 import cronRoute from "../../api/attendance-cron.js";
 import { webhookSecret } from "../../api/_lib/telegram.js";
 import { asNotification } from "../../api/_lib/push.js";
+import { date as nepDate } from "../../api/_lib/att-text.js";
 import webpush from "web-push";
 import { createECDH, randomBytes } from "node:crypto";
 
@@ -340,6 +341,24 @@ test("a stray first punch after the shift ended isn't counted as hours late", ()
   const d = dayRecord({ staff: staff(), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-02 00:33") });
   assert.equal(d.late, 0);
   assert.equal(d.missing, true);
+});
+
+test("the Nepali calendar: known dates, every day there and back, and the summary's date", () => {
+  const ND = globalThis.NepaliDate;
+  const known = { "2018-04-14": [2075, 1, 1], "2024-04-13": [2081, 1, 1], "2025-04-14": [2082, 1, 1], "2026-04-14": [2083, 1, 1], "2026-11-05": [2083, 7, 19] };
+  for (const [ad, [y, m, d]] of Object.entries(known)) {
+    assert.deepEqual(ND.toBS(ad), { y, m, d }, ad);
+    assert.equal(ND.toAD(y, m, d), ad);
+  }
+  for (let t = Date.parse("2018-04-14"), prev = null; t < Date.parse("2034-04-01"); t += 86400000) {
+    const ad = new Date(t).toISOString().slice(0, 10), b = ND.toBS(ad);
+    assert.equal(ND.toAD(b.y, b.m, b.d), ad);
+    if (prev) assert.ok(b.d === prev.d + 1 || (b.d === 1 && (b.m === prev.m + 1 || (b.m === 1 && b.y === prev.y + 1))), ad);
+    prev = b;
+  }
+  assert.equal(ND.toBS("2017-01-01"), null);                               /* before the table: English dates */
+  assert.equal(nepDate("2026-11-05", "en"), "Thu 5 Nov (19 Kartik 2083)");
+  assert.equal(nepDate("2026-11-05", "ne"), "बिहीबार, कात्तिक १९, २०८३");
 });
 
 test("the owner's page needs the password", async () => {

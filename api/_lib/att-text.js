@@ -1,5 +1,8 @@
-/* The words of the Telegram messages, in English (en) or Nepali (ne) —
-   attendance.html → Settings chooses. Edit the Nepali here to improve it. */
+/* The words of the notifications (the app's, and Telegram's), in English
+   (en) or Nepali (ne) — attendance.html → Settings chooses. Edit the Nepali
+   here to improve it. */
+
+import "../../assets/js/nepali-date.js";              /* globalThis.NepaliDate: the Nepali calendar */
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 const NE = "०१२३४५६७८९";
@@ -25,9 +28,11 @@ export function dur(min, lang = "en") {
   return [h ? h + " h" : "", m || !h ? m + " min" : ""].filter(Boolean).join(" ");
 }
 
-function date(day, lang) {
-  const d = new Date(day + "T00:00:00Z");
-  return lang === "ne" ? `${NE_WD[d.getUTCDay()]}, ${neDigits(day)}` : `${WD[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}`;
+/* "Thu 5 Nov (19 Kartik 2083)" / "बिहीबार, कात्तिक १९, २०८३" */
+export function date(day, lang) {
+  const d = new Date(day + "T00:00:00Z"), ND = globalThis.NepaliDate, b = ND && ND.toBS(day);
+  if (lang === "ne") return b ? `${NE_WD[d.getUTCDay()]}, ${ND.MONTHS_NE[b.m - 1]} ${neDigits(b.d)}, ${neDigits(b.y)}` : `${NE_WD[d.getUTCDay()]}, ${neDigits(day)}`;
+  return `${WD[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}` + (b ? ` (${b.d} ${ND.MONTHS[b.m - 1]} ${b.y})` : "");
 }
 
 const T = {

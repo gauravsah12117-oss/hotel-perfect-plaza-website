@@ -9,10 +9,10 @@
    It also shows the app's notifications (api/_lib/push.js): someone has
    punched. Tapping one opens the app on Today. */
 
-const CACHE = "hpp-register-v4";
+const CACHE = "hpp-register-v5";
 const SHELL = ["/attendance.html", "/assets/css/attendance.css", "/assets/js/attendance.js",
   "/assets/icons/register.svg", "/assets/icons/register-192.png", "/attendance.webmanifest",
-  "/assets/images/hotel-logo.png", "/assets/images/front-desk.jpg", "/assets/images/hotel-lobby.jpg", "/assets/js/attendance-ne.js"];
+  "/assets/images/hotel-logo.png", "/assets/images/front-desk.jpg", "/assets/images/hotel-lobby.jpg", "/assets/js/attendance-ne.js", "/assets/js/nepali-date.js"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

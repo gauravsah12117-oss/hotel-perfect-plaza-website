@@ -164,6 +164,7 @@ input:focus, select:focus { border-color: var(--brand); outline: none; box-shado
 .form .wide, .form .check { grid-column: 1 / -1; }
 .form .check { display: flex; font-weight: 500; }
 .form > .btn { justify-self: start; min-width: 9rem; }
+.bshint { font-size: .78rem; font-weight: 500; color: var(--walnut-2); }
 
 /* ---------------------------------------------------------------- tables */
 .scroll { overflow-x: auto; }
