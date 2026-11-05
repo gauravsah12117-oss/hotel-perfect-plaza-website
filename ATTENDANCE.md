@@ -6,6 +6,8 @@ happens. The website keeps it, works out the day, and the owner's phone pops up 
 
 Everything is in one private app: **https://www.hotelperfectplaza.com/attendance.html**, which
 installs on a phone's home screen as **हाजिरी**. Password: `ATTENDANCE_PASSWORD` in Vercel.
+The **नेपाली / English** button at the top switches the whole app's language on that phone
+(each phone remembers its own); the words are in `assets/js/attendance-ne.js`.
 
 | Section | What's there |
 |---|---|

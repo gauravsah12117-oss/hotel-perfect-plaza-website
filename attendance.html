@@ -17,7 +17,7 @@
 <link rel="apple-touch-icon" href="assets/icons/register-180.png">
 <link rel="icon" href="assets/icons/register.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Inter:wght@400;500;600;700&family=Tiro+Devanagari+Hindi&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Tiro+Devanagari+Hindi&display=swap">
 <link rel="stylesheet" href="assets/css/attendance.css">
 </head>
 <body>
@@ -46,6 +46,7 @@
     </div>
   </div>
   <div class="signin__panel">
+    <button type="button" class="langbtn langbtn--signin" data-lang data-no-tr>नेपाली</button>
     <form class="signin__form" data-login>
       <img class="signin__logo" src="assets/images/hotel-logo.png" alt="Hotel Perfect Plaza" width="762" height="288">
       <h1>Staff Attendance <span lang="ne">कर्मचारी हाजिरी</span></h1>
@@ -89,6 +90,7 @@
       <div class="topbar__meta">
         <span class="pill" data-machine-pill hidden></span>
         <span class="topbar__clock" data-clock></span>
+        <button type="button" class="langbtn" data-lang data-no-tr>नेपाली</button>
       </div>
     </header>
 
@@ -98,6 +100,11 @@
       <div data-app>
         <!-- ================================================= TODAY -->
         <section data-panel="day">
+          <div class="welcome">
+            <p class="welcome__hello" data-greeting>Namaste</p>
+            <p class="welcome__sub">Hotel Perfect Plaza, Janakpurdham</p>
+          </div>
+
           <div class="card setup" data-setup hidden>
             <h2>Still to set up</h2>
             <ul data-setup-list></ul>
@@ -307,8 +314,8 @@
               <h2>The app on a phone</h2>
               <p class="hint" data-app-done hidden>This is the app: it's on this phone's home screen, and opens signed in.</p>
               <div data-app-howto>
-                <p class="hint">Put this page on the home screen as an app called <strong lang="ne">हाजिरी</strong>. It opens full screen and stays signed in. Open <strong data-app-url></strong> on that phone, sign in, then:</p>
-                <ul class="howlist">
+                <p class="hint" data-ne="app-intro">Put this page on the home screen as an app called <strong lang="ne">हाजिरी</strong>. It opens full screen and stays signed in. Open <strong data-app-url></strong> on that phone, sign in, then:</p>
+                <ul class="howlist" data-ne="app-steps">
                   <li><strong>Android:</strong> press <strong>Install the app</strong>. If it isn't there: Chrome's <strong>⋮</strong> menu → <strong>Add to Home screen</strong> → <strong>Install</strong>.</li>
                   <li><strong>iPhone:</strong> in Safari, press <strong>Share</strong> (the square with the arrow) → <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
                 </ul>
@@ -324,7 +331,7 @@
             <p class="msg" data-dev-msg role="status"></p>
             <details class="howto" data-dev-howto>
               <summary>How to connect the machine</summary>
-              <ol>
+              <ol data-ne="machine-steps">
                 <li>Connect the machine to the hotel's internet: a LAN cable to the router. On the machine: <strong>Menu → Comm. → Ethernet → DHCP: ON</strong>.</li>
                 <li>On the machine: <strong>Menu → Comm. → Cloud Server Setting</strong> (on some models: <em>ADMS</em>).</li>
                 <li><strong>Enable Domain Name: ON</strong>, server address <code data-dev-host>www.hotelperfectplaza.com</code> (with the www).</li>
@@ -374,7 +381,7 @@
               <button type="button" class="btn btn--ghost" data-tg-test>Send a test message</button>
             </div>
             <div class="linkbox" data-tg-linkbox hidden>
-              <p><strong>On the phone that should get the messages</strong> (Telegram installed), open this link and press <strong>Start</strong>:</p>
+              <p data-ne="tg-open"><strong>On the phone that should get the messages</strong> (Telegram installed), open this link and press <strong>Start</strong>:</p>
               <p><a data-tg-url target="_blank" rel="noopener"></a> <button type="button" class="btn btn--small btn--plain" data-tg-copy>Copy</button></p>
               <p class="hint">It works once, within an hour. After pressing Start, the phone appears in the list below. <button type="button" class="link" data-tg-refresh>Check now</button></p>
             </div>
@@ -389,6 +396,7 @@
   </div>
 </div>
 
+<script src="assets/js/attendance-ne.js" defer></script>
 <script src="assets/js/attendance.js" defer></script>
 </body>
 </html>

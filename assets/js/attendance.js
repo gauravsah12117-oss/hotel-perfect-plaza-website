@@ -14,6 +14,15 @@
   let pass = null;
   try { pass = localStorage.getItem(KEY) || sessionStorage.getItem(KEY); } catch (e) {}
 
+  /* English or नेपाली, per device (the button at the top). In Nepali,
+     attendance-ne.js translates the page and everything drawn after it. */
+  const LANG_KEY = "hpp-attendance-lang";
+  let lang = "en";
+  try { if (localStorage.getItem(LANG_KEY) === "ne" && window.HPP_NE) lang = "ne"; } catch (e) {}
+  const T = s => lang === "ne" ? window.HPP_NE.tr(s) : s;
+  const confirm = s => window.confirm(T(s));
+  const prompt = (s, d) => window.prompt(T(s), d);
+
   /* ------------------------------------------------------------ helpers */
   const today = () => new Date(Date.now() + 345 * 60000).toISOString().slice(0, 10);   /* Nepal, UTC+5:45 */
   const addDays = (s, n) => new Date(Date.parse(s + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);
@@ -146,7 +155,7 @@
     if (!loaders[tab]) tab = "day";
     current = tab;
     $("[data-page-title]").textContent = TITLES[tab];
-    document.title = TITLES[tab] + " — Hotel Perfect Plaza";
+    document.title = T(TITLES[tab] + " — Hotel Perfect Plaza");
     scrollTo(0, 0);
     $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     $$("[data-panel]").forEach(p => { p.hidden = p.dataset.panel !== tab; });
@@ -264,6 +273,8 @@
     $("[data-day-today]").hidden = isToday;
     $("[data-day-next]").disabled = isToday;
     $("[data-board-note]").textContent = isToday ? "Updates by itself every 30 seconds" : "";
+    const hour = new Date(Date.now() + 345 * 60000).getUTCHours();
+    $("[data-greeting]").textContent = hour >= 4 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : "Good evening";
     lede(rows, isToday);
     lastBoard = [rows, isToday ? ms(nowStamp) : null, isToday];
     board(...lastBoard);
@@ -324,10 +335,11 @@
     };
 
     /* hour labels at least ~60px apart, at whatever width the strips have */
-    const stripPx = box.clientWidth - (matchMedia("(max-width: 760px)").matches ? 32 : 490);
-    const step = ([1, 2, 3, 4, 6, 12].find(h => h * HOUR / span * stripPx >= 60) || 12) * HOUR;
+    const stripPx = box.clientWidth - (matchMedia("(max-width: 900px)").matches ? 32 : 490);
+    const gap = lang === "ne" ? 72 : 60, edge = gap / 2 / stripPx * span;   /* Nepali labels are longer */
+    const step = ([1, 2, 3, 4, 6, 12].find(h => h * HOUR / span * stripPx >= gap) || 12) * HOUR;
     const ticks = el("div", { className: "ticks", "aria-hidden": "true" });
-    for (let t = Math.ceil((lo + HOUR / 2) / step) * step; t < hi - HOUR / 2; t += step) {
+    for (let t = Math.ceil((lo + edge) / step) * step; t < hi - edge; t += step) {
       const n = el("span", { className: "tick" + (new Date(t).getUTCHours() === 0 ? " mid" : "") }, hourLabel(t));
       n.style.left = pct(t); ticks.append(n);
     }
@@ -729,6 +741,23 @@
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && pass && current === "day" && $("[data-day-date]").value === today()) loadDay().catch(() => {});
   });
+
+  /* ------------------------------------------------------------ language */
+  function applyLang() {
+    document.documentElement.lang = lang;
+    $$("[data-lang]").forEach(b => { b.textContent = lang === "ne" ? "English" : "नेपाली"; b.lang = lang === "ne" ? "en" : "ne"; });
+    if (lang === "ne") { window.HPP_NE.translate(document.body); document.title = T(document.title); }
+  }
+  if (window.HPP_NE) new MutationObserver(list => {
+    if (lang === "ne") for (const m of list) m.addedNodes.forEach(n => window.HPP_NE.translate(n));
+  }).observe(document.body, { childList: true, subtree: true });
+  $$("[data-lang]").forEach(b => b.addEventListener("click", () => {
+    const next = lang === "ne" ? "en" : "ne";
+    try { localStorage.setItem(LANG_KEY, next); } catch (e) {}
+    if (next === "en" || !window.HPP_NE) return location.reload();   /* back to English: the page as written */
+    lang = "ne"; applyLang();
+  }));
+  applyLang();
 
   if (pass) start().catch(() => {});
 })();
