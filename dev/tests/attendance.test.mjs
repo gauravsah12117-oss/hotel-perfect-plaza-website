@@ -12,6 +12,9 @@ import attendanceRoute from "../../api/attendance.js";
 import telegramRoute from "../../api/telegram.js";
 import cronRoute from "../../api/attendance-cron.js";
 import { webhookSecret } from "../../api/_lib/telegram.js";
+import { asNotification } from "../../api/_lib/push.js";
+import webpush from "web-push";
+import { createECDH, randomBytes } from "node:crypto";
 
 async function call(route, { method = "GET", query = {}, body, headers = {} } = {}) {
   const req = { method, query, body, headers: { host: "hotel.test", "x-forwarded-proto": "https", ...headers } };
@@ -31,11 +34,15 @@ async function machine(op, { method = "GET", query = {}, body } = {}) {
 }
 const punch = lines => machine("cdata", { method: "POST", query: { table: "ATTLOG", Stamp: "9999" }, body: lines.map(([pin, at]) => `${pin}\t${at}\t0\t1\t0\t0\t0`).join("\n") + "\n" });
 
-/* Telegram, stood in for */
-let sent = [];
+/* Telegram and the phones' push services, stood in for */
+let sent = [], pushed = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
+  if (url.startsWith("https://push.example/")) {
+    pushed.push({ url, headers: opts.headers, bytes: opts.body.length });
+    return new Response("", { status: url.endsWith("/gone") ? 410 : 201 });
+  }
   if (url.startsWith("https://api.telegram.org/")) {
     const method = url.split("/").pop(), b = opts.body ? JSON.parse(opts.body) : {};
     if (method === "sendMessage") sent.push(b);
@@ -55,7 +62,41 @@ before(() => {
 });
 beforeEach(async () => {
   useDriver(await makeDriver(null));
-  sent = [];
+  sent = []; pushed = [];
+});
+
+/* a phone's push subscription, as the browser makes it */
+const phone = path => ({ endpoint: "https://push.example/" + path,
+  keys: { p256dh: createECDH("prime256v1").generateKeys("base64url"), auth: randomBytes(16).toString("base64url") } });
+
+test("app notifications: a phone turns them on, gets every punch, and is forgotten once it uninstalls", async () => {
+  const vapid = webpush.generateVAPIDKeys();
+  process.env.VAPID_PUBLIC_KEY = vapid.publicKey; process.env.VAPID_PRIVATE_KEY = vapid.privateKey;
+  delete process.env.TELEGRAM_BOT_TOKEN;
+  try {
+    assert.equal((await owner("settings")).json.push.key, vapid.publicKey);
+    assert.equal((await owner("push-subscribe", { method: "POST", body: { subscription: phone("father"), name: "Father's phone" } })).status, 200);
+    await owner("push-subscribe", { method: "POST", body: { subscription: phone("gone"), name: "Old phone" } });
+    assert.equal((await owner("push-subscribe", { method: "POST", body: { subscription: { endpoint: "nope" } } })).status, 400);
+    await approvedMachine();
+    await owner("staff", { method: "POST", body: { pin: "3", name: "Hari Yadav" } });
+    await punch([["3", nowText(1)]]);
+    const toFather = pushed.filter(p => p.url.endsWith("/father"));
+    assert.equal(toFather.length, 1);
+    assert.equal(toFather[0].headers["Content-Encoding"], "aes128gcm");       /* encrypted for that phone only */
+    assert.match(toFather[0].headers.Authorization, /^vapid t=/);
+    const devices = (await owner("settings")).json.devices;
+    assert.deepEqual(devices.map(d => d.name), ["Father's phone"]);           /* the uninstalled one is gone */
+    assert.ok(devices[0].last_ok);
+  } finally {
+    delete process.env.VAPID_PUBLIC_KEY; delete process.env.VAPID_PRIVATE_KEY;
+    process.env.TELEGRAM_BOT_TOKEN = "123:test";
+  }
+});
+
+test("a notification is the message's first line as its title, the rest under it", () => {
+  assert.deepEqual(asNotification("✅ <b>Hari &amp; Sons</b> came in at 9:22 AM\nKitchen · ⏰ 22 min late"),
+    { title: "✅ Hari & Sons came in at 9:22 AM", body: "Kitchen · ⏰ 22 min late" });
 });
 
 async function approvedMachine() {

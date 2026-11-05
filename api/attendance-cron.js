@@ -4,15 +4,15 @@
    CRON_SECRET when that is set. Switched off in Settings → "Evening summary". */
 
 import { getSettings, dailySummary } from "./_lib/attendance.js";
-import { sendAll, telegramReady } from "./_lib/telegram.js";
+import { notifyAll, notifyReady } from "./_lib/notify.js";
 import { json, handle } from "./_lib/http.js";
 
 export default handle(async (req, res) => {
   const secret = process.env.CRON_SECRET;
   const auth = String(req.headers.authorization || "");
   if (secret ? auth !== "Bearer " + secret : !/vercel-cron/i.test(String(req.headers["user-agent"] || ""))) return json(res, 401, { error: "cron" });
-  if (!telegramReady()) return json(res, 200, { sent: 0, why: "no telegram" });
+  if (!notifyReady()) return json(res, 200, { sent: 0, why: "no telegram or app notifications" });
   const set = await getSettings();
   if (set.notify_summary !== "1") return json(res, 200, { sent: 0, why: "off" });
-  json(res, 200, { sent: await sendAll(await dailySummary()) });
+  json(res, 200, { sent: await notifyAll(await dailySummary()) });
 });

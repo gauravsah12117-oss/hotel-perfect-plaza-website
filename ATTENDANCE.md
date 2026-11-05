@@ -73,6 +73,19 @@ from the Play Store or App Store. On his phone:
 
 *Sign out* on that phone, or a new `ATTENDANCE_PASSWORD` in Vercel, signs the app out.
 
+**Notifications from the app** (free, no Telegram needed): on his phone, in the app, go to
+**Settings → Notifications on this phone → Turn on notifications** and choose **Allow**. From then
+on the phone pops up "✅ Hari Yadav came in at 9:22 AM · 22 min late" the moment someone punches,
+even with the app closed. Tapping it opens Today.
+- **Android:** works in Chrome, installed or not. If they don't arrive, check that Chrome and
+  हाजिरी are allowed notifications in the phone's settings, and not limited by battery saver.
+- **iPhone:** only from the app on the home screen (step 2 above), on iOS 16.4 or newer.
+- Turn it on separately on each phone that should get them. **Remove** in that list stops a
+  phone. Settings → **Send a test** checks it.
+
+The website's notification keys are `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`
+in Vercel. Don't change them: every phone would have to turn notifications on again.
+
 ### 4. The fingerprint machine
 
 The system speaks ZKTeco's **ADMS / "Cloud Server"** protocol. Most ZKTeco and eSSL machines sold
@@ -165,5 +178,7 @@ to its first and last day.
 | `api/_lib/attendance.js` | The tables, and how days, lateness, overtime and pay are worked out |
 | `api/_lib/att-text.js` | The words of every message, English and Nepali. Improve the Nepali here |
 | `api/_lib/telegram.js` | Sending to Telegram |
+| `api/_lib/push.js`, `api/_lib/notify.js` | The app's own notifications, and sending every message to both |
+| `attendance.webmanifest`, `attendance-sw.js` | What makes the page an app: its icon and name, working offline, showing notifications |
 | `attendance-bridge/` | Only for a machine without HTTPS (see above) |
 | `dev/fake-machine.mjs`, `dev/tests/attendance.test.mjs` | A pretend machine, and the tests (`npm test`) |

@@ -18,7 +18,9 @@
    POST action=device   { sn, approved, name, remove }
    POST action=telegram-link            a one-time link to add a phone
    POST action=chat     { chat_id, active, remove }
-   POST action=telegram-test            a test message to every phone */
+   POST action=push-subscribe { subscription, name }  app notifications on this phone
+   POST action=push-remove { endpoint }  …and off
+   POST action=notify-test              a test to every phone (app and Telegram) */
 
 import { createHash, timingSafeEqual, randomBytes } from "node:crypto";
 import { q } from "./_lib/db.js";
@@ -26,7 +28,9 @@ import {
   attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER,
   okDay, addDays, dayStart, wall, wallText, toMin, nowNepal, dayOf, DAY
 } from "./_lib/attendance.js";
-import { telegramReady, botName, tg, webhookSecret, sendAll } from "./_lib/telegram.js";
+import { telegramReady, botName, tg, webhookSecret } from "./_lib/telegram.js";
+import { pushReady, pushPublicKey } from "./_lib/push.js";
+import { notifyAll, notifyReady } from "./_lib/notify.js";
 import { json, body, handle, clean, origin } from "./_lib/http.js";
 
 const digest = s => createHash("sha256").update(String(s)).digest();
@@ -59,8 +63,8 @@ export default handle(async (req, res) => {
 
   if (get && action === "today") {
     const [t, devs] = await Promise.all([today(), machines()]);
-    const chats = await q(`SELECT count(*)::int AS n FROM telegram_chats WHERE active`);
-    return json(res, 200, { ...t, set: undefined, machines: devs, telegram: telegramReady(), phones: chats[0].n });
+    const chats = await q(`SELECT (SELECT count(*)::int FROM telegram_chats WHERE active) + (SELECT count(*)::int FROM push_subs) AS n`);
+    return json(res, 200, { ...t, set: undefined, machines: devs, telegram: telegramReady(), push: pushReady(), notify: notifyReady(), phones: chats[0].n });
   }
 
   if (get && action === "report") {
@@ -174,11 +178,28 @@ export default handle(async (req, res) => {
       for (const [k, ok] of Object.entries(checks)) if (k in v && !ok(String(v[k]))) return json(res, 400, { error: "setting", key: k });
       for (const k of Object.keys(checks)) if (k in v) await setSetting(k, String(v[k]));
     }
-    const [set, devs, chats] = await Promise.all([getSettings(), machines(),
-      q(`SELECT chat_id, name, active, to_char(added_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD') AS added FROM telegram_chats ORDER BY added_at`)]);
+    const [set, devs, chats, subs] = await Promise.all([getSettings(), machines(),
+      q(`SELECT chat_id, name, active, to_char(added_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD') AS added FROM telegram_chats ORDER BY added_at`),
+      q(`SELECT endpoint, name, to_char(added_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD') AS added,
+           to_char(last_ok AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD HH24:MI') AS last_ok FROM push_subs ORDER BY added_at`)]);
     let bot = null; try { bot = await botName(); } catch (e) {}
-    return json(res, 200, { settings: Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, set[k]])), machines: devs, chats,
-      telegram: { ready: telegramReady(), bot }, server: { host: String(req.headers["x-forwarded-host"] || req.headers.host || "") } });
+    return json(res, 200, { settings: Object.fromEntries(Object.keys(DEFAULTS).map(k => [k, set[k]])), machines: devs, chats, devices: subs,
+      telegram: { ready: telegramReady(), bot }, push: { ready: pushReady(), key: pushPublicKey() },
+      server: { host: String(req.headers["x-forwarded-host"] || req.headers.host || "") } });
+  }
+
+  /* this phone's app notifications: on (its push address) or off */
+  if (post && action === "push-subscribe") {
+    const s = b.subscription || {};
+    const endpoint = String(s.endpoint || ""), p256dh = String((s.keys || {}).p256dh || ""), authKey = String((s.keys || {}).auth || "");
+    if (!/^https:\/\/[^\s]{10,1000}$/.test(endpoint) || !/^[A-Za-z0-9_-]{40,200}$/.test(p256dh) || !/^[A-Za-z0-9_-]{10,100}$/.test(authKey)) return json(res, 400, { error: "subscription" });
+    await q(`INSERT INTO push_subs (endpoint, p256dh, auth, name) VALUES ($1, $2, $3, $4)
+      ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth, name = EXCLUDED.name`, [endpoint, p256dh, authKey, clean(b.name, 60) || "Phone"]);
+    return json(res, 200, { ok: true });
+  }
+  if (post && action === "push-remove") {
+    await q(`DELETE FROM push_subs WHERE endpoint = $1`, [String(b.endpoint || "")]);
+    return json(res, 200, { ok: true });
   }
 
   if (post && action === "device") {
@@ -210,10 +231,10 @@ export default handle(async (req, res) => {
     return json(res, 200, { ok: true });
   }
 
-  if (post && action === "telegram-test") {
-    if (!telegramReady()) return json(res, 503, { error: "telegram" });
+  if (post && (action === "notify-test" || action === "telegram-test")) {
+    if (!notifyReady()) return json(res, 503, { error: "notify" });
     const set = await getSettings();
-    const sent = await sendAll(set.lang === "ne" ? "🔔 होटल पर्फेक्ट प्लाजा हाजिरी: परीक्षण सन्देश। यो आयो भने सबै ठीक छ।" : "🔔 Hotel Perfect Plaza attendance: a test message. If you can read this, messages are working.");
+    const sent = await notifyAll(set.lang === "ne" ? "🔔 परीक्षण सन्देश\nहोटल पर्फेक्ट प्लाजा हाजिरी। यो आयो भने सबै ठीक छ।" : "🔔 Test message\nHotel Perfect Plaza attendance. If you can see this, notifications are working.");
     return json(res, 200, { sent });
   }
 

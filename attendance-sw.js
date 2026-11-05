@@ -4,9 +4,12 @@
    The page itself (html, css, js, icons) comes from the network every time
    when there is one, so a new version shows at once; a copy is kept for when
    there isn't. The data (/api/…) is never kept: without internet the page
-   opens and says it can't reach the hotel's system. */
+   opens and says it can't reach the hotel's system.
 
-const CACHE = "hpp-register-v1";
+   It also shows the app's notifications (api/_lib/push.js): someone has
+   punched. Tapping one opens the app on Today. */
+
+const CACHE = "hpp-register-v2";
 const SHELL = ["/attendance.html", "/assets/css/attendance.css", "/assets/js/attendance.js",
   "/assets/icons/register.svg", "/assets/icons/register-192.png", "/attendance.webmanifest"];
 
@@ -17,6 +20,24 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
+});
+
+self.addEventListener("push", e => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch (err) { m = { title: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(m.title || "Staff register", {
+    body: m.body || "", icon: "/assets/icons/register-192.png", badge: "/assets/icons/register-192.png",
+    lang: /[ऀ-ॿ]/.test(m.title || "") ? "ne" : "en", timestamp: Date.now(), data: { url: "/attendance.html#day" }
+  }));
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+    /* the app already open: bring it forward (it refreshes Today by itself) */
+    const open = list.find(c => new URL(c.url).pathname.startsWith("/attendance"));
+    return open ? open.focus() : self.clients.openWindow("/attendance.html#day");
+  }));
 });
 
 self.addEventListener("fetch", e => {

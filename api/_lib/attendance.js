@@ -12,7 +12,8 @@
      att_devices    the machines that have called in; punches count only
                     from a machine the owner has approved
      att_settings   the hotel's rules and message switches
-     telegram_chats who gets the messages
+     telegram_chats who gets the messages on Telegram
+     push_subs      the phones that get app notifications (push.js)
 
    Times are Nepal wall-clock times, as the machine's clock shows them, kept
    in "timestamp" columns (no time zone) and handled here as milliseconds
@@ -26,7 +27,7 @@
    ========================================================================== */
 
 import { q, addSchema } from "./db.js";
-import { sendAll, telegramReady } from "./telegram.js";
+import { notifyAll, notifyReady } from "./notify.js";
 import { punchText, lateUploadText, summaryText } from "./att-text.js";
 
 addSchema([
@@ -84,6 +85,14 @@ addSchema([
      name     text NOT NULL DEFAULT '',
      active   boolean NOT NULL DEFAULT true,
      added_at timestamptz NOT NULL DEFAULT now()
+   )`,
+  `CREATE TABLE IF NOT EXISTS push_subs (
+     endpoint text PRIMARY KEY,
+     p256dh   text NOT NULL,
+     auth     text NOT NULL,
+     name     text NOT NULL DEFAULT '',
+     added_at timestamptz NOT NULL DEFAULT now(),
+     last_ok  timestamptz
    )`
 ]);
 
@@ -357,7 +366,7 @@ export async function punchEvent(pin, at, set) {
 }
 
 async function announce(added, now) {
-  if (!added.length || !telegramReady()) return;
+  if (!added.length || !notifyReady()) return;
   const set = await getSettings();
   const fresh = [], late = [];
   for (const p of added.sort((x, y) => wall(x.at) - wall(y.at))) {
@@ -369,12 +378,12 @@ async function announce(added, now) {
     const ev = await punchEvent(p.pin, p.at, set);
     if (!ev || !ev.staff.notify) continue;
     if (ev.kind === "in" ? set.notify_in !== "1" : set.notify_out !== "1") continue;
-    await sendAll(punchText(ev, set.lang));
+    await notifyAll(punchText(ev, set.lang));
   }
   if (late.length) {
     const names = new Map((await q(`SELECT pin, name, notify FROM staff WHERE pin = ANY($1::text[])`, [late.map(p => p.pin)])).map(s => [s.pin, s]));
     const shown = late.filter(p => !names.get(p.pin) || names.get(p.pin).notify);
-    if (shown.length) await sendAll(lateUploadText(shown.map(p => ({ name: staffName(names.get(p.pin) || { pin: p.pin }), t: wall(p.at) })), set.lang));
+    if (shown.length) await notifyAll(lateUploadText(shown.map(p => ({ name: staffName(names.get(p.pin) || { pin: p.pin }), t: wall(p.at) })), set.lang));
   }
 }
 

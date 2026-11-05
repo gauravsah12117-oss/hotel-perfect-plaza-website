@@ -82,6 +82,11 @@ main { max-width: 80rem; margin: 0 auto; padding: 1.4rem clamp(1rem, 3vw, 2rem) 
 .login .check, .check { display: flex; align-items: center; gap: .55rem; font-size: .9rem; color: var(--ink-2); }
 .login .check input { width: 1.1rem; height: 1.1rem; accent-color: var(--sindoor); }
 
+.notecard { border-left: 4px solid var(--leaf); }
+.notestate { margin: .2rem 0 .8rem; font-weight: 600; color: var(--ink); }
+.notestate.on { color: var(--leaf-ink); }
+.notestate.off { color: var(--sindoor); }
+.optional { margin-left: .4rem; padding: .1rem .5rem; border-radius: 99px; background: var(--paper-2); color: var(--ink-3); font-size: .72rem; font-weight: 600; vertical-align: .15em; }
 .offline { margin: 0 0 1rem; padding: .7rem 1rem; border-radius: 10px; background: var(--sindoor); color: #fff; font-weight: 500; }
 
 /* the app: the install button on the night blue, and the card in Settings */

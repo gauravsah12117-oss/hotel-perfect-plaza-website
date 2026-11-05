@@ -27,6 +27,7 @@
   const ERR = { pin: "Choose a staff member (or check the machine number).", time: "That date or time isn't right.", future: "That time hasn't happened yet.",
     exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", money: "Check the salary and overtime amounts.",
     dates: "Check the dates (at most 62 days at once).", telegram: "TELEGRAM_BOT_TOKEN isn't set in Vercel yet (ATTENDANCE.md, step 2).",
+    notify: "Turn on notifications on a phone first (Settings → Notifications on this phone).",
     webhook: "Telegram didn't accept the website's address. This only works on the real website, not on this computer.", setting: "Check the highlighted numbers." };
   const errText = r => ERR[r.json.error] || "Something went wrong. Try again.";
 
@@ -372,8 +373,7 @@
     const approved = t.machines.filter(m => m.approved), waiting = t.machines.filter(m => !m.approved);
     if (!t.machines.length) go("No fingerprint machine has connected yet. See \"How to connect the machine\".", "settings");
     waiting.forEach(m => go(`A fingerprint machine (${m.sn}) is waiting for you to approve it.`, "settings"));
-    if (!t.telegram) items.push(el("li", {}, "Telegram messages are off: TELEGRAM_BOT_TOKEN isn't set in Vercel yet (ATTENDANCE.md, step 2)."));
-    else if (!t.phones) go("No phone gets the arrival messages yet. Settings → Add a phone.", "settings");
+    if (!t.phones) go(t.notify ? "No phone gets a notification when someone punches yet. Settings → Turn on notifications, on your father's phone." : "Notifications aren't set up on the website yet.", "settings");
     const unnamed = t.rows.filter(r => /^Staff #/.test(r.name)).length;
     if (unnamed) go(`${unnamed} staff member${unnamed > 1 ? "s have" : " has"} no name yet.`, "staff");
     if (approved.some(m => m.clock_fast)) go("The machine's clock is fast. Set the right time on the machine (Menu → System → Date Time).", "settings");
@@ -581,7 +581,65 @@
     ]));
     $("[data-dev-howto]").open = !j.machines.length;
     machinePill(j.machines);
+    renderPush(j).catch(e => console.error(e));
   }
+
+  /* ------------------------------------- app notifications on this phone */
+  const canPush = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const b64bytes = s => { s = s.replace(/-/g, "+").replace(/_/g, "/"); s += "=".repeat((4 - s.length % 4) % 4); return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
+  let pushKey = "";
+  async function mySub() {
+    if (!canPush) return null;
+    const reg = await navigator.serviceWorker.getRegistration("/attendance");
+    return reg ? reg.pushManager.getSubscription() : null;
+  }
+  async function renderPush(j) {
+    pushKey = j.push.key;
+    const state = $("[data-push-state]"), on = $("[data-push-on]"), off = $("[data-push-off]"), test = $("[data-push-test]");
+    const sub = await mySub().catch(() => null);
+    const mine = sub && j.devices.some(d => d.endpoint === sub.endpoint);
+    const say = (text, cls) => { state.textContent = text; state.className = "notestate " + (cls || ""); };
+    on.hidden = off.hidden = true;
+    test.hidden = !j.devices.length && !j.chats.length;
+    if (!j.push.ready) say("App notifications aren't switched on for the hotel's website yet.", "off");
+    else if (!canPush) say(isIOS && !standalone
+      ? "On iPhone: first put this app on the home screen (\"The app on a phone\" above), open it from there, then come back here."
+      : "This browser can't show notifications. Open the page in Chrome (Android) or Safari (iPhone).", "off");
+    else if (Notification.permission === "denied") say("Notifications are blocked for this app. Allow them in the phone's settings (Settings → Apps or Notifications → हाजिरी or Chrome), then come back.", "off");
+    else if (mine) { say("On: this phone gets a notification every time someone punches.", "on"); off.hidden = false; }
+    else { say("Off on this phone.", ""); on.hidden = false; }
+    fill($("[data-push-table]"), ["Phone", "Turned on", "Last notification", ""], j.devices.map(d => [
+      { v: [d.name, sub && d.endpoint === sub.endpoint ? el("small", {}, "this phone") : null], cls: "name" },
+      nice(d.added), d.last_ok ? `${nice(d.last_ok.slice(0, 10))}, ${clock(d.last_ok.slice(11))}` : "—",
+      btn("Remove", async () => { if (confirm(`Stop notifications on ${d.name}?`)) { await post("push-remove", { endpoint: d.endpoint }); loadSettings(); } }, DANGER)
+    ]));
+  }
+  $("[data-push-on]").addEventListener("click", async () => {
+    const m = $("[data-push-msg]");
+    try {
+      if (await Notification.requestPermission() !== "granted") return msg(m, "Notifications weren't allowed. Press the button again and choose Allow.");
+      const reg = await navigator.serviceWorker.register("/attendance-sw.js", { scope: "/attendance" });
+      await navigator.serviceWorker.ready;
+      const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64bytes(pushKey) });
+      const guess = isIOS ? "iPhone" : /Android/.test(navigator.userAgent) ? "Android phone" : "Computer";
+      const name = prompt("Whose phone is this? (e.g. Father's phone)", guess) || guess;
+      const r = await post("push-subscribe", { subscription: sub.toJSON(), name });
+      if (!r.ok) return msg(m, "Couldn't turn them on. Try again.");
+      msg(m, "Turned on. Press \"Send a test\" to see one.", true);
+      loadSettings();
+    } catch (e) { console.error(e); msg(m, "Couldn't turn them on here (" + (e && e.message || e) + ")."); }
+  });
+  $("[data-push-off]").addEventListener("click", async () => {
+    const sub = await mySub();
+    if (sub) { await post("push-remove", { endpoint: sub.endpoint }); await sub.unsubscribe().catch(() => {}); }
+    msg($("[data-push-msg]"), "Turned off on this phone.", true);
+    loadSettings();
+  });
+  $("[data-push-test]").addEventListener("click", async () => {
+    const r = await post("notify-test");
+    msg($("[data-push-msg]"), r.ok ? (r.json.sent ? `Sent to ${r.json.sent} phone${r.json.sent > 1 ? "s" : ""}. It should appear in a few seconds.` : "No phone to send to yet.") : errText(r), r.ok && r.json.sent);
+  });
   $("[data-set-form]").addEventListener("submit", async e => {
     e.preventDefault();
     const f = e.target, m = $("[data-set-msg]"), settings = {};

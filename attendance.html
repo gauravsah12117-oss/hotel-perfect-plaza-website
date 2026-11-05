@@ -267,8 +267,22 @@
         </div>
       </div>
 
+      <div class="card notecard">
+        <h2>Notifications on this phone</h2>
+        <p class="hint">The app pops up a notification the moment someone puts their finger on the machine: who, what time, and if they're late. Free, and nothing else to install. Turn it on once on each phone that should get them.</p>
+        <p class="notestate" data-push-state></p>
+        <div class="row actions">
+          <button type="button" class="btn" data-push-on hidden>Turn on notifications</button>
+          <button type="button" class="btn btn--plain" data-push-off hidden>Turn off on this phone</button>
+          <button type="button" class="btn btn--ghost" data-push-test hidden>Send a test</button>
+        </div>
+        <p class="msg" data-push-msg role="status"></p>
+        <h3>Phones that get notifications</h3>
+        <div class="scroll"><table class="att" data-push-table></table></div>
+      </div>
+
       <div class="card">
-        <h2>Messages on Telegram</h2>
+        <h2>Messages on Telegram <span class="optional">optional</span></h2>
         <div data-tg-status></div>
         <div class="row actions">
           <button type="button" class="btn" data-tg-link>Add a phone</button>
