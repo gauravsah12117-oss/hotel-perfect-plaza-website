@@ -6,7 +6,7 @@ import { test, before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { makeDriver } from "../pglite-driver.mjs";
 import { useDriver } from "../../api/_lib/db.js";
-import { attendance, dayRecord, nowNepal, wallText, addDays, dayOf, MIN } from "../../api/_lib/attendance.js";
+import { attendance, dayRecord, nowNepal, wallText, addDays, dayOf, MIN, wall, checkAbsent, monthSummary, inQuiet } from "../../api/_lib/attendance.js";
 import * as iclock from "../../api/iclock.js";
 import * as hikRoute from "../../api/hik.js";
 import { nepalTime as hikTime } from "../../api/hik.js";
@@ -213,8 +213,8 @@ test("the evening summary goes to the phones, and only from Vercel Cron", async 
   await owner("staff", { method: "POST", body: { pin: "9", name: "Gita", shift_start: "00:30", shift_end: "08:30" } });
   sent = [];
   assert.equal((await call(cronRoute, { headers: { authorization: "Bearer wrong" } })).status, 401);
-  const r = await call(cronRoute, { headers: { authorization: "Bearer cron-secret" } });
-  assert.equal(r.json.sent, 1);
+  const r = await call(cronRoute, { query: { job: "evening" }, headers: { authorization: "Bearer cron-secret" } });
+  assert.ok(r.json.sent >= 1);                                          /* 2 on the last day of a Nepali month */
   assert.match(sent[0].text, /Attendance today/);
 });
 
@@ -452,6 +452,44 @@ test("payslips: bonus and allowance added, SSF, advance, tax and deductions take
   assert.equal(s.adjustments.length, 5);
   const list = (await owner("adjust", { query: { from: "2026-09-01", to: "2026-09-30" } })).json.adjustments;
   assert.equal((await owner("adjust-delete", { method: "POST", body: { id: list[0].id } })).status, 200);
+});
+
+/* ------------------------------------------ alerts made for the owner */
+test("\"not come yet\": once per person, only for those whose shift started a while ago, quiet in quiet hours", async () => {
+  await addPhone();
+  const d = dayOf(nowNepal()), at = hm => wall(`${d} ${hm}:00`);
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", shift_start: "09:00", shift_end: "17:00" } });
+  await owner("staff", { method: "POST", body: { pin: "2", name: "Sita", shift_start: "09:00", shift_end: "17:00", notify: false } });
+  await owner("staff", { method: "POST", body: { pin: "3", name: "Hari", shift_start: "14:00", shift_end: "22:00" } });
+  sent = [];
+  assert.equal(await checkAbsent(at("09:20"), { force: true }), 0);          /* 20 minutes in: not yet (30 by default) */
+  assert.equal(await checkAbsent(at("10:00"), { force: true }), 1);
+  assert.match(sent[0].text, /Not come yet/);
+  assert.match(sent[0].text, /Ram \(shift 9:00 AM\)/);
+  assert.doesNotMatch(sent[0].text, /Sita|Hari/);                             /* not notified about; not due yet */
+  assert.equal(await checkAbsent(at("10:30"), { force: true }), 0);          /* once a day */
+  await owner("settings", { method: "POST", body: { settings: { quiet_from: "22:00", quiet_to: "06:00" } } });
+  assert.equal(await checkAbsent(at("23:00"), { force: true }), 0);          /* Hari is due, but it's quiet hours */
+  assert.equal(await checkAbsent(at("14:45"), { force: true }), 1);
+  assert.match(sent[1].text, /Hari/);
+  assert.equal(inQuiet({ quiet_from: "22:00", quiet_to: "06:00" }, at("05:59")), true);
+  assert.equal(inQuiet({ quiet_from: "22:00", quiet_to: "06:00" }, at("06:00")), false);
+  assert.equal(inQuiet({ quiet_from: "", quiet_to: "" }, at("03:00")), false);
+});
+
+test("the month's summary comes on the last day of a Nepali month, and only then", async () => {
+  const ND = globalThis.NepaliDate, first = ND.toAD(2083, 6, 1), last = ND.toAD(2083, 6, ND.daysIn(2083, 6));   /* Asoj 2083 */
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", salary: 30000, joined: first } });
+  for (let k = 0, d = first; d <= last; d = addDays(d, 1), k++) {                  /* every day but one; late on the first */
+    if (k === 5) continue;
+    for (const t of [k ? "09:00" : "09:40", "18:00"]) await owner("punch", { method: "POST", body: { pin: "1", day: d, time: t } });
+  }
+  const text = await monthSummary(wall(`${last} 21:00:00`));
+  assert.match(text, /Asoj 2083: the month/);
+  assert.match(text, /Present 30 days · Absent 1 · Late 1 times/);
+  assert.match(text, /Salaries to pay: Rs [\d,]+/);
+  assert.match(text, /Most often late: Ram \(1 times\)/);
+  assert.equal(await monthSummary(wall(`${addDays(last, -1)} 21:00:00`)), null);
 });
 
 test("the owner's page needs the password", async () => {

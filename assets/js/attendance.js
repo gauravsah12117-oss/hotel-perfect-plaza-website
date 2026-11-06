@@ -20,6 +20,14 @@
   let lang = "en";
   try { if (localStorage.getItem(LANG_KEY) === "ne" && window.HPP_NE) lang = "ne"; } catch (e) {}
   const T = s => lang === "ne" ? window.HPP_NE.tr(s) : s;
+
+  /* per device: bigger text, and how Today is shown (phones start on the simple list) */
+  const SIZE_KEY = "hpp-attendance-size", VIEW_KEY = "hpp-attendance-view";
+  const stored = k => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
+  const keep2 = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const applySize = s => { document.documentElement.classList.toggle("size-l", s === "l"); document.documentElement.classList.toggle("size-xl", s === "xl"); };
+  applySize(stored(SIZE_KEY));
+  let view = stored(VIEW_KEY) || (matchMedia("(max-width: 900px)").matches ? "simple" : "timeline");
   const confirm = s => window.confirm(T(s));
   const prompt = (s, d) => window.prompt(T(s), d);
 
@@ -358,8 +366,118 @@
     $("[data-greeting]").textContent = hour >= 4 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : "Good evening";
     lede(rows, isToday);
     lastBoard = [rows, isToday ? ms(nowStamp) : null, isToday];
-    board(...lastBoard);
+    simple(rows, isToday);
+    applyView();
+    if (view === "timeline") board(...lastBoard);
   }
+
+  /* Simple or Timeline */
+  function applyView() {
+    $$("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+    $("[data-simple]").hidden = view !== "simple";
+    $("[data-timeline]").hidden = $("[data-key]").hidden = view !== "timeline";
+    const pref = $("[data-view-pref]"); if (pref) pref.value = view;
+  }
+  function setView(v) { view = v; keep2(VIEW_KEY, v); applyView(); if (v === "timeline" && lastBoard) board(...lastBoard); }
+  $$("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+
+  /* a person's initials in a coloured circle */
+  function avatar(name, pin, big) {
+    const words = String(name).replace(/^Staff #/, "#").split(/\s+/).filter(Boolean);
+    const letters = (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
+    let h = 0; for (const c of String(pin)) h = (h * 31 + c.charCodeAt(0)) % 997;
+    return el("span", { className: "avatar" + (big ? " avatar--big" : ""), "data-c": String(h % 6), "aria-hidden": "true" }, letters);
+  }
+  const telOf = p => String(p || "").replace(/[^\d+]/g, "");
+
+  /* The day as groups of people: not come, not due yet, in the hotel, gone
+     home, away. Each person opens their card; each has a call button. */
+  function simple(rows, isToday) {
+    const box = $("[data-simple]"); box.textContent = "";
+    if (!rows.length) { box.append(el("p", { className: "card board__empty" }, "No staff yet. Add them in Staff, or they appear here after their first punch.")); return; }
+    const away = x => ["leave", "off", "holiday", "none"].includes(x.status);
+    const groups = isToday ? [
+      ["absent", "Not come yet", x => x.status === "absent"],
+      ["inside", "In the hotel now", x => x.inside],
+      ["upcoming", "Not due yet", x => x.status === "upcoming" && !x.punches.length && !x.leave && !x.off && !x.holiday],
+      ["gone", "Gone home", x => x.punches.length && !x.inside],
+      ["away", "On leave or day off", x => !x.punches.length && (away(x) || (x.status === "upcoming" && (x.leave || x.off || x.holiday)))]
+    ] : [
+      ["absent", "Absent", x => x.status === "absent"],
+      ["gone", "Came", x => x.punches.length],
+      ["away", "On leave or day off", x => !x.punches.length && x.status !== "absent"]
+    ];
+    for (const [key, title, test] of groups) {
+      const list = rows.filter(r => test(r.rec));
+      if (!list.length) continue;
+      const sec = el("section", { className: "group group--" + key, "data-group": key },
+        el("h3", {}, el("span", {}, title), " ", el("b", {}, String(list.length))));
+      for (const r of list) {
+        const tel = telOf(r.phone);
+        sec.append(el("div", { className: "pcard" },
+          el("button", { type: "button", className: "pcard__open", onclick: () => openSheet(r) },
+            avatar(r.name, r.pin),
+            el("span", { className: "pcard__who" }, el("b", {}, r.name), r.job ? el("small", {}, r.job) : null, el("span", { className: "chips" }, chips(r.rec, isToday))),
+            el("span", { className: "pcard__facts" }, facts(r.rec, isToday))),
+          tel ? el("a", { className: "callbtn", href: "tel:" + tel, "aria-label": `Call ${r.name}` }, "📞", el("span", {}, "Call")) : null));
+      }
+      box.append(sec);
+    }
+  }
+  const jump = key => { setView("simple"); const g = $(`[data-group="${key}"]`); if (g) g.scrollIntoView({ behavior: "smooth", block: "start" }); };
+
+  /* --------------------------------------------------------- person card */
+  let sheetRow = null;
+  async function openSheet(r) {
+    sheetRow = r;
+    const dlg = $("[data-sheet]");
+    const av = avatar(r.name, r.pin, true); av.setAttribute("data-sheet-avatar", "");
+    $("[data-sheet-avatar]").replaceWith(av);
+    $("[data-sheet-name]").textContent = r.name;
+    $("[data-sheet-job]").textContent = [r.job, r.phone].filter(Boolean).join(" · ");
+    const call = $("[data-sheet-call]"), tel = telOf(r.phone);
+    call.hidden = !tel; call.href = tel ? "tel:" + tel : "#"; call.textContent = `📞 Call ${r.name}`;
+    const td = $("[data-sheet-today]"); td.textContent = "";
+    td.append(el("div", { className: "chips" }, chips(r.rec, r.rec.day === today())), el("p", { className: "srow__facts" }, facts(r.rec, r.rec.day === today())));
+    msg($("[data-sheet-msg]"), "");
+    $("[data-sheet-stats]").textContent = ""; $("[data-sheet-marks]").textContent = "";
+    if (!dlg.open) dlg.showModal();
+    /* this month so far: the Nepali month with Nepali dates on */
+    const t = today(), b = bsOf(t), from = b ? ND.toAD(b.y, b.m, 1) : t.slice(0, 8) + "01";
+    $("[data-sheet-month]").textContent = "This month: " + (b ? `${ND.MONTHS[b.m - 1]} ${b.y}` : new Date(t + "T00:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }));
+    const rep = (await api("report", { query: { from, to: t } })).json;
+    const s = rep.staff.find(x => x.pin === r.pin);
+    if (!s || sheetRow !== r) return;
+    const x = s.summary, stat = (k, v, cls) => el("div", { className: cls || "" }, el("b", {}, String(v)), el("span", {}, k));
+    $("[data-sheet-stats]").append(stat("Present", x.present), stat("Absent", x.absent, x.absent ? "bad" : ""), stat("Late", x.late, x.late ? "warn" : ""),
+      stat("Leave", x.paidLeave + x.unpaidLeave), stat("Overtime (h)", hours(x.ot)), s.salary ? stat("Pay so far", rs(x.pay), "good") : null);
+    $("[data-sheet-marks]").append(...s.days.map(d => el("span", { className: "sheet__mark" }, mark(d), el("small", {}, String((bsOf(d.day) || { d: +d.day.slice(8) }).d)))));
+  }
+  $("[data-sheet-close]").addEventListener("click", () => $("[data-sheet]").close());
+  $("[data-sheet]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });   /* tap outside */
+  $("[data-sheet-leave]").addEventListener("submit", async e => {
+    e.preventDefault();
+    const r = await post("leave", { pin: sheetRow.pin, from: today(), to: today(), kind: e.target.kind.value });
+    msg($("[data-sheet-msg]"), r.ok ? "Saved." : errText(r), r.ok);
+    if (r.ok) loadDay();
+  });
+  $("[data-sheet-punch]").addEventListener("submit", async e => {
+    e.preventDefault();
+    const r = await post("punch", { pin: sheetRow.pin, day: today(), time: e.target.time.value, note: "added from the person card" });
+    msg($("[data-sheet-msg]"), r.ok ? "Added." : errText(r), r.ok);
+    if (r.ok) { e.target.time.value = ""; loadDay(); }
+  });
+  $("[data-sheet-slip]").addEventListener("click", () => { slipPin = sheetRow.pin; $("[data-sheet]").close(); show("report"); });
+
+  /* ---------------------------------------------------- share the day */
+  let shareText = "";
+  $("[data-share]").addEventListener("click", async () => {
+    const text = shareText + "\n— " + T("Hotel Perfect Plaza");
+    try {
+      if (navigator.share) await navigator.share({ title: T("Daily attendance"), text });
+      else { await navigator.clipboard.writeText(text); alert(T("Copied. Paste it into WhatsApp or Viber.")); }
+    } catch (e) { /* closed without sharing */ }
+  });
   let lastBoard = null, resizing = 0;
   addEventListener("resize", () => { clearTimeout(resizing); resizing = setTimeout(() => { if (lastBoard && current === "day") board(...lastBoard); }, 150); });
   const go = n => { $("[data-day-date]").value = addDays($("[data-day-date]").value || today(), n); loadDay(); };
@@ -382,8 +500,14 @@
     const inside = pick(x => x.inside), leave = pick(x => x.status === "leave");
     const ot = rows.reduce((a, r) => a + r.rec.ot, 0);
     const names = list => list.map(r => r.name).join(", ");
-    const stat = (cls, label, num, sub) => box.append(el("div", { className: "stat stat--" + cls },
-      el("p", { className: "stat__label" }, label), el("p", { className: "stat__num" }, num), el("p", { className: "stat__sub" }, sub || "")));
+    const GROUP = { ok: "gone", in: "inside", late: "inside", absent: "absent", ot: "gone" };
+    const stat = (cls, label, num, sub) => box.append(el("button", { type: "button", className: "stat stat--" + cls, onclick: () => jump(GROUP[cls]) },
+      el("span", { className: "stat__label" }, label), el("span", { className: "stat__num" }, num), el("span", { className: "stat__sub" }, sub || "")));
+    /* the same, as text to share */
+    const line = (label, value) => value ? `\n${T(label)}: ${T(value)}` : "";
+    shareText = T($("[data-day-title]").textContent) + line(isToday ? "Came today" : "Came", `${came.length} / ${rows.length}`) +
+      line("In the hotel now", isToday ? names(inside) : "") + line("Late", late.map(r => `${r.name} ${dur(r.rec.late)}`).join(", ")) +
+      line(isToday ? "Not come" : "Absent", names(away)) + line("On leave", names(leave)) + line("Overtime", ot ? dur(ot) : "");
     stat("ok", isToday ? "Came today" : "Came", [String(came.length), el("small", {}, " / " + rows.length)], rows.length ? (came.length === rows.length ? "Everyone" : "") : "No staff yet");
     if (isToday) stat("in", "In the hotel now", String(inside.length), names(inside));
     stat("late", "Late", String(late.length), late.map(r => `${r.name} ${dur(r.rec.late)}`).join(", "));
@@ -458,9 +582,10 @@
     if (!x.punches.length) {
       const say = {
         absent: [isToday ? "Not come yet" : "Absent", "bad"], leave: [LEAVE[x.leave] || "On leave"], holiday: [x.holiday], off: ["Day off"],
-        none: ["Not joined yet"], upcoming: [isToday ? "Due at " + clock(x.shiftStart) : "—"]
+        none: ["Not joined yet"], upcoming: [isToday ? "" : "—"]
       }[x.status] || ["—"];
-      return [el("span", { className: "times" }, "—"), el("span", { className: say[1] }, say[0])];
+      const scheduled = !x.off && !x.holiday && !x.leave && x.status !== "none";
+      return [el("span", { className: "times" }, scheduled ? `Shift ${clock(x.shiftStart)}` : "—"), el("span", { className: say[1] }, say[0])];
     }
     const parts = [el("span", {}, x.worked ? dur(x.worked) + " worked" : x.inside ? "just arrived" : "no time worked")];
     if (x.late) parts.push(el("span", { className: "late" }, dur(x.late) + " late"));
@@ -829,6 +954,12 @@
   }
   $("[data-shift-add]").addEventListener("click", () => addShiftRow());
 
+  /* On this phone: text size, and how Today is shown */
+  $("[data-size]").value = stored(SIZE_KEY);
+  $("[data-size]").addEventListener("change", e => { keep2(SIZE_KEY, e.target.value); applySize(e.target.value); });
+  $("[data-view-pref]").value = view;
+  $("[data-view-pref]").addEventListener("change", e => setView(e.target.value));
+
   /* --------------------------------------------------------------- backup */
   function backupYears() {
     const sel = $("[data-backup-year]"), now = +today().slice(0, 4);
@@ -906,8 +1037,9 @@
   $("[data-set-form]").addEventListener("submit", async e => {
     e.preventDefault();
     const f = e.target, m = $("[data-set-msg]"), settings = {};
-    for (const k of ["notify_in", "notify_out", "notify_summary"]) settings[k] = f[k].checked ? "1" : "0";
-    for (const k of ["lang", "shift_start", "shift_end", "grace", "ot_min", "ot_multiplier", "ssf_employee", "ssf_employer"]) settings[k] = f[k].value;
+    for (const k of ["notify_in", "notify_out", "notify_summary", "notify_absent", "notify_month"]) settings[k] = f[k].checked ? "1" : "0";
+    for (const k of ["lang", "shift_start", "shift_end", "grace", "ot_min", "ot_multiplier", "ssf_employee", "ssf_employer", "absent_after", "quiet_from", "quiet_to"]) settings[k] = f[k].value;
+    if (!settings.quiet_from !== !settings.quiet_to) { msg(m, "Give both quiet-hours times, or leave both empty."); return; }
     settings.shifts = JSON.stringify($$("[data-shifts] .shiftrow").map(row => {
       const [name, start, end] = $$("input", row).map(i => i.value.trim());
       return { name, start, end };

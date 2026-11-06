@@ -23,7 +23,7 @@
    ========================================================================== */
 
 import { q } from "./_lib/db.js";
-import { recordPunches, recordUsers, nowNepal } from "./_lib/attendance.js";
+import { recordPunches, recordUsers, nowNepal, checkAbsent } from "./_lib/attendance.js";
 import { clean } from "./_lib/http.js";
 
 const text = (body, status = 200) => new Response(body, { status, headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" } });
@@ -76,6 +76,7 @@ export async function GET(request) {
   if (op === "getrequest" && Date.now() - (touched.get(sn) || 0) > 30 * 60000) {
     touched.set(sn, Date.now());
     await device(sn, ip, clean(p.get("INFO") || "", 300)).catch(e => console.error(e));
+    await checkAbsent().catch(e => console.error(e));                 /* a good moment for "not come yet" */
   }
   return text("OK");
 }

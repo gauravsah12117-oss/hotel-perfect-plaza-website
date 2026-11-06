@@ -28,7 +28,24 @@ with that year's row and correct the row if they differ.
 | **Leave** | Paid, sick and unpaid leave per person; holidays for everyone (Dashain, Tihar…) |
 | **Settings** | Notifications on this phone, installing the app, the fingerprint machines, the hotel's rules (usual shift, late after, overtime from, overtime rate, language of the notifications), backup, Telegram (optional) |
 
+**Made easy for the owner's father**
+- **Today → Simple** (the start on a phone): everyone in groups, *Not come yet*, *In the hotel
+  now*, *Not due yet*, *Gone home*, *On leave or day off*, in big cards with a **📞 Call** button.
+  Tap a number at the top to jump to its group. **Timeline** is the detailed view.
+- **Tap a person** for their card: a big call button, today, this month (present, absent, late,
+  leave, overtime, pay so far, a mark for every day), and **On leave today** or **Add a
+  forgotten punch today** in one tap, or their **Payslip**.
+- **Share today** sends the day's summary to WhatsApp, Viber or anywhere.
+- **Settings → On this phone**: bigger text (Large, Extra large), and Simple or Timeline.
+
 **Notifications**
+- **"Not come yet"**: 30 minutes (Settings) after someone's shift starts without a punch, one
+  notification naming them, once a day per person. It is checked whenever anyone punches, when
+  the app is opened, when the machine checks in, and at 10:30 am every day.
+- **Quiet hours** (Settings, e.g. 22:00 to 06:00): no punch notifications at night; the punches
+  are still recorded and the 9 pm summary still comes.
+- **The month's summary** on the last day of each Nepali month, with the 9 pm summary: days
+  present, absences, late arrivals, overtime, the salaries to pay, who was late most often.
 - When someone arrives (on time, or how late), leaves (hours worked, overtime, left early), or
   comes back from a break; in English or Nepali (Settings)
 - At about 9 pm, the day's summary: present, late, absent, on leave, still in, overtime,

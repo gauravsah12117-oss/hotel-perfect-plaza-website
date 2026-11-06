@@ -123,11 +123,22 @@
 
           <div class="stats" data-day-lede></div>
 
-          <div class="card card--flush">
+          <div class="daybar">
+            <div class="seg" role="group" aria-label="How Today is shown">
+              <button type="button" data-view="simple" aria-pressed="true">Simple</button>
+              <button type="button" data-view="timeline" aria-pressed="false">Timeline</button>
+            </div>
+            <button type="button" class="btn btn--ghost btn--small" data-share>Share today</button>
+          </div>
+
+          <!-- Simple: people in groups, big and easy to read, with a call button -->
+          <div class="simple" data-simple></div>
+
+          <div class="card card--flush" data-timeline>
             <div class="card__head"><h2>Who came, and when</h2><span class="card__note" data-board-note></span></div>
             <div class="board" data-board></div>
           </div>
-          <p class="key">
+          <p class="key" data-key>
             <span><i class="k k--shift"></i>Shift</span>
             <span><i class="k k--bar"></i>At work</span>
             <span><i class="k k--late"></i>Late</span>
@@ -358,6 +369,19 @@
             </div>
           </div>
 
+          <div class="card">
+            <h2>On this phone</h2>
+            <p class="hint">Only for this phone; each phone keeps its own.</p>
+            <div class="form">
+              <label>Text size
+                <select data-size><option value="">Normal</option><option value="l">Large</option><option value="xl">Extra large</option></select>
+              </label>
+              <label>Today shows
+                <select data-view-pref><option value="simple">Simple list</option><option value="timeline">Timeline</option></select>
+              </label>
+            </div>
+          </div>
+
           <div class="card appcard" data-appcard>
             <img src="assets/icons/register-192.png" alt="" width="64" height="64">
             <div>
@@ -410,6 +434,12 @@
               <label class="check"><input name="notify_in" type="checkbox"> Notify when someone arrives</label>
               <label class="check"><input name="notify_out" type="checkbox"> Notify when someone leaves or comes back</label>
               <label class="check"><input name="notify_summary" type="checkbox"> The day's summary at about 9 pm</label>
+              <label class="check"><input name="notify_absent" type="checkbox"> Notify when someone hasn't come</label>
+              <label>…this many minutes after their shift starts <input name="absent_after" type="number" min="0" max="600" required></label>
+              <label class="check"><input name="notify_month" type="checkbox"> The month's summary on its last day</label>
+              <label>Quiet hours from <input name="quiet_from" type="time"></label>
+              <label>Quiet hours until <input name="quiet_to" type="time"></label>
+              <p class="hint wide">No punch notifications during quiet hours (for example 22:00 to 06:00): the punches are still recorded, and the 9 pm summary still comes. Leave both empty for none.</p>
               <label>Language of the notifications
                 <select name="lang"><option value="en">English</option><option value="ne">नेपाली</option></select>
               </label>
@@ -464,6 +494,40 @@
     </main>
   </div>
 </div>
+
+<!-- a person, opened by tapping their name on Today -->
+<dialog class="sheet" data-sheet aria-labelledby="sheet-name">
+  <div class="sheet__head">
+    <span class="avatar avatar--big" data-sheet-avatar></span>
+    <div class="sheet__who"><h2 id="sheet-name" data-sheet-name></h2><p data-sheet-job></p></div>
+    <button type="button" class="btn btn--plain btn--icon" data-sheet-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <a class="btn btn--block callbig" data-sheet-call hidden>Call</a>
+    <section>
+      <h3>Today</h3>
+      <div class="sheet__today" data-sheet-today></div>
+    </section>
+    <section>
+      <h3 data-sheet-month>This month</h3>
+      <div class="sheet__stats" data-sheet-stats></div>
+      <div class="sheet__marks" data-sheet-marks></div>
+    </section>
+    <section>
+      <h3>Quick actions</h3>
+      <form class="sheet__act" data-sheet-leave>
+        <select name="kind" aria-label="Kind"><option value="paid">Paid leave</option><option value="sick">Sick leave</option><option value="unpaid">Unpaid leave</option></select>
+        <button class="btn btn--small" type="submit">On leave today</button>
+      </form>
+      <form class="sheet__act" data-sheet-punch>
+        <input type="time" name="time" required aria-label="Time">
+        <button class="btn btn--small" type="submit">Add a forgotten punch today</button>
+      </form>
+      <button type="button" class="btn btn--ghost btn--small" data-sheet-slip>Payslip</button>
+      <p class="msg" data-sheet-msg role="status"></p>
+    </section>
+  </div>
+</dialog>
 
 <!-- what is printed when printing payslips (attendance.js fills it) -->
 <div class="printarea" data-printarea hidden></div>

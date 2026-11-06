@@ -20,6 +20,7 @@
                     one: a shift from Settings (Morning, Night…) or a day off
      pay_adjust     money for the payslip on a date: an advance, a bonus, an
                     allowance, tax or another deduction
+     att_alerts     the "not come yet" alerts already sent, one per person per day
 
    Times are Nepal wall-clock times, as the machine's clock shows them, kept
    in "timestamp" columns (no time zone) and handled here as milliseconds
@@ -34,7 +35,7 @@
 
 import { q, addSchema } from "./db.js";
 import { notifyAll, notifyReady } from "./notify.js";
-import { punchText, lateUploadText, summaryText } from "./att-text.js";
+import { punchText, lateUploadText, summaryText, absentText, monthText } from "./att-text.js";
 
 addSchema([
   `CREATE TABLE IF NOT EXISTS staff (
@@ -111,6 +112,13 @@ addSchema([
      created_at timestamptz NOT NULL DEFAULT now()
    )`,
   `CREATE INDEX IF NOT EXISTS pay_adjust_day ON pay_adjust (day)`,
+  `CREATE TABLE IF NOT EXISTS att_alerts (
+     day     date NOT NULL,
+     pin     text NOT NULL,
+     kind    text NOT NULL,
+     sent_at timestamptz NOT NULL DEFAULT now(),
+     PRIMARY KEY (day, pin, kind)
+   )`,
   `ALTER TABLE staff ADD COLUMN IF NOT EXISTS ssf boolean NOT NULL DEFAULT false`,
   `CREATE TABLE IF NOT EXISTS att_login_fails (
      ip           text PRIMARY KEY,
@@ -165,7 +173,11 @@ export const DEFAULTS = {
   shifts: JSON.stringify([{ name: "Morning", start: "06:00", end: "14:00" }, { name: "Day", start: "09:00", end: "18:00" },
     { name: "Evening", start: "14:00", end: "22:00" }, { name: "Night", start: "22:00", end: "06:00" }]),
   ssf_employee: "11",     /* Social Security Fund, % of the basic salary earned: taken from pay */
-  ssf_employer: "20"      /* … and paid by the hotel on top (shown on the payslip) */
+  ssf_employer: "20",     /* … and paid by the hotel on top (shown on the payslip) */
+  notify_absent: "1",     /* "not come yet" alert … */
+  absent_after: "30",     /* … this many minutes after the shift started */
+  notify_month: "1",      /* the month's summary on the last day of each Nepali month */
+  quiet_from: "", quiet_to: ""   /* no punch notifications between these times ("" = none) */
 };
 
 export async function getSettings() {
@@ -402,7 +414,7 @@ export async function today(now = nowNepal()) {
   const res = await attendance(addDays(d, -1), d, { now });
   const rows = res.staff.map(st => {
     const rec = st.days.find(x => x.day === st.currentDay) || st.days[st.days.length - 1];
-    return { pin: st.pin, name: st.displayName, job: st.job, rec };
+    return { pin: st.pin, name: st.displayName, job: st.job, phone: st.phone, notify: st.notify, rec };
   });
   return { set: res.set, day: d, now: res.now, rows };
 }
@@ -417,6 +429,52 @@ export async function machines() {
 export async function dailySummary(now = nowNepal()) {
   const [t, devs] = await Promise.all([today(now), machines()]);
   return summaryText(t, devs.filter(d => d.approved), t.set.lang);
+}
+
+/* Quiet hours: no punch notifications between quiet_from and quiet_to
+   (Nepal time; may run past midnight, e.g. 22:00 to 06:00). */
+export function inQuiet(set, now) {
+  const a = toMin(set.quiet_from), b = toMin(set.quiet_to);
+  if (a === null || b === null || a === b) return false;
+  const d = new Date(now), m = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return a < b ? m >= a && m < b : m >= a || m < b;
+}
+
+/* "Not come yet": anyone whose shift started absent_after minutes ago
+   without a punch, once per person per day, as one notification. Run on
+   every punch, when the app is opened, when a machine checks in, and by
+   the 10:30 am cron; at most every 5 minutes per running copy. */
+let absentChecked = 0;
+export async function checkAbsent(now = nowNepal(), { force = false } = {}) {
+  if (!force && Date.now() - absentChecked < 5 * MIN) return 0;
+  absentChecked = Date.now();
+  if (!notifyReady()) return 0;
+  const set = await getSettings();
+  if (set.notify_absent !== "1" || inQuiet(set, now)) return 0;
+  const after = Math.max(0, Number(set.absent_after) || 0) * MIN;
+  const t = await today(now);
+  const due = t.rows.filter(r => r.notify && r.rec.status === "absent" && now >= wall(`${r.rec.day} ${r.rec.shiftStart}`) + after);
+  if (!due.length) return 0;
+  const fresh = await q(`INSERT INTO att_alerts (day, pin, kind) SELECT d, p, 'absent' FROM unnest($1::date[], $2::text[]) AS x(d, p)
+    ON CONFLICT DO NOTHING RETURNING pin`, [due.map(r => r.rec.day), due.map(r => r.pin)]);
+  const pins = new Set(fresh.map(f => f.pin)), list = due.filter(r => pins.has(r.pin));
+  return list.length ? notifyAll(absentText(list, set.lang)) : 0;
+}
+
+/* On the last day of a Nepali month (English month outside the calendar's
+   years): the month's totals, or null on any other day. */
+export async function monthSummary(now = nowNepal()) {
+  const d = dayOf(now), ND = globalThis.NepaliDate, b = ND && ND.toBS(d);
+  let from, label;
+  if (b) {
+    if (b.d !== ND.daysIn(b.y, b.m)) return null;
+    from = ND.toAD(b.y, b.m, 1); label = { bs: b };
+  } else {
+    if (addDays(d, 1).slice(8) !== "01") return null;
+    from = d.slice(0, 8) + "01"; label = { ad: d };
+  }
+  const res = await attendance(from, d, { now });
+  return monthText(res, label, res.set.lang);
 }
 
 /* ---------------------------------------------- punches from the machine */
@@ -446,6 +504,7 @@ export async function recordPunches(rows, sn, now = nowNepal()) {
   else if (fast > -3) await q(`UPDATE att_devices SET clock_fast = NULL WHERE sn = $1 AND clock_fast IS NOT NULL`, [sn]);
 
   try { await announce(added, now); } catch (e) { console.error("attendance message", e); }
+  try { await checkAbsent(now); } catch (e) { console.error("absent check", e); }
   return { taken: rows.length, added };
 }
 
@@ -474,6 +533,7 @@ export async function punchEvent(pin, at, set) {
 async function announce(added, now) {
   if (!added.length || !notifyReady()) return;
   const set = await getSettings();
+  if (inQuiet(set, now)) return;                        /* quiet hours: kept, not notified */
   const fresh = [], late = [];
   for (const p of added.sort((x, y) => wall(x.at) - wall(y.at))) {
     const age = now - wall(p.at);

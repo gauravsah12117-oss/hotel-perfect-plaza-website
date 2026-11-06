@@ -22,7 +22,7 @@
    ========================================================================== */
 
 import { q } from "./_lib/db.js";
-import { recordPunches, nowNepal, wall, wallText } from "./_lib/attendance.js";
+import { recordPunches, nowNepal, wall, wallText, checkAbsent } from "./_lib/attendance.js";
 import { clean } from "./_lib/http.js";
 
 const ok = () => new Response("OK", { status: 200, headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" } });
@@ -89,10 +89,12 @@ export async function POST(request) {
     const at = pin && nepalTime(ev.dateTime);
     if (pin && at) bySn.get(sn).rows.push({ pin, at, verify: VERIFY[a.subEventType] ?? null });
   }
+  let punched = false;
   for (const [sn, { info, rows }] of bySn) {
     const approved = await seen(sn, ip, info);
-    if (approved && rows.length) await recordPunches(rows, sn, nowNepal());
+    if (approved && rows.length) { await recordPunches(rows, sn, nowNepal()); punched = true; }
   }
+  if (!punched && bySn.size) await checkAbsent().catch(e => console.error(e));   /* a heartbeat: a good moment for "not come yet" */
   return ok();
 }
 

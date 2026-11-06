@@ -186,6 +186,22 @@ window.HPP_NE = (function () {
     "SSF paid by the hotel, on top of this pay": "यो तलबबाहेक होटलले तिर्ने SSF",
     "How to connect the machine: Hikvision": "मेसिन कसरी जोड्ने: Hikvision", "How to connect the machine: ZKTeco or eSSL": "मेसिन कसरी जोड्ने: ZKTeco वा eSSL",
 
+    /* for the owner's father: the simple list, the person card, sharing, alerts */
+    "How Today is shown": "आज कसरी देखाउने", "Simple": "सजिलो", "Timeline": "समयरेखा", "Share today": "आजको हाजिरी पठाउनुहोस्",
+    "Not due yet": "अझै समय भएको छैन", "Gone home": "घर गए", "On leave or day off": "बिदा वा साप्ताहिक बिदामा",
+    "Call": "फोन", "Quick actions": "छिटो काम", "On leave today": "आज बिदामा", "Add a forgotten punch today": "आजको छुटेको हाजिरी थप्नुहोस्",
+    "Pay so far": "अहिलेसम्मको तलब", "added from the person card": "व्यक्तिको कार्डबाट थपिएको",
+    "Copied. Paste it into WhatsApp or Viber.": "कपी भयो। WhatsApp वा Viber मा टाँस्नुहोस्।",
+    "Notify when someone hasn't come": "कोही नआएमा सूचना", "…this many minutes after their shift starts": "…सिफ्ट सुरु भएको यति मिनेटपछि",
+    "The month's summary on its last day": "महिनाको अन्तिम दिन महिनाभरिको सारांश",
+    "Quiet hours from": "शान्त समय सुरु", "Quiet hours until": "शान्त समय सकिने",
+    "No punch notifications during quiet hours (for example 22:00 to 06:00): the punches are still recorded, and the 9 pm summary still comes. Leave both empty for none.":
+      "शान्त समयमा (जस्तै राति 22:00 देखि बिहान 06:00) हाजिरीको सूचना आउँदैन: हाजिरी भने रेकर्ड हुन्छ, र राति 9 बजेको सारांश आउँछ। नचाहिए दुवै खाली छोड्नुहोस्।",
+    "Give both quiet-hours times, or leave both empty.": "शान्त समयका दुवै समय दिनुहोस्, वा दुवै खाली छोड्नुहोस्।",
+    "On this phone": "यो फोनमा", "Only for this phone; each phone keeps its own.": "यो फोनका लागि मात्र; हरेक फोनको आफ्नै।",
+    "Text size": "अक्षरको आकार", "Normal": "सामान्य", "Large": "ठूलो", "Extra large": "धेरै ठूलो",
+    "Today shows": "आज देखाउने", "Simple list": "सजिलो सूची",
+
     /* errors (errText in attendance.js) */
     "Choose a staff member (or check the machine number).": "कर्मचारी छान्नुहोस् (वा मेसिन नम्बर जाँच्नुहोस्)।",
     "That date or time isn't right.": "मिति वा समय मिलेन।", "That time hasn't happened yet.": "त्यो समय अझै आएको छैन।",
@@ -258,6 +274,10 @@ window.HPP_NE = (function () {
     [/^Too many wrong passwords\. Try again in (\d+) minutes\.$/, m => "धेरै पटक गलत पासवर्ड। " + m[1] + " मिनेटपछि फेरि प्रयास गर्नुहोस्।"],
     [/^(.+) — Hotel Perfect Plaza$/, m => tr(m[1]) + " — होटल पर्फेक्ट प्लाजा"],
     [/^Payslip: (.+)$/, m => "तलब पर्ची: " + m[1]],
+    [/^📞 Call (.+)$/, m => "📞 " + m[1] + " लाई फोन गर्नुहोस्"],
+    [/^Call (.+)$/, m => m[1] + " लाई फोन"],
+    [/^This month: (.+)$/, m => "यो महिना: " + inline(m[1])],
+    [/^Shift (\d{1,2}:\d{2} [AP]M)$/, m => "सिफ्ट " + inline(m[1])],
     [/^([\d.]+) unpaid days × Rs ([\d,]+) taken off$/, m => `${m[1]} बेतलबी दिन × रु ${m[2]} कटाइयो`],
     [/^([\d.]+) hours × Rs ([\d,]+)$/, m => `${m[1]} घण्टा × रु ${m[2]}`],
     [/^([\d.]+)% of basic salary$/, m => `आधारभूत तलबको ${m[1]}%`],

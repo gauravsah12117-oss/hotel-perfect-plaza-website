@@ -39,7 +39,7 @@
 import { createHash, createHmac, timingSafeEqual, randomBytes } from "node:crypto";
 import { q } from "./_lib/db.js";
 import {
-  attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER, shiftList,
+  attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER, shiftList, checkAbsent,
   okDay, addDays, dayStart, wall, wallText, toMin, nowNepal, dayOf, DAY
 } from "./_lib/attendance.js";
 import { telegramReady, botName, tg, webhookSecret } from "./_lib/telegram.js";
@@ -135,6 +135,7 @@ export default handle(async (req, res) => {
   }
 
   if (get && action === "today") {
+    await checkAbsent().catch(e => console.error(e));                 /* someone is looking: a good moment for "not come yet" */
     const [t, devs] = await Promise.all([today(), machines()]);
     const chats = await q(`SELECT (SELECT count(*)::int FROM telegram_chats WHERE active) + (SELECT count(*)::int FROM push_subs) AS n`);
     return json(res, 200, { ...t, set: undefined, machines: devs, telegram: telegramReady(), push: pushReady(), notify: notifyReady(), phones: chats[0].n });
@@ -248,6 +249,8 @@ export default handle(async (req, res) => {
         notify_in: s => /^[01]$/.test(s), notify_out: s => /^[01]$/.test(s), notify_summary: s => /^[01]$/.test(s),
         lang: s => s === "en" || s === "ne",
         ssf_employee: s => /^\d{1,2}(\.\d{1,2})?$/.test(s), ssf_employer: s => /^\d{1,2}(\.\d{1,2})?$/.test(s),
+        notify_absent: s => /^[01]$/.test(s), notify_month: s => /^[01]$/.test(s), absent_after: s => /^\d{1,3}$/.test(s),
+        quiet_from: s => s === "" || toMin(s) !== null, quiet_to: s => s === "" || toMin(s) !== null,
         shifts: s => { try { const l = JSON.parse(s); return Array.isArray(l) && l.length <= 8 && l.every(x => x && typeof x.name === "string" && x.name.trim() && x.name.length <= 24 && toMin(x.start) !== null && toMin(x.end) !== null); } catch (e) { return false; } }
       };
       for (const [k, ok] of Object.entries(checks)) if (k in v && !ok(String(v[k]))) return json(res, 400, { error: "setting", key: k });

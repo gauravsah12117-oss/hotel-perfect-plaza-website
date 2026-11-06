@@ -51,7 +51,11 @@ const T = {
     machineOff: c => `⚠️ The fingerprint machine hasn't connected since ${c}. Check its power and internet.`,
     noMachine: "⚠️ No fingerprint machine is connected yet.",
     nobodyIn: "Nobody is in right now.", insideTitle: "🟢 <b>In the hotel now</b>",
-    noStaff: "No staff added yet."
+    noStaff: "No staff added yet.",
+    notCome: "⏰ <b>Not come yet</b>", shift: c => `shift ${c}`,
+    monthTitle: m => `📅 <b>${m}: the month</b>`,
+    monthCounts: (p, a, l, ot) => `Present ${p} days · Absent ${a} · Late ${l} times · Overtime ${ot} h`,
+    toPay: r => `Salaries to pay: Rs ${r}`, mostLate: (n, k) => `Most often late: ${n} (${k} times)`
   },
   ne: {
     in: (n, c) => `✅ <b>${n}</b> ${c} मा आइपुगे`,
@@ -68,7 +72,11 @@ const T = {
     machineOff: c => `⚠️ फिंगरप्रिन्ट मेसिन ${c} देखि जोडिएको छैन। बिजुली र इन्टरनेट जाँच्नुहोस्।`,
     noMachine: "⚠️ फिंगरप्रिन्ट मेसिन अझै जोडिएको छैन।",
     nobodyIn: "अहिले कोही पनि भित्र छैन।", insideTitle: "🟢 <b>अहिले होटलमा</b>",
-    noStaff: "कर्मचारी थपिएको छैन।"
+    noStaff: "कर्मचारी थपिएको छैन।",
+    notCome: "⏰ <b>अझै आएका छैनन्</b>", shift: c => `सिफ्ट ${c}`,
+    monthTitle: m => `📅 <b>${m}: महिनाभरि</b>`,
+    monthCounts: (p, a, l, ot) => `उपस्थित ${neDigits(p)} दिन · अनुपस्थित ${neDigits(a)} · ढिलो ${neDigits(l)} पटक · ओभरटाइम ${neDigits(ot)} घण्टा`,
+    toPay: r => `तिर्नुपर्ने तलब: रु ${neDigits(r)}`, mostLate: (n, k) => `सबैभन्दा धेरै ढिलो: ${n} (${neDigits(k)} पटक)`
   }
 };
 const words = lang => T[lang] || T.en;
@@ -120,6 +128,30 @@ export function summaryText(t, devs, lang) {
   if (!devs.length) out.push(w.noMachine);
   for (const d of devs) if (d.ago > 2 * 3600) out.push(w.machineOff(clock(d.last_seen.slice(11), lang) + (d.last_seen.slice(0, 10) === t.day ? "" : " " + date(d.last_seen.slice(0, 10), lang))));
   return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/* "Not come yet": rows from today() whose shift started a while ago */
+export function absentText(rows, lang) {
+  const w = words(lang);
+  return w.notCome + "\n" + rows.map(r => `${esc(r.name)} (${w.shift(clock(r.rec.shiftStart, lang))})`).join("\n");
+}
+
+/* The month's totals. res: attendance() for the month so far; label:
+   { bs: { y, m } } or { ad: "YYYY-MM-DD" } */
+export function monthText(res, label, lang) {
+  const w = words(lang), ND = globalThis.NepaliDate;
+  const name = label.bs
+    ? (lang === "ne" ? `${ND.MONTHS_NE[label.bs.m - 1]} ${neDigits(label.bs.y)}` : `${ND.MONTHS[label.bs.m - 1]} ${label.bs.y}`)
+    : new Date(label.ad + "T00:00:00Z").toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+  const S = res.staff, tot = k => S.reduce((a, s) => a + (s.summary[k] || 0), 0);
+  const pay = S.filter(s => s.salary || s.summary.gross).reduce((a, s) => a + s.summary.pay, 0);
+  const out = [w.monthTitle(name)];
+  if (!S.length) return out.concat(w.noStaff).join("\n");
+  out.push(w.monthCounts(tot("present"), tot("absent"), tot("late"), (tot("ot") / 60).toFixed(1)));
+  if (pay) out.push(w.toPay(Math.round(pay).toLocaleString("en-IN")));
+  const late = S.filter(s => s.summary.late).sort((a, b) => b.summary.late - a.summary.late)[0];
+  if (late) out.push(w.mostLate(esc(late.displayName), late.summary.late));
+  return out.join("\n");
 }
 
 export function insideText(t, lang) {
