@@ -310,6 +310,15 @@ th { color: var(--ink-3); font-weight: 600; font-size: .78rem; vertical-align: b
 code { padding: .05rem .35rem; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); font-size: .9em; }
 .signout-mobile { display: none; }
 
+/* installing the app */
+.installbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; padding: .8rem 1rem; border-radius: 14px; background: var(--walnut); color: #fff; box-shadow: var(--shadow); }
+.installbar strong { color: var(--gold-l); }
+.installbar .btn { background: var(--gold-l); border-color: var(--gold-l); color: var(--walnut); }
+.installbtn { width: 100%; max-width: 23rem; margin: 1.2rem auto 0; display: flex; }
+.install__icon { border-radius: 12px; }
+.install__note { padding: .8rem 1rem; border-radius: 10px; background: var(--late-bg); color: var(--late-ink); font-weight: 500; }
+.install__steps { margin: 0; padding-left: 1.4rem; display: grid; gap: .5rem; font-size: 1rem; color: var(--ink); }
+
 /* Today: Simple or Timeline, and Share */
 .daybar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; }
 .seg { display: inline-flex; padding: .2rem; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }

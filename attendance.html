@@ -57,6 +57,7 @@
       <button class="btn btn--block" type="submit">Sign in</button>
       <p class="msg" data-login-msg role="status"></p>
     </form>
+    <button type="button" class="btn btn--ghost installbtn" data-install-any hidden>📲 Install the app on this phone</button>
     <p class="signin__foot">Hotel Perfect Plaza, Janakpurdham · +977-41-590911</p>
   </div>
 </section>
@@ -101,6 +102,10 @@
       <div data-app>
         <!-- ================================================= TODAY -->
         <section data-panel="day">
+          <div class="installbar" data-install-bar hidden>
+            <span>📲 Put the <strong lang="ne">हाजिरी</strong> app on this phone's home screen</span>
+            <button type="button" class="btn btn--small" data-install-any>Install</button>
+          </div>
           <div class="welcome">
             <p class="welcome__hello" data-greeting>Namaste</p>
             <p class="welcome__sub">Hotel Perfect Plaza, Janakpurdham</p>
@@ -397,7 +402,7 @@
                 </ul>
                 <p class="hint">Then open it from the home screen and turn on notifications above.</p>
               </div>
-              <button type="button" class="btn" data-install-card hidden>Install the app on this device</button>
+              <button type="button" class="btn" data-install-any hidden>📲 Install the app on this phone</button>
             </div>
           </div>
 
@@ -529,6 +534,16 @@
       <p class="msg" data-sheet-msg role="status"></p>
     </section>
   </div>
+</dialog>
+
+<!-- how to install the app, when the phone doesn't offer it by itself (attendance.js fills it) -->
+<dialog class="sheet" data-install-help aria-labelledby="install-title">
+  <div class="sheet__head">
+    <img src="assets/icons/register-192.png" alt="" width="56" height="56" class="install__icon">
+    <div class="sheet__who"><h2 id="install-title">Install the app</h2><p>Hotel Perfect Plaza · <span lang="ne">हाजिरी</span></p></div>
+    <button type="button" class="btn btn--plain btn--icon" data-install-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body" data-install-steps></div>
 </dialog>
 
 <!-- what is printed when printing payslips (attendance.js fills it) -->

@@ -1073,19 +1073,60 @@
   $("[data-app-done]").hidden = !standalone;
   $("[data-app-howto]").hidden = standalone;
   if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("/attendance-sw.js", { scope: "/attendance" }).catch(() => {});
+  /* Installing the app. Where the browser offers it (Chrome, Edge), the
+     button installs straight away; otherwise it explains how, for the
+     browser in use. Inside WhatsApp, Facebook and the like apps can't be
+     installed at all, so it offers to open the page in Chrome. The buttons
+     show on every phone or computer until the app is installed. */
   let installer = null;
-  const installButtons = () => [$("[data-install]"), $("[data-install-card]")];
-  addEventListener("beforeinstallprompt", e => {
-    e.preventDefault(); installer = e;
-    installButtons().forEach(b => { b.hidden = false; });
-  });
-  installButtons().forEach(b => b.addEventListener("click", async () => {
-    if (!installer) return;
-    installer.prompt();
-    await installer.userChoice.catch(() => {});
-    installer = null; installButtons().forEach(x => { x.hidden = true; });
+  const UA = navigator.userAgent;
+  const android = /Android/i.test(UA), iphone = /iPhone|iPad|iPod/i.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const inApp = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|Snapchat|; wv\)|GSA\//i.test(UA);
+  const samsung = /SamsungBrowser/i.test(UA);
+  const chromeOk = /Chrome\/\d/.test(UA) && !/Edg|OPR|SamsungBrowser|MiuiBrowser|UCBrowser|HeyTap|Vivo|Opera/i.test(UA) && !inApp;
+  const installUI = () => [$("[data-install]"), ...$$("[data-install-any]")];
+  const showInstall = on => {
+    installUI().forEach(b => { b.hidden = !on; });
+    $("[data-install-bar]").hidden = !on || !(android || iphone);
+  };
+  showInstall(!standalone);
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installer = e; showInstall(true); });
+  addEventListener("appinstalled", () => { installer = null; showInstall(false); });
+
+  function installHelp() {
+    const box = $("[data-install-steps]"); box.textContent = "";
+    const steps = (title, list) => el("section", {}, el("h3", {}, title), el("ol", { className: "install__steps" }, list.map(s => el("li", {}, s))));
+    const page = location.origin + "/attendance.html";
+    if (android && !chromeOk && !samsung) {
+      box.append(el("p", { className: "install__note" }, inApp
+        ? "This page is open inside another app (like WhatsApp or Facebook). Apps can't be installed from there. Open it in Chrome:"
+        : "This browser can't install apps. Open the page in Chrome:"),
+        el("a", { className: "btn btn--block", href: `intent://${location.host}/attendance.html#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(page)};end` }, "Open in Chrome"),
+        el("p", { className: "hint" }, "Then press the install button there again."));
+    }
+    if (android && samsung) box.append(steps("Samsung Internet", [
+      "Tap the ≡ menu (bottom right).", "Tap \"Add page to\".", "Tap \"Home screen\", then \"Add\".", "The हाजिरी icon appears on the home screen: open the app from there."]));
+    if (android && !samsung) box.append(steps("Chrome on Android", [
+      "Tap ⋮ (three dots, top right).", "Tap \"Install app\" or \"Add to Home screen\".", "Tap \"Install\".", "The हाजिरी icon appears on the home screen: open the app from there."]));
+    if (iphone) box.append(steps("iPhone (Safari)", [
+      "Tap Share (the square with the arrow, at the bottom).", "Tap \"Add to Home Screen\".", "Tap \"Add\".", "The हाजिरी icon appears on the home screen: open the app from there."]));
+    if (!android && !iphone) box.append(steps("Computer (Chrome or Edge)", [
+      "Click the install icon at the right end of the address bar (a screen with an arrow).", "Click \"Install\"."]));
+    box.append(el("p", { className: "hint" }, "Then sign in once, with \"Keep me signed in on this phone\" ticked, and turn on notifications in Settings."));
+    $("[data-install-help]").showModal();
+  }
+  installUI().forEach(b => b.addEventListener("click", async () => {
+    if (installer) {
+      installer.prompt();
+      const choice = await installer.userChoice.catch(() => ({}));
+      installer = null;
+      if (choice.outcome === "accepted") showInstall(false);
+      return;
+    }
+    installHelp();
   }));
-  addEventListener("appinstalled", () => installButtons().forEach(b => { b.hidden = true; }));
+  $("[data-install-close]").addEventListener("click", () => $("[data-install-help]").close());
+  $("[data-install-help]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
   /* back in the app after a while: show what changed straight away */
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && pass && current === "day" && $("[data-day-date]").value === today()) loadDay().catch(() => {});
