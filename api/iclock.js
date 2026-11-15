@@ -46,7 +46,7 @@ async function device(sn, ip, info) {
 }
 
 /* "Any commands?" comes every 30 seconds. Writing "seen" each time would
-   keep the database awake all day, so it's written at most every 30 minutes
+   keep the database awake all day, so it's written at most every hour
    per running copy of this function; punches update it anyway. */
 const touched = new Map();
 
@@ -73,7 +73,7 @@ export async function GET(request) {
     if (process.env.ZK_TIMEZONE) lines.push("TimeZone=" + process.env.ZK_TIMEZONE);
     return text(lines.join("\n") + "\n");
   }
-  if (op === "getrequest" && Date.now() - (touched.get(sn) || 0) > 30 * 60000) {
+  if (op === "getrequest" && Date.now() - (touched.get(sn) || 0) > 60 * 60000) {
     touched.set(sn, Date.now());
     await device(sn, ip, clean(p.get("INFO") || "", 300)).catch(e => console.error(e));
     await checkAbsent().catch(e => console.error(e));                 /* a good moment for "not come yet" */

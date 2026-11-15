@@ -66,6 +66,8 @@ export function nepalTime(dateTime) {
   return t === null ? null : wallText(t);
 }
 
+const heard = new Map();          /* terminal → when its "seen" was last written */
+
 async function seen(sn, ip, info) {
   const rows = await q(
     `INSERT INTO att_devices (sn, ip, info) VALUES ($1, $2, $3)
@@ -89,12 +91,20 @@ export async function POST(request) {
     const at = pin && nepalTime(ev.dateTime);
     if (pin && at) bySn.get(sn).rows.push({ pin, at, verify: VERIFY[a.subEventType] ?? null });
   }
-  let punched = false;
   for (const [sn, { info, rows }] of bySn) {
-    const approved = await seen(sn, ip, info);
-    if (approved && rows.length) { await recordPunches(rows, sn, nowNepal()); punched = true; }
+    if (!rows.length) {
+      /* a heartbeat (about every 30 seconds, day and night): written at most
+         once an hour per running copy, so the database can sleep between —
+         Neon's free plan counts the hours it is awake */
+      if (Date.now() - (heard.get(sn) || 0) < 60 * 60000) continue;
+      heard.set(sn, Date.now());
+      await seen(sn, ip, info);
+      await checkAbsent().catch(e => console.error(e));                 /* a good moment for "not come yet" */
+      continue;
+    }
+    heard.set(sn, Date.now());
+    if (await seen(sn, ip, info)) await recordPunches(rows, sn, nowNepal());
   }
-  if (!punched && bySn.size) await checkAbsent().catch(e => console.error(e));   /* a heartbeat: a good moment for "not come yet" */
   return ok();
 }
 

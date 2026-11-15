@@ -673,7 +673,7 @@
     const p = $("[data-machine-pill]"), m = machines.filter(x => x.approved);
     p.hidden = !m.length;
     if (!m.length) return;
-    const off = m.filter(x => x.ago > 3600);
+    const off = m.filter(x => x.ago > 7200);              /* "seen" is written about hourly */
     p.className = "pill " + (off.length ? "off" : "on");
     p.textContent = off.length ? "Machine offline since " + clock(off[0].last_seen.slice(11)) + (off[0].last_seen.slice(0, 10) !== today() ? " " + nice(off[0].last_seen.slice(0, 10)) : "") : "Machine online";
   }
@@ -1004,7 +1004,7 @@
     backupYears();
     fill($("[data-dev-table]"), ["Machine (serial no.)", "Status", "Last connected", "Clock", ""], j.machines.map(m => [
       { v: [m.name || m.sn, m.name ? el("small", {}, m.sn) : null], cls: "name" },
-      m.approved ? (m.ago > 3600 ? el("span", { className: "chip absent" }, "Offline") : el("span", { className: "chip present" }, "Online"))
+      m.approved ? (m.ago > 7200 ? el("span", { className: "chip absent" }, "Offline") : el("span", { className: "chip present" }, "Online"))
         : el("span", { className: "chip late" }, "Waiting for approval"),
       `${nice(m.last_seen.slice(0, 10))}, ${clock(m.last_seen.slice(11))}`,
       m.clock_fast ? el("span", { className: "bad" }, `${m.clock_fast} min fast`) : "OK",
