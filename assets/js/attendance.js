@@ -1116,12 +1116,14 @@
     $("[data-install-help]").showModal();
   }
   installUI().forEach(b => b.addEventListener("click", async () => {
-    if (installer) {
-      installer.prompt();
-      const choice = await installer.userChoice.catch(() => ({}));
-      installer = null;
-      if (choice.outcome === "accepted") showInstall(false);
-      return;
+    if (installer && !inApp) {
+      const offer = installer; installer = null;
+      try {
+        await offer.prompt();
+        const choice = await offer.userChoice.catch(() => ({}));
+        if (choice.outcome === "accepted") showInstall(false);
+        return;
+      } catch (e) { /* the browser wouldn't show its own offer: show the steps instead */ }
     }
     installHelp();
   }));
