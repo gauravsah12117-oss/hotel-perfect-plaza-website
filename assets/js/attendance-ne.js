@@ -191,6 +191,20 @@ window.HPP_NE = (function () {
     "Not due yet": "अझै समय भएको छैन", "Gone home": "घर गए", "On leave or day off": "बिदा वा साप्ताहिक बिदामा",
     "Call": "फोन", "Quick actions": "छिटो काम", "On leave today": "आज बिदामा", "Add a forgotten punch today": "आजको छुटेको हाजिरी थप्नुहोस्",
     "Pay so far": "अहिलेसम्मको तलब",
+    /* departments, several days at once, late and early lists, grace */
+    "Department": "विभाग", "Branch": "शाखा", "All departments": "सबै विभाग",
+    "e.g. Kitchen, Front office": "जस्तै: भान्सा, फ्रन्ट अफिस", "only if the hotel has more than one": "होटलका एकभन्दा बढी शाखा भए मात्र",
+    "the hotel's": "होटलको", "Late after: a number of minutes from 0 to 240, or empty for the hotel's.": "यति मिनेटपछि ढिलो: 0 देखि 240 सम्मको अङ्क, वा होटलको नियमका लागि खाली।",
+    "Add several days at once": "धेरै दिन एकै पटक थप्नुहोस्",
+    "For days the machine missed: everyone ticked gets the in time (and out time) on each day from the first date to the last. An out time earlier than the in time is the next morning (a night shift). Marked \"by hand\", like any added punch.":
+      "मेसिनले छुटाएका दिनका लागि: टिक लगाइएका सबैलाई पहिलो मितिदेखि अन्तिम मितिसम्म हरेक दिन आएको (र गएको) समय थपिन्छ। आएको भन्दा अघिको गएको समय भनेको भोलिपल्ट बिहान (राति सिफ्ट) हो। अरू थपिएका हाजिरीजस्तै “हातैले” भनेर देखिन्छ।",
+    "Everyone": "सबै जना", "In": "आएको", "Out": "गएको",
+    "Skip days off, holidays and leave": "साप्ताहिक बिदा, पर्व र बिदाका दिन छोड्ने", "Skip days that already have a punch": "हाजिरी भइसकेका दिन छोड्ने",
+    "e.g. the machine was broken": "जस्तै: मेसिन बिग्रेको थियो", "Add these days": "यी दिन थप्नुहोस्", "Tick at least one person.": "कम्तीमा एक जनामा टिक लगाउनुहोस्।",
+    "Late arrivals and early exits": "ढिलो आएका र चाँडै गएका", "Which list": "कुन सूची", "Left early": "चाँडै गएको",
+    "Came": "आएको", "Went": "गएको", "Late by": "यति ढिलो", "Early by": "यति चाँडै",
+    "Nobody was late in these dates.": "यी मितिमा कोही ढिलो आएनन्।", "Nobody left early in these dates.": "यी मितिमा कोही चाँडै गएनन्।",
+
     /* installing the app */
     "📲 Install the app on this phone": "📲 यो फोनमा एप इन्स्टल गर्नुहोस्", "Install": "इन्स्टल गर्नुहोस्", "Install the app": "एप इन्स्टल गर्नुहोस्",
     "📲 Put the": "📲", "app on this phone's home screen": "एपलाई यो फोनको होम स्क्रिनमा राख्नुहोस्",
@@ -298,6 +312,9 @@ window.HPP_NE = (function () {
     [/^This month: (.+)$/, m => "यो महिना: " + inline(m[1])],
     [/^Shift (\d{1,2}:\d{2} [AP]M)$/, m => "सिफ्ट " + inline(m[1])],
     [/^\(break (.+)\)$/, m => "(विश्राम " + inline(m[1]) + ")"],
+    [/^Added (\d+) punches\. Skipped (\d+) days\.$/, m => `${m[1]} हाजिरी थपियो। ${m[2]} दिन छोडियो।`],
+    [/^(\d+) late arrivals, (.+) in all\.$/, m => `${m[1]} पटक ढिलो, जम्मा ${inline(m[2])}।`],
+    [/^(\d+) early exits, (.+) in all\.$/, m => `${m[1]} पटक चाँडै गएको, जम्मा ${inline(m[2])}।`],
     [/^([\d.]+) unpaid days × Rs ([\d,]+) taken off$/, m => `${m[1]} बेतलबी दिन × रु ${m[2]} कटाइयो`],
     [/^([\d.]+) hours × Rs ([\d,]+)$/, m => `${m[1]} घण्टा × रु ${m[2]}`],
     [/^([\d.]+)% of basic salary$/, m => `आधारभूत तलबको ${m[1]}%`],

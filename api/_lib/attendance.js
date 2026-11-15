@@ -122,6 +122,9 @@ addSchema([
   `ALTER TABLE staff ADD COLUMN IF NOT EXISTS ssf boolean NOT NULL DEFAULT false`,
   `ALTER TABLE staff ADD COLUMN IF NOT EXISTS break_start text NOT NULL DEFAULT ''`,
   `ALTER TABLE staff ADD COLUMN IF NOT EXISTS break_end text NOT NULL DEFAULT ''`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS grace integer`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS department text NOT NULL DEFAULT ''`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS branch text NOT NULL DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS att_login_fails (
      ip           text PRIMARY KEY,
      fails        integer NOT NULL DEFAULT 0,
@@ -190,8 +193,9 @@ export async function getSettings() {
 export const setSetting = (key, value) => q(
   `INSERT INTO att_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [key, String(value)]);
 
-const rules = set => ({
-  grace: Math.max(0, Number(set.grace) || 0),
+/* the hotel's rules; a person's own grace (Staff) overrides the hotel's */
+const rules = (set, staff = null) => ({
+  grace: Math.max(0, staff && staff.grace != null && staff.grace !== "" ? Number(staff.grace) : Number(set.grace) || 0),
   otMin: Math.max(0, Number(set.ot_min) || 0),
   otMult: Math.max(0, Number(set.ot_multiplier) || 1)
 });
@@ -199,7 +203,7 @@ const rules = set => ({
 /* ------------------------------------------------------- shifts and days */
 
 export const STAFF_COLS = `pin, name, job, phone, shift_start, shift_end, break_start, break_end, weekly_off, salary, ot_rate,
-  joined::text AS joined, active, notify, ssf`;
+  joined::text AS joined, active, notify, ssf, grace, department, branch`;
 
 /* A person's unpaid break inside their usual shift (e.g. 13:00–15:00):
    minutes from the start of the day and how long, or null. Hours in it
@@ -266,7 +270,7 @@ export function realPunches(list) {
            they joined) */
 export function dayRecord({ staff, day, punches, set, leave = null, holiday = null, now, plan = null }) {
   plan = plan || planFor(staff, set);
-  const shift = plan(day), r = rules(set), [winA, winB] = windowOf(plan, day);
+  const shift = plan(day), r = rules(set, staff), [winA, winB] = windowOf(plan, day);
   const ps = realPunches(punches);
   const startT = dayStart(day) + shift.start * MIN, endT = startT + shift.len * MIN;
   const off = shift.off;
@@ -431,7 +435,7 @@ export async function today(now = nowNepal()) {
   const res = await attendance(addDays(d, -1), d, { now });
   const rows = res.staff.map(st => {
     const rec = st.days.find(x => x.day === st.currentDay) || st.days[st.days.length - 1];
-    return { pin: st.pin, name: st.displayName, job: st.job, phone: st.phone, notify: st.notify, rec };
+    return { pin: st.pin, name: st.displayName, job: st.job, phone: st.phone, notify: st.notify, department: st.department, branch: st.branch, rec };
   });
   return { set: res.set, day: d, now: res.now, rows };
 }

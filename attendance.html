@@ -133,6 +133,7 @@
               <button type="button" data-view="simple" aria-pressed="true">Simple</button>
               <button type="button" data-view="timeline" aria-pressed="false">Timeline</button>
             </div>
+            <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
             <button type="button" class="btn btn--ghost btn--small" data-share>Share today</button>
           </div>
 
@@ -162,6 +163,7 @@
               <span class="inline" data-rep-bs hidden>Month <select data-rep-bs-month aria-label="Nepali month"></select> <select data-rep-bs-year aria-label="Nepali year"></select></span>
               <label class="inline">From <input type="date" data-rep-from></label>
               <label class="inline">To <input type="date" data-rep-to></label>
+              <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
             </div>
           </div>
 
@@ -189,6 +191,18 @@
             <div class="scroll"><table class="att report" data-rep-table></table></div>
             <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>
           </div>
+          <div class="card">
+            <div class="card__head">
+              <h2>Late arrivals and early exits</h2>
+              <div class="seg" role="group" aria-label="Which list">
+                <button type="button" data-le="late" aria-pressed="true">Late</button>
+                <button type="button" data-le="early" aria-pressed="false">Left early</button>
+              </div>
+            </div>
+            <p class="hint" data-le-note></p>
+            <div class="scroll"><table class="att" data-le-table></table></div>
+          </div>
+
           <!-- one person's payslip for the month, and the money to put on it -->
           <div class="card slipcard" data-slip hidden>
             <div class="card__head">
@@ -243,12 +257,33 @@
             </form>
           </div>
           <div class="card">
+            <h2>Add several days at once</h2>
+            <p class="hint">For days the machine missed: everyone ticked gets the in time (and out time) on each day from the first date to the last. An out time earlier than the in time is the next morning (a night shift). Marked "by hand", like any added punch.</p>
+            <form class="form" data-bulk-form>
+              <fieldset class="wide bulkstaff">
+                <legend>Staff</legend>
+                <label class="check"><input type="checkbox" data-bulk-all> Everyone</label>
+                <div class="bulkstaff__list" data-bulk-staff></div>
+              </fieldset>
+              <label>From <input name="from" type="date" required></label>
+              <label>To <input name="to" type="date" required></label>
+              <label>In <input name="in" type="time" required></label>
+              <label>Out <input name="out" type="time"></label>
+              <label class="check"><input name="skip_off" type="checkbox" checked> Skip days off, holidays and leave</label>
+              <label class="check"><input name="skip_existing" type="checkbox" checked> Skip days that already have a punch</label>
+              <label class="wide">Why <input name="note" type="text" placeholder="e.g. the machine was broken"></label>
+              <button class="btn" type="submit">Add these days</button>
+              <p class="msg wide" data-bulk-msg role="status"></p>
+            </form>
+          </div>
+          <div class="card">
             <div class="card__head">
               <h2>Every punch</h2>
               <div class="pick wrap">
                 <label class="inline">From <input type="date" data-pun-from></label>
                 <label class="inline">To <input type="date" data-pun-to></label>
                 <label class="inline">Staff <select data-pun-staff><option value="">Everyone</option></select></label>
+                <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
               </div>
             </div>
             <p class="hint">Exactly what the machine recorded. "Leave out" takes a wrong punch out of the sums without deleting it.</p>
@@ -282,11 +317,15 @@
               <label>Machine no. <input name="pin" type="text" inputmode="numeric" pattern="[0-9A-Za-z]{1,20}" required></label>
               <label>Name <input name="name" type="text" required></label>
               <label>Job <input name="job" type="text" placeholder="e.g. Kitchen, Reception"></label>
+              <label>Department <input name="department" type="text" list="dept-list" placeholder="e.g. Kitchen, Front office"></label>
+              <label>Branch <input name="branch" type="text" list="branch-list" placeholder="only if the hotel has more than one"></label>
               <label>Phone <input name="phone" type="tel"></label>
               <label>Shift starts <input name="shift_start" type="time"></label>
               <label>Shift ends <input name="shift_end" type="time"></label>
               <label>Break from <input name="break_start" type="time"></label>
               <label>Break until <input name="break_end" type="time"></label>
+              <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" step="1" placeholder="the hotel's"></label>
+              <datalist id="dept-list" data-dept-list></datalist><datalist id="branch-list" data-branch-list></datalist>
               <label>Weekly day off
                 <select name="weekly_off">
                   <option value="">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>

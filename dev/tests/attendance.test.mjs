@@ -532,6 +532,32 @@ test("old records import quietly: kept once, nothing within 2 minutes of a kept 
   assert.equal(p.filter(x => x.device === "MeroHajir GD1").length, 2);
 });
 
+test("a person's own grace overrides the hotel's; department and branch are kept", async () => {
+  const strict = dayRecord({ staff: staff({ grace: 0 }), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-01 09:05", "2026-10-01 18:00") });
+  assert.equal(strict.late, 5);                                                /* hotel's 10 would make it on time */
+  const easy = dayRecord({ staff: staff({ grace: 30 }), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-01 09:25", "2026-10-01 18:00") });
+  assert.equal(easy.late, 0);
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", grace: 15, department: "Kitchen", branch: "Janakpur" } });
+  const s = (await owner("staff")).json.staff[0];
+  assert.deepEqual([s.grace, s.department, s.branch], [15, "Kitchen", "Janakpur"]);
+  assert.equal((await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", grace: 999 } })).status, 400);
+});
+
+test("several days at once: in and out on each day, a night shift's out the next morning, days off and punched days skipped", async () => {
+  await owner("staff", { method: "POST", body: { pin: "1", name: "Ram", weekly_off: 6, joined: "2026-01-01" } });       /* Saturdays off */
+  await owner("staff", { method: "POST", body: { pin: "2", name: "Sita", joined: "2026-01-01" } });
+  await owner("punch", { method: "POST", body: { pin: "2", day: "2026-09-02", time: "09:30" } });                     /* already punched */
+  const r = await owner("punch-bulk", { method: "POST", body: { pins: ["1", "2"], from: "2026-09-01", to: "2026-09-05", in: "09:00", out: "18:00", note: "machine broken" } });
+  assert.deepEqual(r.json, { added: 4 * 2 + 4 * 2, skipped: 2 });           /* Ram: Sat 5 Sep off; Sita: 2 Sep punched */
+  const night = await owner("punch-bulk", { method: "POST", body: { pins: ["2"], from: "2026-09-10", to: "2026-09-10", in: "20:00", out: "08:00" } });
+  assert.equal(night.json.added, 2);
+  const p = (await owner("punches", { query: { from: "2026-09-10", to: "2026-09-11", pin: "2" } })).json.punches.map(x => x.at).sort();
+  assert.deepEqual(p, ["2026-09-10 20:00:00", "2026-09-11 08:00:00"]);
+  const future = await owner("punch-bulk", { method: "POST", body: { pins: ["2"], from: addDays(dayOf(nowNepal()), 2), in: "09:00" } });
+  assert.deepEqual(future.json, { added: 0, skipped: 1 });
+  assert.equal((await owner("punch-bulk", { method: "POST", body: { pins: ["1"], from: "2026-09-01", to: "2026-12-31", in: "09:00" } })).status, 400);
+});
+
 test("the owner's page needs the password", async () => {
   assert.equal((await call(attendanceRoute, { query: { action: "today" } })).status, 401);
   const t = await owner("today");

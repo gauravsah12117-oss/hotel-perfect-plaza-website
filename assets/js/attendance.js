@@ -60,7 +60,7 @@
   const hours = min => (min / 60).toFixed(1);
   const msg = (el, text, ok) => { el.textContent = text || ""; el.className = "msg" + (el.classList.contains("wide") ? " wide" : "") + (text ? (ok ? " ok" : " bad") : ""); };
   const ERR = { pin: "Choose a staff member (or check the machine number).", time: "That date or time isn't right.", future: "That time hasn't happened yet.",
-    exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", break: "Give both break times, or leave both empty.", money: "Check the salary and overtime amounts.",
+    exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", break: "Give both break times, or leave both empty.", grace: "Late after: a number of minutes from 0 to 240, or empty for the hotel's.", money: "Check the salary and overtime amounts.",
     dates: "Check the dates (at most 62 days at once).", telegram: "TELEGRAM_BOT_TOKEN isn't set in Vercel yet (ATTENDANCE.md, step 2).",
     notify: "Turn on notifications on a phone first (Settings → Notifications on this phone).",
     kind: "Choose what kind it is.",
@@ -148,6 +148,7 @@
     $("[data-lv-from]").value ||= t.slice(0, 8) + "01";
     $("[data-lv-to]").value ||= addDays(t, 90);
     $("[data-punch-form]").day.value ||= t;
+    $("[data-bulk-form]").from.value ||= t; $("[data-bulk-form]").to.value ||= t;
     $("[data-leave-form]").from.value ||= t;
     hints();
     await loadStaff();
@@ -207,11 +208,17 @@
     f.textContent = ""; f.append(el("option", { value: "" }, "Everyone"));
     staff.forEach(s => f.append(el("option", { value: s.pin }, name(s))));
     f.value = was;
+    groups();
+    /* several days at once: a tick box per person still working here */
+    const bl = $("[data-bulk-staff]"), ticked = new Set($$("input:checked", bl).map(i => i.value));
+    bl.textContent = "";
+    staff.filter(s => s.active).forEach(s => bl.append(el("label", { className: "check" },
+      el("input", { type: "checkbox", value: s.pin, checked: ticked.has(s.pin) }), `${name(s)} (${s.pin})`)));
     fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", "Day off", ["Salary", "num"], "SSF", "Messages", "", ["Punches", "num"], ""],
       staff.map(s => [
         { v: s.pin, cls: "num" },
         { v: s.name || el("span", { className: "warn" }, "No name yet"), cls: "name" },
-        s.job, s.shift_start ? [`${clock(s.shift_start)} – ${clock(s.shift_end)}`, s.break_start ? el("small", { className: "muted" }, ` (break ${clock(s.break_start)} – ${clock(s.break_end)})`) : null] : el("span", { className: "muted" }, "usual hours"),
+        { v: [s.job, s.department || s.branch ? el("small", {}, [s.department, s.branch].filter(Boolean).join(" · ")) : null], cls: "job" }, s.shift_start ? [`${clock(s.shift_start)} – ${clock(s.shift_end)}`, s.break_start ? el("small", { className: "muted" }, ` (break ${clock(s.break_start)} – ${clock(s.break_end)})`) : null] : el("span", { className: "muted" }, "usual hours"),
         s.weekly_off == null ? "—" : DAYS[s.weekly_off],
         { v: s.salary ? rs(s.salary) : "—", cls: "num" },
         s.ssf ? "Yes" : "—",
@@ -223,7 +230,8 @@
   }
   function editStaff(s) {
     const f = $("[data-staff-form]");
-    for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "break_start", "break_end", "joined"]) f[k].value = s[k] || "";
+    for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "break_start", "break_end", "joined", "department", "branch"]) f[k].value = s[k] || "";
+    f.grace.value = s.grace == null ? "" : s.grace;
     f.weekly_off.value = s.weekly_off == null ? "" : String(s.weekly_off);
     f.salary.value = s.salary || ""; f.ot_rate.value = s.ot_rate || "";
     f.notify.checked = s.notify; f.active.checked = s.active; f.ssf.checked = !!s.ssf;
@@ -247,6 +255,7 @@
     const r = await post("staff", {
       pin: f.pin.value.trim(), name: f.name.value, job: f.job.value, phone: f.phone.value,
       shift_start: f.shift_start.value, shift_end: f.shift_end.value, break_start: f.break_start.value, break_end: f.break_end.value, weekly_off: f.weekly_off.value,
+      grace: f.grace.value, department: f.department.value, branch: f.branch.value,
       salary: f.salary.value, ot_rate: f.ot_rate.value, joined: f.joined.value, notify: f.notify.checked, active: f.active.checked, ssf: f.ssf.checked
     });
     if (!r.ok) return msg(m, errText(r));
@@ -254,6 +263,49 @@
     await loadStaff();
     const s = staff.find(x => x.pin === f.pin.value.trim());
     if (s) editStaff(s);
+  });
+
+  /* ---------------------------------------------- departments and branches */
+  /* One filter, shown on Today, Month and Punches once any department (or a
+     second branch) is set in Staff: "" (everyone), "d:<department>" or
+     "b:<branch>". Remembered on this device. */
+  const GROUP_KEY = "hpp-attendance-group";
+  let grp = stored(GROUP_KEY);
+  const inGroup = x => !grp || (grp.startsWith("d:") ? (x.department || "") === grp.slice(2) : (x.branch || "") === grp.slice(2));
+  function groups() {
+    const depts = [...new Set(staff.map(s => s.department).filter(Boolean))].sort();
+    const branches = [...new Set(staff.map(s => s.branch).filter(Boolean))].sort();
+    for (const [sel, list] of [[$("[data-dept-list]"), depts], [$("[data-branch-list]"), branches]]) {
+      sel.textContent = ""; list.forEach(v => sel.append(el("option", { value: v })));
+    }
+    if (grp && !(grp.startsWith("d:") ? depts : branches).includes(grp.slice(2))) { grp = ""; keep2(GROUP_KEY, ""); }
+    const any = depts.length || branches.length > 1;
+    $$("[data-group-filter]").forEach(sel => {
+      sel.textContent = ""; sel.hidden = !any;
+      sel.append(el("option", { value: "" }, "All departments"));
+      if (branches.length > 1) sel.append(el("optgroup", { label: "Branch" }, branches.map(b => el("option", { value: "b:" + b }, b))));
+      if (depts.length) sel.append(el("optgroup", { label: "Department" }, depts.map(d => el("option", { value: "d:" + d }, d))));
+      sel.value = grp;
+    });
+  }
+  $$("[data-group-filter]").forEach(sel => sel.addEventListener("change", () => {
+    grp = sel.value; keep2(GROUP_KEY, grp);
+    $$("[data-group-filter]").forEach(s => { s.value = grp; });
+    loaders[current]().catch(e => console.error(e));
+  }));
+
+  /* --------------------------------------------- several days at once */
+  $("[data-bulk-all]").addEventListener("change", e => $$("[data-bulk-staff] input").forEach(i => { i.checked = e.target.checked; }));
+  $("[data-bulk-form]").addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = e.target, m = $("[data-bulk-msg]");
+    const pins = $$("[data-bulk-staff] input:checked").map(i => i.value);
+    if (!pins.length) return msg(m, "Tick at least one person.");
+    const r = await post("punch-bulk", { pins, from: f.from.value, to: f.to.value, in: f.in.value, out: f.out.value,
+      note: f.note.value, skip_off: f.skip_off.checked, skip_existing: f.skip_existing.checked });
+    if (!r.ok) return msg(m, errText(r));
+    msg(m, `Added ${r.json.added} punches. Skipped ${r.json.skipped} days.`, true);
+    loadPunches();
   });
 
   /* ------------------------------------------------------------- roster */
@@ -349,13 +401,13 @@
     let rows;
     if (isToday) {
       const r = await api("today");
-      rows = r.json.rows;
+      rows = r.json.rows.filter(inGroup);
       nowStamp = r.json.now;
       setup(r.json);
       machinePill(r.json.machines);
     } else {
       const r = await api("report", { query: { from: d, to: d } });
-      rows = r.json.staff.map(s => ({ pin: s.pin, name: s.displayName, job: s.job, rec: s.days[0] }));
+      rows = r.json.staff.filter(inGroup).map(s => ({ pin: s.pin, name: s.displayName, job: s.job, phone: s.phone, rec: s.days[0] }));
       $("[data-setup]").hidden = true;
     }
     $("[data-day-title]").textContent = isToday ? "Today, " + longDay(d) : longDay(d);
@@ -669,6 +721,7 @@
   async function loadReport() {
     const r = await api("report", { query: { from: $("[data-rep-from]").value, to: $("[data-rep-to]").value } });
     report = r.json;
+    report.staff = report.staff.filter(inGroup);
     const span = Math.round((Date.parse(report.to) - Date.parse(report.from)) / 86400000) + 1;
     const wholeMonth = span >= 28;
     const all = k => report.staff.reduce((a, s) => a + s.summary[k], 0);
@@ -676,6 +729,7 @@
       (report.staff.length ? `${all("late")} late arrival${all("late") === 1 ? "" : "s"}, ${all("absent")} day${all("absent") === 1 ? "" : "s"} absent, ${hours(all("ot"))} hours of overtime so far.` : "") +
       (wholeMonth ? "" : " Pay is only worked out for a whole month.");
     register(report.staff);
+    lateEarly();
     const head = ["Staff", ["Present", "num"], ["Half day", "num"], ["Absent", "num"], ["Paid leave", "num"], ["Unpaid leave", "num"], ["Off & holidays", "num"],
       ["Late (times)", "num"], ["Late (total)", "num"], ["Hours worked", "num"], ["Overtime (h)", "num"], ["Overtime pay", "num"], ["Unpaid days", "num"], ["Salary", "num"]];
     if (wholeMonth) head.push(["Added", "num"], ["Taken off", "num"], ["Pay", "num"], "");
@@ -787,6 +841,27 @@
   $("[data-slip-print]").addEventListener("click", () => { const s = report.staff.find(x => x.pin === slipPin); if (s) printSlips([s]); });
   $("[data-slips-print]").addEventListener("click", () => printSlips(report.staff.filter(s => s.salary || s.summary.gross)));
 
+  /* Only the late arrivals, or only the early exits, for the report's dates */
+  let leKind = "late";
+  function lateEarly() {
+    const late = leKind === "late", rows = [];
+    for (const s of report.staff) for (const d of s.days) if (late ? d.late : d.early) rows.push({ s, d });
+    rows.sort((a, b) => b.d.day.localeCompare(a.d.day) || a.s.displayName.localeCompare(b.s.displayName));
+    const total = rows.reduce((a, x) => a + (late ? x.d.late : x.d.early), 0);
+    $("[data-le-note]").textContent = rows.length
+      ? (late ? `${rows.length} late arrivals, ${dur(total)} in all.` : `${rows.length} early exits, ${dur(total)} in all.`) : "";
+    fill($("[data-le-table]"), ["Date", "Staff", "Shift", late ? "Came" : "Went", [late ? "Late by" : "Early by", "num"]], rows.map(({ s, d }) => [
+      nice(d.day), { v: [s.displayName, s.job ? el("small", {}, s.job) : null], cls: "name" },
+      `${clock(d.shiftStart)}–${clock(d.shiftEnd)}`, clock(late ? d.in : d.out),
+      { v: dur(late ? d.late : d.early), cls: "num warn" }
+    ]), { empty: late ? "Nobody was late in these dates." : "Nobody left early in these dates." });
+  }
+  $$("[data-le]").forEach(b => b.addEventListener("click", () => {
+    leKind = b.dataset.le;
+    $$("[data-le]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+    if (report) lateEarly();
+  }));
+
   /* The paper register: a row per person, a mark per day. */
   function mark(d) {
     const plan = d.holiday ? ["H", "hol"] : d.leave ? ["Lv", "v"] : d.off ? ["–", "o"] : null;
@@ -852,7 +927,7 @@
   const HOW = { 0: "Password", 1: "Fingerprint", 2: "Card", 3: "Password", 4: "Card", 15: "Face", 25: "Palm" };
   async function loadPunches() {
     const r = await api("punches", { query: { from: $("[data-pun-from]").value, to: $("[data-pun-to]").value, pin: $("[data-pun-staff]").value } });
-    const P = r.json.punches || [];
+    const P = (r.json.punches || []).filter(inGroup);
     fill($("[data-pun-table]"), ["When", "Staff", "How", "Note", ""], P.map(p => [
       `${nice(p.at.slice(0, 10))}, ${clock(p.at.slice(11, 16))}`,
       { v: (p.name || "Staff #" + p.pin) + " (" + p.pin + ")", cls: "name" },

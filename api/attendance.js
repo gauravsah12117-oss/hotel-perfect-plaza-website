@@ -13,6 +13,7 @@
    GET  action=report&from=&to=         every person's days and totals
    GET  action=punches&from=&to=&pin=   the punches themselves
    POST action=punch    { pin, day, time, note }    a punch someone forgot
+   POST action=punch-bulk { pins, from, to, in, out, note, skip_off, skip_existing }  several days at once
    POST action=import   { rows: [{ pin, at }], device, note }   old records (up to 2,000 a call)
    POST action=punch-ignore { id, ignored }  leave a wrong punch out (or back in)
    POST action=punch-delete { id }      only punches added by hand
@@ -152,7 +153,7 @@ export default handle(async (req, res) => {
     const { from, to } = range(req.query, 62);
     const pin = okPin(req.query.pin) ? req.query.pin : null;
     const rows = await q(
-      `SELECT p.id, p.pin, s.name, to_char(p.at, 'YYYY-MM-DD HH24:MI:SS') AS at, p.source, p.device, p.verify, p.note, p.ignored,
+      `SELECT p.id, p.pin, s.name, s.department, s.branch, to_char(p.at, 'YYYY-MM-DD HH24:MI:SS') AS at, p.source, p.device, p.verify, p.note, p.ignored,
               to_char(p.received_at AT TIME ZONE 'Asia/Kathmandu', 'YYYY-MM-DD HH24:MI:SS') AS received
        FROM punches p LEFT JOIN staff s ON s.pin = p.pin
        WHERE p.at >= $1::timestamp AND p.at < $2::timestamp AND ($3::text IS NULL OR p.pin = $3)
@@ -170,6 +171,36 @@ export default handle(async (req, res) => {
     const rows = await q(`INSERT INTO punches (pin, at, source, note) VALUES ($1, $2::timestamp, 'manual', $3)
       ON CONFLICT (pin, at) DO NOTHING RETURNING id`, [b.pin, wallText(t), clean(b.note, 200)]);
     return json(res, rows.length ? 200 : 409, rows.length ? { id: Number(rows[0].id) } : { error: "exists" });
+  }
+
+  /* forgotten punches for several people and days at once: an in time and
+     (optionally) an out time on each day; an out time before the in time is
+     the next morning (a night shift). Days off, holidays, leave, days before
+     someone joined, days still to come and (if asked) days already punched
+     are skipped. */
+  if (post && action === "punch-bulk") {
+    const pins = [...new Set((Array.isArray(b.pins) ? b.pins : []).map(String))].filter(okPin).slice(0, 60);
+    if (!pins.length) return json(res, 400, { error: "pin" });
+    if (!okDay(b.from) || !okDay(b.to || b.from)) return json(res, 400, { error: "dates" });
+    const to = b.to || b.from;
+    if (to < b.from || days(b.from, to) > 62) return json(res, 400, { error: "dates" });
+    const tin = toMin(b.in), tout = b.out ? toMin(b.out) : null;
+    if (tin === null || (b.out && tout === null)) return json(res, 400, { error: "time" });
+    const staffRows = await q(`SELECT ${STAFF_COLS} FROM staff WHERE pin = ANY($1::text[]) ${STAFF_ORDER}`, [pins]);
+    if (!staffRows.length) return json(res, 400, { error: "pin" });
+    const res2 = await attendance(b.from, to, { staffRows }), now = nowNepal();
+    const add = { pins: [], ats: [] };
+    let skipped = 0;
+    for (const st of res2.staff) for (const d of st.days) {
+      const away = d.off || d.holiday || d.leave || d.status === "none";
+      const inT = dayStart(d.day) + tin * 60000, outT = tout === null ? null : dayStart(d.day) + tout * 60000 + (tout <= tin ? 86400000 : 0);
+      if ((b.skip_off !== false && away) || (b.skip_existing !== false && d.punches.length) || inT > now) { skipped++; continue; }
+      add.pins.push(st.pin); add.ats.push(wallText(inT));
+      if (outT !== null && outT <= now) { add.pins.push(st.pin); add.ats.push(wallText(outT)); }
+    }
+    const rows = add.pins.length ? await q(`INSERT INTO punches (pin, at, source, note) SELECT p, a, 'manual', $3
+      FROM unnest($1::text[], $2::timestamp[]) AS x(p, a) ON CONFLICT (pin, at) DO NOTHING RETURNING id`, [add.pins, add.ats, clean(b.note, 200)]) : [];
+    return json(res, 200, { added: rows.length, skipped });
   }
 
   /* old records from another system (MeroHajir): kept as the machine's punches,
@@ -207,21 +238,24 @@ export default handle(async (req, res) => {
       if (shiftStart === false || shiftEnd === false || (shiftStart === "") !== (shiftEnd === "")) return json(res, 400, { error: "shift" });
       const breakStart = time(b.break_start), breakEnd = time(b.break_end);
       if (breakStart === false || breakEnd === false || (breakStart === "") !== (breakEnd === "")) return json(res, 400, { error: "break" });
+      const grace = b.grace === "" || b.grace == null ? null : Number(b.grace);
+      if (grace !== null && !(Number.isInteger(grace) && grace >= 0 && grace <= 240)) return json(res, 400, { error: "grace" });
       const off = b.weekly_off === "" || b.weekly_off == null ? null : Number(b.weekly_off);
       if (off !== null && !(Number.isInteger(off) && off >= 0 && off <= 6)) return json(res, 400, { error: "off" });
       const money = (v, max) => { const n = Math.round(Number(v) || 0); return n >= 0 && n <= max ? n : false; };
       const salary = money(b.salary, 10000000), otRate = money(b.ot_rate, 100000);
       if (salary === false || otRate === false) return json(res, 400, { error: "money" });
       const joined = okDay(b.joined) ? b.joined : null;
-      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify, ssf, break_start, break_end)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12, $13, $14, $15)
+      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify, ssf, break_start, break_end, grace, department, branch)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12, $13, $14, $15, $16, $17, $18)
         ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, job = EXCLUDED.job, phone = EXCLUDED.phone,
           shift_start = EXCLUDED.shift_start, shift_end = EXCLUDED.shift_end, weekly_off = EXCLUDED.weekly_off,
           salary = EXCLUDED.salary, ot_rate = EXCLUDED.ot_rate, joined = COALESCE($10::date, staff.joined),
           active = EXCLUDED.active, notify = EXCLUDED.notify, ssf = EXCLUDED.ssf,
-          break_start = EXCLUDED.break_start, break_end = EXCLUDED.break_end`,
+          break_start = EXCLUDED.break_start, break_end = EXCLUDED.break_end,
+          grace = EXCLUDED.grace, department = EXCLUDED.department, branch = EXCLUDED.branch`,
         [b.pin, clean(b.name, 80), clean(b.job, 60), clean(b.phone, 30), shiftStart, shiftEnd, off, salary, otRate, joined,
-         b.active !== false, b.notify !== false, b.ssf === true, breakStart, breakEnd]);
+         b.active !== false, b.notify !== false, b.ssf === true, breakStart, breakEnd, grace, clean(b.department, 40), clean(b.branch, 40)]);
     }
     const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
     return json(res, 200, { staff: rows });

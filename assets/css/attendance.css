@@ -310,6 +310,14 @@ th { color: var(--ink-3); font-weight: 600; font-size: .78rem; vertical-align: b
 code { padding: .05rem .35rem; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); font-size: .9em; }
 .signout-mobile { display: none; }
 
+/* departments, several days at once */
+.groupfilter { min-height: 2.3rem; padding: .3rem .5rem; font-size: .86rem; }
+.att td.job small { display: block; color: var(--ink-3); font-size: .78rem; }
+.bulkstaff { margin: 0; padding: .7rem .9rem; border: 1px solid var(--line); border-radius: 10px; }
+.bulkstaff legend { padding: 0 .3rem; font-size: .85rem; font-weight: 600; color: var(--ink); }
+.bulkstaff__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: .35rem 1rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--line); }
+.bulkstaff .check { font-weight: 400; }
+
 /* installing the app */
 .installbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; padding: .8rem 1rem; border-radius: 14px; background: var(--walnut); color: #fff; box-shadow: var(--shadow); }
 .installbar strong { color: var(--gold-l); }
