@@ -13,6 +13,7 @@
    GET  action=report&from=&to=         every person's days and totals
    GET  action=punches&from=&to=&pin=   the punches themselves
    POST action=punch    { pin, day, time, note }    a punch someone forgot
+   POST action=import   { rows: [{ pin, at }], device, note }   old records (up to 2,000 a call)
    POST action=punch-ignore { id, ignored }  leave a wrong punch out (or back in)
    POST action=punch-delete { id }      only punches added by hand
    GET  action=staff
@@ -169,6 +170,23 @@ export default handle(async (req, res) => {
     const rows = await q(`INSERT INTO punches (pin, at, source, note) VALUES ($1, $2::timestamp, 'manual', $3)
       ON CONFLICT (pin, at) DO NOTHING RETURNING id`, [b.pin, wallText(t), clean(b.note, 200)]);
     return json(res, rows.length ? 200 : 409, rows.length ? { id: Number(rows[0].id) } : { error: "exists" });
+  }
+
+  /* old records from another system (MeroHajir): kept as the machine's punches,
+     marked by device and note, never notified. A punch within 2 minutes of one
+     already kept for that person is skipped; anyone new joins on their first. */
+  if (post && action === "import") {
+    const rows = (Array.isArray(b.rows) ? b.rows.slice(0, 2000) : [])
+      .map(r => ({ pin: String(r.pin || ""), t: wall(String(r.at || "")) })).filter(r => okPin(r.pin) && r.t !== null);
+    if (!rows.length) return json(res, 400, { error: "rows" });
+    const pins = rows.map(r => r.pin), ats = rows.map(r => wallText(r.t));
+    await q(`INSERT INTO staff (pin, joined) SELECT p, min(d) FROM unnest($1::text[], $2::date[]) AS x(p, d) GROUP BY p
+      ON CONFLICT (pin) DO UPDATE SET joined = EXCLUDED.joined WHERE EXCLUDED.joined < staff.joined`, [pins, ats.map(a => a.slice(0, 10))]);
+    const added = await q(`INSERT INTO punches (pin, at, source, device, note)
+      SELECT p, a, 'machine', $3, $4 FROM unnest($1::text[], $2::timestamp[]) AS x(p, a)
+      WHERE NOT EXISTS (SELECT 1 FROM punches e WHERE e.pin = x.p AND e.at BETWEEN x.a - interval '2 minutes' AND x.a + interval '2 minutes')
+      ON CONFLICT (pin, at) DO NOTHING RETURNING id`, [pins, ats, clean(b.device, 60) || "import", clean(b.note, 120)]);
+    return json(res, 200, { received: rows.length, added: added.length });
   }
 
   if (post && action === "punch-ignore") {

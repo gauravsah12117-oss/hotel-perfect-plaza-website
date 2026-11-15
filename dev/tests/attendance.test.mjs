@@ -492,6 +492,23 @@ test("the month's summary comes on the last day of a Nepali month, and only then
   assert.equal(await monthSummary(wall(`${addDays(last, -1)} 21:00:00`)), null);
 });
 
+test("old records import quietly: kept once, nothing within 2 minutes of a kept punch, joining dates move back", async () => {
+  await addPhone();
+  await owner("staff", { method: "POST", body: { pin: "5", name: "Mohan" } });                 /* joined today */
+  await owner("punch", { method: "POST", body: { pin: "5", day: "2026-09-02", time: "09:01" } });
+  sent = [];
+  const rows = [{ pin: "5", at: "2026-09-01 09:00:00" }, { pin: "5", at: "2026-09-02 09:02:30" }, { pin: "6", at: "2026-09-03 08:00:00" }, { pin: "x y", at: "nonsense" }];
+  const r = await owner("import", { method: "POST", body: { rows, device: "MeroHajir GD1", note: "imported from MeroHajir" } });
+  assert.deepEqual(r.json, { received: 3, added: 2 });
+  assert.equal((await owner("import", { method: "POST", body: { rows } })).json.added, 0);             /* a second time: nothing new */
+  assert.equal(sent.length, 0);                                                                  /* no notifications */
+  const staff = (await owner("staff")).json.staff;
+  assert.equal(staff.find(s => s.pin === "5").joined, "2026-09-01");
+  assert.equal(staff.find(s => s.pin === "6").joined, "2026-09-03");
+  const p = (await owner("punches", { query: { from: "2026-09-01", to: "2026-09-03" } })).json.punches;
+  assert.equal(p.filter(x => x.device === "MeroHajir GD1").length, 2);
+});
+
 test("the owner's page needs the password", async () => {
   assert.equal((await call(attendanceRoute, { query: { action: "today" } })).status, 401);
   const t = await owner("today");
