@@ -248,6 +248,29 @@ test("a day with a break, a forgotten punch-out, and a half day", () => {
   assert.equal(half.early, 360);
 });
 
+test("a break isn't worked time, punched out for or not; overtime and half days go by the hours the shift is for", () => {
+  const santosh = staff({ shift_start: "07:30", shift_end: "22:00", break_start: "13:00", break_end: "15:00" });   /* 12½ h of work */
+  const straight = dayRecord({ staff: santosh, day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-01 07:30", "2026-10-01 22:00") });
+  assert.equal(straight.worked, 750);
+  assert.equal(straight.ot, 0);
+  assert.equal(straight.breakStart, "13:00");
+  const punched = dayRecord({ staff: santosh, day: "2026-10-01", set: SET, now: later,
+    punches: ps("2026-10-01 07:30", "2026-10-01 13:00", "2026-10-01 15:00", "2026-10-01 22:40") });
+  assert.equal(punched.worked, 790);
+  assert.equal(punched.ot, 40);
+  /* the dishwasher: 5–7 am and 5–8 pm, 5 hours */
+  const sharmila = staff({ shift_start: "05:00", shift_end: "20:00", break_start: "07:00", break_end: "17:00" });
+  const split = dayRecord({ staff: sharmila, day: "2026-10-01", set: SET, now: later,
+    punches: ps("2026-10-01 05:00", "2026-10-01 07:00", "2026-10-01 17:00", "2026-10-01 20:00") });
+  assert.equal(split.worked, 300);
+  assert.equal(split.status, "present");
+  assert.equal(split.ot, 0);
+  /* a night break after midnight */
+  const night = staff({ shift_start: "19:00", shift_end: "08:00", break_start: "01:00", break_end: "02:00" });
+  const n = dayRecord({ staff: night, day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-01 19:00", "2026-10-02 08:00") });
+  assert.equal(n.worked, 720);
+});
+
 test("a night shift is one day, even across midnight", () => {
   const night = staff({ shift_start: "20:00", shift_end: "08:00" });
   const d = dayRecord({ staff: night, day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-01 19:55", "2026-10-02 08:40") });

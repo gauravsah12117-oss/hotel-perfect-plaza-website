@@ -205,20 +205,23 @@ export default handle(async (req, res) => {
       const time = s => { s = clean(s, 5); return s === "" || toMin(s) !== null ? s : false; };
       const shiftStart = time(b.shift_start), shiftEnd = time(b.shift_end);
       if (shiftStart === false || shiftEnd === false || (shiftStart === "") !== (shiftEnd === "")) return json(res, 400, { error: "shift" });
+      const breakStart = time(b.break_start), breakEnd = time(b.break_end);
+      if (breakStart === false || breakEnd === false || (breakStart === "") !== (breakEnd === "")) return json(res, 400, { error: "break" });
       const off = b.weekly_off === "" || b.weekly_off == null ? null : Number(b.weekly_off);
       if (off !== null && !(Number.isInteger(off) && off >= 0 && off <= 6)) return json(res, 400, { error: "off" });
       const money = (v, max) => { const n = Math.round(Number(v) || 0); return n >= 0 && n <= max ? n : false; };
       const salary = money(b.salary, 10000000), otRate = money(b.ot_rate, 100000);
       if (salary === false || otRate === false) return json(res, 400, { error: "money" });
       const joined = okDay(b.joined) ? b.joined : null;
-      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify, ssf)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12, $13)
+      await q(`INSERT INTO staff (pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate, joined, active, notify, ssf, break_start, break_end)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::date, (now() AT TIME ZONE 'Asia/Kathmandu')::date), $11, $12, $13, $14, $15)
         ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name, job = EXCLUDED.job, phone = EXCLUDED.phone,
           shift_start = EXCLUDED.shift_start, shift_end = EXCLUDED.shift_end, weekly_off = EXCLUDED.weekly_off,
           salary = EXCLUDED.salary, ot_rate = EXCLUDED.ot_rate, joined = COALESCE($10::date, staff.joined),
-          active = EXCLUDED.active, notify = EXCLUDED.notify, ssf = EXCLUDED.ssf`,
+          active = EXCLUDED.active, notify = EXCLUDED.notify, ssf = EXCLUDED.ssf,
+          break_start = EXCLUDED.break_start, break_end = EXCLUDED.break_end`,
         [b.pin, clean(b.name, 80), clean(b.job, 60), clean(b.phone, 30), shiftStart, shiftEnd, off, salary, otRate, joined,
-         b.active !== false, b.notify !== false, b.ssf === true]);
+         b.active !== false, b.notify !== false, b.ssf === true, breakStart, breakEnd]);
     }
     const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
     return json(res, 200, { staff: rows });

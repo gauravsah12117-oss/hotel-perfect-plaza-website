@@ -120,6 +120,8 @@ addSchema([
      PRIMARY KEY (day, pin, kind)
    )`,
   `ALTER TABLE staff ADD COLUMN IF NOT EXISTS ssf boolean NOT NULL DEFAULT false`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS break_start text NOT NULL DEFAULT ''`,
+  `ALTER TABLE staff ADD COLUMN IF NOT EXISTS break_end text NOT NULL DEFAULT ''`,
   `CREATE TABLE IF NOT EXISTS att_login_fails (
      ip           text PRIMARY KEY,
      fails        integer NOT NULL DEFAULT 0,
@@ -196,8 +198,17 @@ const rules = set => ({
 
 /* ------------------------------------------------------- shifts and days */
 
-export const STAFF_COLS = `pin, name, job, phone, shift_start, shift_end, weekly_off, salary, ot_rate,
+export const STAFF_COLS = `pin, name, job, phone, shift_start, shift_end, break_start, break_end, weekly_off, salary, ot_rate,
   joined::text AS joined, active, notify, ssf`;
+
+/* A person's unpaid break inside their usual shift (e.g. 13:00–15:00):
+   minutes from the start of the day and how long, or null. Hours in it
+   don't count as worked, punched out for or not. */
+export function breakOf(staff, shift) {
+  const a = toMin(staff.break_start), b = toMin(staff.break_end);
+  if (a === null || b === null || a === b) return null;
+  return { from: a < shift.start ? a + 1440 : a, len: (b - a + 1440) % 1440 };
+}
 export const STAFF_ORDER = `ORDER BY (pin !~ '^[0-9]+$'), lpad(pin, 20, '0'), pin`;
 
 export function shiftOf(staff, set) {
@@ -221,7 +232,7 @@ export function planFor(staff, set, roster = null) {
       if (start !== null && end !== null) return { start, len: ((end - start + 1440) % 1440) || 1440, off: false, name: r.name || "" };
     }
     const weeklyOff = staff.weekly_off != null && Number(staff.weekly_off) === new Date(dayStart(day)).getUTCDay();
-    return { start: base.start, len: base.len, off: r ? !!r.off : weeklyOff, name: r && r.off ? "off" : "" };
+    return { start: base.start, len: base.len, off: r ? !!r.off : weeklyOff, name: r && r.off ? "off" : "", brk: breakOf(staff, base) };
   };
 }
 
@@ -263,6 +274,7 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
   const current = now >= winA && now < winB;
   const rec = {
     day, shiftStart: hhmm(startT), shiftEnd: hhmm(endT), shiftLen: shift.len, shiftName: shift.name,
+    breakStart: shift.brk ? hhmm(dayStart(day) + shift.brk.from * MIN) : null, breakEnd: shift.brk ? hhmm(dayStart(day) + (shift.brk.from + shift.brk.len) * MIN) : null,
     punches: ps.map(p => ({ id: p.id, time: hhmm(p.t), at: wallText(p.t), manual: p.source === "manual" })),
     in: null, out: null, worked: 0, late: 0, early: 0, ot: 0,
     inside: false, missing: false, manual: ps.some(p => p.source === "manual"),
@@ -276,10 +288,13 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
     return rec;
   }
 
+  /* time at work, less any of the unpaid break inside it */
+  const bA = shift.brk ? dayStart(day) + shift.brk.from * MIN : 0, bB = shift.brk ? bA + shift.brk.len * MIN : 0;
+  const atWork = (a, b) => (b - a) - (shift.brk ? Math.max(0, Math.min(b, bB) - Math.max(a, bA)) : 0);
   const open = ps.length % 2 === 1;
   let worked = 0;
-  for (let i = 0; i + 1 < ps.length; i += 2) worked += ps[i + 1].t - ps[i].t;
-  if (open && current && now >= ps[ps.length - 1].t) { rec.inside = true; worked += now - ps[ps.length - 1].t; }
+  for (let i = 0; i + 1 < ps.length; i += 2) worked += atWork(ps[i].t, ps[i + 1].t);
+  if (open && current && now >= ps[ps.length - 1].t) { rec.inside = true; worked += atWork(ps[ps.length - 1].t, now); }
   else if (open) rec.missing = true;
   rec.worked = Math.round(worked / MIN);
 
@@ -297,9 +312,10 @@ export function dayRecord({ staff, day, punches, set, leave = null, holiday = nu
       rec.early = early > r.grace ? early : 0;
     }
   }
-  const extra = scheduled ? rec.worked - shift.len : rec.worked;
+  const need = shift.len - (shift.brk ? shift.brk.len : 0);           /* the hours the shift is for */
+  const extra = scheduled ? rec.worked - need : rec.worked;
   rec.ot = extra >= r.otMin && extra > 0 ? extra : 0;
-  const half = scheduled && !rec.inside && !rec.missing && rec.worked < shift.len / 2;
+  const half = scheduled && !rec.inside && !rec.missing && rec.worked < need / 2;
   rec.status = half ? "half" : rec.late ? "late" : "present";
   return rec;
 }
@@ -329,7 +345,8 @@ export function summarise(staff, days, set, adj = []) {
   const r = rules(set), shift = shiftOf(staff, set);
   const salary = Number(staff.salary) || 0;
   const dayRate = salary / 30;                       /* Nepal's Labour Act counts a month as 30 days */
-  const otHourly = Number(staff.ot_rate) || (dayRate / (shift.len / 60)) * r.otMult;
+  const brk = breakOf(staff, shift), hoursADay = (shift.len - (brk ? brk.len : 0)) / 60;
+  const otHourly = Number(staff.ot_rate) || (dayRate / hoursADay) * r.otMult;
   s.paidDays = s.present + s.half / 2 + s.paidLeave + s.off + s.holiday;
   s.unpaidDays = s.absent + s.unpaidLeave + s.half / 2 + s.notJoined;
   s.dayRate = Math.round(dayRate);

@@ -60,7 +60,7 @@
   const hours = min => (min / 60).toFixed(1);
   const msg = (el, text, ok) => { el.textContent = text || ""; el.className = "msg" + (el.classList.contains("wide") ? " wide" : "") + (text ? (ok ? " ok" : " bad") : ""); };
   const ERR = { pin: "Choose a staff member (or check the machine number).", time: "That date or time isn't right.", future: "That time hasn't happened yet.",
-    exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", money: "Check the salary and overtime amounts.",
+    exists: "There is already a punch at exactly that time.", shift: "Give both shift times, or leave both empty.", break: "Give both break times, or leave both empty.", money: "Check the salary and overtime amounts.",
     dates: "Check the dates (at most 62 days at once).", telegram: "TELEGRAM_BOT_TOKEN isn't set in Vercel yet (ATTENDANCE.md, step 2).",
     notify: "Turn on notifications on a phone first (Settings → Notifications on this phone).",
     kind: "Choose what kind it is.",
@@ -211,7 +211,7 @@
       staff.map(s => [
         { v: s.pin, cls: "num" },
         { v: s.name || el("span", { className: "warn" }, "No name yet"), cls: "name" },
-        s.job, s.shift_start ? `${clock(s.shift_start)} – ${clock(s.shift_end)}` : el("span", { className: "muted" }, "usual hours"),
+        s.job, s.shift_start ? [`${clock(s.shift_start)} – ${clock(s.shift_end)}`, s.break_start ? el("small", { className: "muted" }, ` (break ${clock(s.break_start)} – ${clock(s.break_end)})`) : null] : el("span", { className: "muted" }, "usual hours"),
         s.weekly_off == null ? "—" : DAYS[s.weekly_off],
         { v: s.salary ? rs(s.salary) : "—", cls: "num" },
         s.ssf ? "Yes" : "—",
@@ -223,7 +223,7 @@
   }
   function editStaff(s) {
     const f = $("[data-staff-form]");
-    for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "joined"]) f[k].value = s[k] || "";
+    for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "break_start", "break_end", "joined"]) f[k].value = s[k] || "";
     f.weekly_off.value = s.weekly_off == null ? "" : String(s.weekly_off);
     f.salary.value = s.salary || ""; f.ot_rate.value = s.ot_rate || "";
     f.notify.checked = s.notify; f.active.checked = s.active; f.ssf.checked = !!s.ssf;
@@ -246,7 +246,7 @@
     if (isNew) return msg(m, `Machine no. ${f.pin.value} is already in the list. Use its Edit button.`);
     const r = await post("staff", {
       pin: f.pin.value.trim(), name: f.name.value, job: f.job.value, phone: f.phone.value,
-      shift_start: f.shift_start.value, shift_end: f.shift_end.value, weekly_off: f.weekly_off.value,
+      shift_start: f.shift_start.value, shift_end: f.shift_end.value, break_start: f.break_start.value, break_end: f.break_end.value, weekly_off: f.weekly_off.value,
       salary: f.salary.value, ot_rate: f.ot_rate.value, joined: f.joined.value, notify: f.notify.checked, active: f.active.checked, ssf: f.ssf.checked
     });
     if (!r.ok) return msg(m, errText(r));
