@@ -36,6 +36,7 @@
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
     <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4.5 4.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
   </defs>
 </svg>
 
@@ -129,7 +130,7 @@
             <h2 class="pagehead__title" data-day-title>Today</h2>
             <div class="pick">
               <button type="button" class="btn btn--plain btn--icon" data-day-prev aria-label="Day before">‹</button>
-              <span class="datebox" data-datebox><input type="date" data-day-date aria-label="Date"><span class="datebox__bs" data-day-bs aria-hidden="true" hidden></span></span>
+              <input type="date" data-day-date aria-label="Date">
               <button type="button" class="btn btn--plain btn--icon" data-day-next aria-label="Day after">›</button>
               <button type="button" class="btn btn--plain" data-day-today hidden>Today</button>
             </div>
@@ -170,15 +171,24 @@
         <!-- ================================================= MONTH -->
         <section data-panel="report" hidden>
           <div class="pagehead">
-            <p class="pagehead__note" data-rep-note></p>
-            <div class="pick wrap">
-              <label class="inline" data-rep-ad>Month <input type="month" data-rep-month></label>
-              <span class="inline" data-rep-bs hidden>Month <select data-rep-bs-month aria-label="Nepali month"></select> <select data-rep-bs-year aria-label="Nepali year"></select></span>
-              <label class="inline">From <input type="date" data-rep-from></label>
-              <label class="inline">To <input type="date" data-rep-to></label>
-              <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
+            <div class="pick">
+              <button type="button" class="btn btn--plain btn--icon" data-rep-prev aria-label="Month before">‹</button>
+              <h2 class="pagehead__title" data-rep-title>Month</h2>
+              <button type="button" class="btn btn--plain btn--icon" data-rep-next aria-label="Month after">›</button>
             </div>
+            <p class="pagehead__note" data-rep-note></p>
           </div>
+          <div class="filters">
+            <label class="full" data-rep-ad><span>Month</span><input type="month" data-rep-month></label>
+            <span class="filters__pair" data-rep-bs hidden>
+              <label><span>Month</span><select data-rep-bs-month aria-label="Nepali month"></select></label>
+              <label><span>Year</span><select data-rep-bs-year aria-label="Nepali year"></select></label>
+            </span>
+            <label><span>From</span><input type="date" data-rep-from></label>
+            <label><span>To</span><input type="date" data-rep-to></label>
+            <select class="groupfilter full" data-group-filter aria-label="Department" hidden></select>
+          </div>
+          <div class="stats" data-rep-stats></div>
 
           <div class="card">
             <div class="card__head">
@@ -192,7 +202,7 @@
             <div class="scroll"><table class="register" data-rep-register></table></div>
           </div>
 
-          <div class="card">
+          <div class="card" data-rep-totals>
             <div class="card__head">
               <h2>Totals and pay</h2>
               <div class="row actions">
@@ -201,10 +211,10 @@
                 <button type="button" class="btn btn--ghost" data-rep-print>Print</button>
               </div>
             </div>
-            <div class="scroll"><table class="att report" data-rep-table></table></div>
+            <div class="scroll"><table class="att report stack" data-rep-table></table></div>
             <p class="hint">Pay = monthly salary − unpaid days × day rate (salary ÷ 30) + overtime pay. Absent, unpaid leave, half a day for a half day, and days before someone joined are unpaid. Days still to come aren't counted. Tap a name to see every day.</p>
           </div>
-          <div class="card">
+          <div class="card" data-le-card>
             <div class="card__head">
               <h2>Late arrivals and early exits</h2>
               <div class="seg" role="group" aria-label="Which list">
@@ -213,100 +223,45 @@
               </div>
             </div>
             <p class="hint" data-le-note></p>
-            <div class="scroll"><table class="att" data-le-table></table></div>
-          </div>
-
-          <!-- one person's payslip for the month, and the money to put on it -->
-          <div class="card slipcard" data-slip hidden>
-            <div class="card__head">
-              <h2 data-slip-title>Payslip</h2>
-              <div class="row actions">
-                <button type="button" class="btn" data-slip-print>Print payslip</button>
-                <button type="button" class="btn btn--plain btn--small" data-slip-close>Close</button>
-              </div>
-            </div>
-            <div data-slip-doc></div>
-            <h3>Advances, bonuses and deductions this month</h3>
-            <div class="scroll"><table class="att" data-slip-adj></table></div>
-            <form class="form" data-adj-form>
-              <label>Date <input name="day" type="date" required></label>
-              <label>Kind
-                <select name="kind">
-                  <option value="advance">Salary advance (taken off)</option>
-                  <option value="bonus">Bonus (added)</option>
-                  <option value="allowance">Allowance (added)</option>
-                  <option value="tax">Tax (taken off)</option>
-                  <option value="deduction">Other deduction (taken off)</option>
-                </select>
-              </label>
-              <label>Amount (NPR) <input name="amount" type="number" min="1" step="1" required></label>
-              <label class="wide">Note <input name="note" type="text" placeholder="e.g. advance for Dashain"></label>
-              <button class="btn" type="submit">Add</button>
-              <p class="msg wide" data-adj-msg role="status"></p>
-            </form>
-          </div>
-
-          <div class="card" data-rep-detail hidden>
-            <div class="card__head">
-              <h2 data-rep-detail-title></h2>
-              <button type="button" class="btn btn--plain btn--small" data-rep-detail-close>Close</button>
-            </div>
-            <div class="scroll"><table class="att" data-rep-detail-table></table></div>
+            <div class="scroll"><table class="att stack stack--line stack--labels" data-le-table></table></div>
           </div>
         </section>
 
         <!-- ================================================= PUNCHES -->
         <section data-panel="punches" hidden>
-          <div class="card">
-            <h2>Add a forgotten punch</h2>
-            <p class="hint">When someone forgot to put their finger on the machine. It shows as "by hand" everywhere, so it can always be told apart.</p>
-            <form class="form" data-punch-form>
-              <label>Staff <select name="pin" data-staff-select required></select></label>
-              <label>Date <input name="day" type="date" required></label>
-              <label>Time <input name="time" type="time" required></label>
-              <label class="wide">Why <input name="note" type="text" placeholder="e.g. forgot when leaving, told the manager"></label>
-              <button class="btn" type="submit">Add punch</button>
-              <p class="msg wide" data-punch-msg role="status"></p>
-            </form>
-          </div>
-          <div class="card">
-            <h2>Add several days at once</h2>
-            <p class="hint">For days the machine missed: everyone ticked gets the in time (and out time) on each day from the first date to the last. An out time earlier than the in time is the next morning (a night shift). Marked "by hand", like any added punch.</p>
-            <form class="form" data-bulk-form>
-              <fieldset class="wide bulkstaff">
-                <legend>Staff</legend>
-                <label class="check"><input type="checkbox" data-bulk-all> Everyone</label>
-                <div class="bulkstaff__list" data-bulk-staff></div>
-              </fieldset>
-              <label>From <input name="from" type="date" required></label>
-              <label>To <input name="to" type="date" required></label>
-              <label>In <input name="in" type="time" required></label>
-              <label>Out <input name="out" type="time"></label>
-              <label class="check"><input name="skip_off" type="checkbox" checked> Skip days off, holidays and leave</label>
-              <label class="check"><input name="skip_existing" type="checkbox" checked> Skip days that already have a punch</label>
-              <label class="wide">Why <input name="note" type="text" placeholder="e.g. the machine was broken"></label>
-              <button class="btn" type="submit">Add these days</button>
-              <p class="msg wide" data-bulk-msg role="status"></p>
-            </form>
-          </div>
-          <div class="card">
-            <div class="card__head">
-              <h2>Every punch</h2>
-              <div class="pick wrap">
-                <label class="inline">From <input type="date" data-pun-from></label>
-                <label class="inline">To <input type="date" data-pun-to></label>
-                <label class="inline">Staff <select data-pun-staff><option value="">Everyone</option></select></label>
-                <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
-              </div>
+          <div class="pagehead">
+            <h2 class="pagehead__title">Every punch</h2>
+            <div class="row actions">
+              <button type="button" class="btn" data-open="punch"><svg><use href="#i-plus"/></svg>Add a punch</button>
+              <button type="button" class="btn btn--ghost" data-open="bulk">Several days</button>
             </div>
-            <p class="hint">Exactly what the machine recorded. "Leave out" takes a wrong punch out of the sums without deleting it.</p>
-            <div class="scroll"><table class="att" data-pun-table></table></div>
+          </div>
+          <div class="filters">
+            <label><span>From</span><input type="date" data-pun-from></label>
+            <label><span>To</span><input type="date" data-pun-to></label>
+            <label class="full"><span>Staff</span><select data-pun-staff><option value="">Everyone</option></select></label>
+            <select class="groupfilter full" data-group-filter aria-label="Department" hidden></select>
+          </div>
+          <div class="card">
+            <p class="hint hint--top">Exactly what the machine recorded. "Leave out" takes a wrong punch out of the sums without deleting it.</p>
+            <div class="scroll"><table class="att stack stack--line" data-pun-table></table></div>
             <p class="msg" data-pun-msg role="status"></p>
           </div>
         </section>
 
         <!-- ================================================= STAFF -->
         <section data-panel="staff" hidden>
+          <div class="pagehead">
+            <h2 class="pagehead__title" data-staff-count>Staff</h2>
+            <div class="row actions">
+              <button type="button" class="btn" data-staff-add><svg><use href="#i-plus"/></svg>Add staff</button>
+            </div>
+          </div>
+          <div class="card">
+            <p class="hint hint--top">Tap a person to change their details, shift, salary or photo.</p>
+            <div class="scroll"><table class="att stack stack--line stack--labels" data-staff-table></table></div>
+          </div>
+
           <div class="card rostercard">
             <div class="card__head">
               <h2>Weekly roster</h2>
@@ -317,102 +272,35 @@
                 <button type="button" class="btn btn--ghost btn--small" data-ros-copy>Copy last week</button>
               </div>
             </div>
-            <p class="hint">Who works which shift each day. "Usual" is the person's own shift (below). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.</p>
+            <p class="hint">Who works which shift each day. "Usual" is the person's own shift (in the list above). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.</p>
             <p class="legend ros-legend" data-ros-legend></p>
             <div class="scroll"><table class="roster" data-roster></table></div>
             <p class="msg" data-ros-msg role="status"></p>
-          </div>
-
-          <div class="card">
-            <h2 data-staff-form-title>Add staff</h2>
-            <p class="hint">"Machine no." is the user ID the person was given when their finger was enrolled on the machine. Anyone who punches before being added here appears as "Staff #" and their number: fill in their name here.</p>
-            <form class="form" data-staff-form>
-              <div class="wide photofield">
-                <span class="avatar avatar--big" data-photo-preview aria-hidden="true">?</span>
-                <div class="photofield__act">
-                  <label class="btn btn--plain btn--small">Choose a photo<input type="file" accept="image/*" class="filepick" data-photo-file></label>
-                  <button type="button" class="btn btn--small btn--danger" data-photo-remove hidden>Remove photo</button>
-                  <p class="hint">A face photo, shown on Today and on the person's card. Saved with the other details.</p>
-                </div>
-              </div>
-              <label>Machine no. <input name="pin" type="text" inputmode="numeric" pattern="[0-9A-Za-z]{1,20}" required></label>
-              <label>Name <input name="name" type="text" required></label>
-              <label>Job <input name="job" type="text" placeholder="e.g. Kitchen, Reception"></label>
-              <label>Department <input name="department" type="text" list="dept-list" placeholder="e.g. Kitchen, Front office"></label>
-              <label>Branch <input name="branch" type="text" list="branch-list" placeholder="only if the hotel has more than one"></label>
-              <label>Phone <input name="phone" type="tel"></label>
-              <label>Shift starts <input name="shift_start" type="time"></label>
-              <label>Shift ends <input name="shift_end" type="time"></label>
-              <label>Break from <input name="break_start" type="time"></label>
-              <label>Break until <input name="break_end" type="time"></label>
-              <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" step="1" placeholder="the hotel's"></label>
-              <datalist id="dept-list" data-dept-list></datalist><datalist id="branch-list" data-branch-list></datalist>
-              <label>Weekly day off
-                <select name="weekly_off">
-                  <option value="">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
-                  <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
-                </select>
-              </label>
-              <label>Joined <input name="joined" type="date"></label>
-              <label>Monthly salary (NPR) <input name="salary" type="number" min="0" step="1"></label>
-              <label>Overtime per hour (NPR) <input name="ot_rate" type="number" min="0" step="1" placeholder="from salary"></label>
-              <label class="check"><input name="ssf" type="checkbox"> In the Social Security Fund (SSF)</label>
-              <label class="check"><input name="notify" type="checkbox" checked> Notify when this person punches</label>
-              <label class="check"><input name="active" type="checkbox" checked> Still working here</label>
-              <p class="hint wide">Leave the shift empty to use the hotel's usual hours (Settings). If overtime per hour is empty, it is worked out from the salary × the overtime rate in Settings.</p>
-              <div class="wide row">
-                <button class="btn" type="submit">Save</button>
-                <button class="btn btn--plain" type="reset" data-staff-new>New person</button>
-              </div>
-              <p class="msg wide" data-staff-msg role="status"></p>
-            </form>
-          </div>
-          <div class="card">
-            <h2>Staff</h2>
-            <div class="scroll"><table class="att" data-staff-table></table></div>
           </div>
         </section>
 
         <!-- ================================================= LEAVE -->
         <section data-panel="leave" hidden>
-          <div class="card">
-            <h2>Leave</h2>
-            <form class="form" data-leave-form>
-              <label>Staff <select name="pin" data-staff-select required></select></label>
-              <label>From <input name="from" type="date" required></label>
-              <label>To <input name="to" type="date"></label>
-              <label>Kind
-                <select name="kind">
-                  <option value="paid">Paid leave</option><option value="sick">Sick leave (paid)</option>
-                  <option value="unpaid">Unpaid leave</option><option value="none">Remove leave</option>
-                </select>
-              </label>
-              <label class="wide">Note <input name="note" type="text"></label>
-              <button class="btn" type="submit">Save leave</button>
-              <p class="msg wide" data-leave-msg role="status"></p>
-            </form>
-          </div>
-          <div class="card">
-            <h2>Holidays for everyone</h2>
-            <p class="hint">Dashain, Tihar, Chhath… A holiday is paid; anyone who works on it gets the whole day as overtime.</p>
-            <form class="form" data-hol-form>
-              <label>Date <input name="day" type="date" required></label>
-              <label>Name <input name="name" type="text" placeholder="e.g. Tihar"></label>
-              <button class="btn" type="submit">Add holiday</button>
-              <p class="msg wide" data-hol-msg role="status"></p>
-            </form>
-          </div>
-          <div class="card">
-            <div class="card__head">
-              <h2>Booked</h2>
-              <div class="pick wrap">
-                <label class="inline">From <input type="date" data-lv-from></label>
-                <label class="inline">To <input type="date" data-lv-to></label>
-              </div>
+          <div class="pagehead">
+            <h2 class="pagehead__title">Booked leave and holidays</h2>
+            <div class="row actions">
+              <button type="button" class="btn" data-open="leave"><svg><use href="#i-plus"/></svg>Add leave</button>
+              <button type="button" class="btn btn--ghost" data-open="hol">Add holiday</button>
             </div>
-            <div class="cols">
-              <div><h3>Leave</h3><div class="scroll"><table class="att" data-lv-table></table></div></div>
-              <div><h3>Holidays</h3><div class="scroll"><table class="att" data-hol-table></table></div></div>
+          </div>
+          <div class="filters">
+            <label><span>From</span><input type="date" data-lv-from></label>
+            <label><span>To</span><input type="date" data-lv-to></label>
+          </div>
+          <div class="cols cols--cards">
+            <div class="card">
+              <h2>Leave</h2>
+              <div class="scroll"><table class="att stack stack--line" data-lv-table></table></div>
+            </div>
+            <div class="card">
+              <h2>Holidays</h2>
+              <p class="hint">Dashain, Tihar, Chhath… A holiday is paid; anyone who works on it gets the whole day as overtime.</p>
+              <div class="scroll"><table class="att stack stack--line" data-hol-table></table></div>
             </div>
           </div>
         </section>
@@ -432,14 +320,14 @@
               </div>
               <p class="msg" data-push-msg role="status"></p>
               <h3>Phones that get notifications</h3>
-              <div class="scroll"><table class="att" data-push-table></table></div>
+              <div class="scroll"><table class="att stack stack--line stack--labels" data-push-table></table></div>
             </div>
           </div>
 
           <div class="card">
             <h2>On this phone</h2>
             <p class="hint">Only for this phone; each phone keeps its own.</p>
-            <div class="form">
+            <div class="form form--2">
               <label>Text size
                 <select data-size><option value="">Normal</option><option value="l">Large</option><option value="xl">Extra large</option></select>
               </label>
@@ -468,7 +356,7 @@
 
           <div class="card">
             <h2>Fingerprint machines</h2>
-            <div class="scroll"><table class="att" data-dev-table></table></div>
+            <div class="scroll"><table class="att stack stack--line stack--labels" data-dev-table></table></div>
             <p class="msg" data-dev-msg role="status"></p>
             <details class="howto" data-dev-howto>
               <summary>How to connect the machine: Hikvision</summary>
@@ -497,17 +385,17 @@
 
           <div class="card">
             <h2>The hotel's rules, and what gets notified</h2>
-            <form class="form" data-set-form>
+            <form class="form form--2" data-set-form>
               <label class="check"><input name="notify_in" type="checkbox"> Notify when someone arrives</label>
               <label class="check"><input name="notify_out" type="checkbox"> Notify when someone leaves or comes back</label>
               <label class="check"><input name="notify_summary" type="checkbox"> The day's summary at about 9 pm</label>
               <label class="check"><input name="notify_absent" type="checkbox"> Notify when someone hasn't come</label>
-              <label>…this many minutes after their shift starts <input name="absent_after" type="number" min="0" max="600" required></label>
+              <label class="wide">…this many minutes after their shift starts <input name="absent_after" type="number" min="0" max="600" required></label>
               <label class="check"><input name="notify_month" type="checkbox"> The month's summary on its last day</label>
               <label>Quiet hours from <input name="quiet_from" type="time"></label>
               <label>Quiet hours until <input name="quiet_to" type="time"></label>
               <p class="hint wide">No punch notifications during quiet hours (for example 22:00 to 06:00): the punches are still recorded, and the 9 pm summary still comes. Leave both empty for none.</p>
-              <label>Language of the notifications
+              <label class="wide">Language of the notifications
                 <select name="lang"><option value="en">English</option><option value="ne">नेपाली</option></select>
               </label>
               <label>Usual shift starts <input name="shift_start" type="time" required></label>
@@ -522,7 +410,7 @@
                 <div data-shifts></div>
                 <button type="button" class="btn btn--plain btn--small" data-shift-add>Add a shift</button>
               </div>
-              <p class="hint wide">"Late after 10" means 9:10 is on time and 9:11 is 11 minutes late. "Overtime from 30" means staying 20 minutes extra isn't overtime, and 45 minutes is.</p>
+              <p class="hint wide">"Late after 10" means 9:10 is on time and 9:11 is 11 minutes late. "Overtime from 60" means staying 30 minutes extra isn't overtime, and an hour is.</p>
               <button class="btn" type="submit">Save</button>
               <p class="msg wide" data-set-msg role="status"></p>
             </form>
@@ -552,7 +440,7 @@
               <p class="hint">It works once, within an hour. After pressing Start, the phone appears in the list below. <button type="button" class="link" data-tg-refresh>Check now</button></p>
             </div>
             <p class="msg" data-tg-msg role="status"></p>
-            <div class="scroll"><table class="att" data-chat-table></table></div>
+            <div class="scroll"><table class="att stack stack--line stack--labels" data-chat-table></table></div>
           </details>
 
           <button type="button" class="btn btn--plain signout-mobile" data-logout><svg><use href="#i-out"/></svg>Sign out of this phone</button>
@@ -604,6 +492,181 @@
     <button type="button" class="btn btn--plain btn--icon" data-install-close aria-label="Close">×</button>
   </div>
   <div class="sheet__body" data-install-steps></div>
+</dialog>
+
+<!-- The forms, each in a sheet that comes up when its button is pressed
+     (data-open="<name>" opens data-form-sheet="<name>"); from the bottom on phones. -->
+<dialog class="sheet" data-form-sheet="punch" aria-labelledby="punch-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="punch-title">Add a forgotten punch</h2></div>
+    <button type="button" class="btn btn--plain btn--icon" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <p class="hint">When someone forgot to put their finger on the machine. It shows as "by hand" everywhere, so it can always be told apart.</p>
+    <form class="form form--2" data-punch-form>
+      <label class="wide">Staff <select name="pin" data-staff-select required></select></label>
+      <label>Date <input name="day" type="date" required></label>
+      <label>Time <input name="time" type="time" required></label>
+      <label class="wide">Why <input name="note" type="text" placeholder="e.g. forgot when leaving, told the manager"></label>
+      <button class="btn" type="submit">Add punch</button>
+      <p class="msg wide" data-punch-msg role="status"></p>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" data-form-sheet="bulk" aria-labelledby="bulk-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="bulk-title">Add several days at once</h2></div>
+    <button type="button" class="btn btn--plain btn--icon" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <p class="hint">For days the machine missed: everyone ticked gets the in time (and out time) on each day from the first date to the last. An out time earlier than the in time is the next morning (a night shift). Marked "by hand", like any added punch.</p>
+    <form class="form form--2" data-bulk-form>
+      <fieldset class="wide bulkstaff">
+        <legend>Staff</legend>
+        <label class="check"><input type="checkbox" data-bulk-all> Everyone</label>
+        <div class="bulkstaff__list" data-bulk-staff></div>
+      </fieldset>
+      <label>From <input name="from" type="date" required></label>
+      <label>To <input name="to" type="date" required></label>
+      <label>In <input name="in" type="time" required></label>
+      <label>Out <input name="out" type="time"></label>
+      <label class="check"><input name="skip_off" type="checkbox" checked> Skip days off, holidays and leave</label>
+      <label class="check"><input name="skip_existing" type="checkbox" checked> Skip days that already have a punch</label>
+      <label class="wide">Why <input name="note" type="text" placeholder="e.g. the machine was broken"></label>
+      <button class="btn" type="submit">Add these days</button>
+      <p class="msg wide" data-bulk-msg role="status"></p>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" data-form-sheet="staff" aria-labelledby="staff-form-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="staff-form-title" data-staff-form-title>Add staff</h2></div>
+    <button type="button" class="btn btn--plain btn--icon" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <form class="form form--2" data-staff-form>
+      <div class="wide photofield">
+        <span class="avatar avatar--big" data-photo-preview aria-hidden="true">?</span>
+        <div class="photofield__act">
+          <label class="btn btn--plain btn--small">Choose a photo<input type="file" accept="image/*" class="filepick" data-photo-file></label>
+          <button type="button" class="btn btn--small btn--danger" data-photo-remove hidden>Remove photo</button>
+          <p class="hint">A face photo, shown on Today and on the person's card. Saved with the other details.</p>
+        </div>
+      </div>
+      <label class="wide">Name <input name="name" type="text" required></label>
+      <label>Machine no. <input name="pin" type="text" inputmode="numeric" pattern="[0-9A-Za-z]{1,20}" required></label>
+      <label>Phone <input name="phone" type="tel"></label>
+      <p class="hint wide">"Machine no." is the user ID the person was given when their finger was enrolled on the machine. Anyone who punches before being added here appears as "Staff #" and their number: fill in their name here.</p>
+      <label>Job <input name="job" type="text" placeholder="e.g. Kitchen, Reception"></label>
+      <label>Department <input name="department" type="text" list="dept-list" placeholder="e.g. Kitchen, Front office"></label>
+      <label>Joined <input name="joined" type="date"></label>
+      <label>Branch <input name="branch" type="text" list="branch-list" placeholder="only if the hotel has more than one"></label>
+      <datalist id="dept-list" data-dept-list></datalist><datalist id="branch-list" data-branch-list></datalist>
+      <label>Shift starts <input name="shift_start" type="time"></label>
+      <label>Shift ends <input name="shift_end" type="time"></label>
+      <label>Break from <input name="break_start" type="time"></label>
+      <label>Break until <input name="break_end" type="time"></label>
+      <label>Late after (minutes) <input name="grace" type="number" min="0" max="240" step="1" placeholder="the hotel's"></label>
+      <label>Weekly day off
+        <select name="weekly_off">
+          <option value="">None</option><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option>
+          <option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+        </select>
+      </label>
+      <label>Monthly salary (NPR) <input name="salary" type="number" min="0" step="1"></label>
+      <label>Overtime per hour (NPR) <input name="ot_rate" type="number" min="0" step="1" placeholder="from salary"></label>
+      <p class="hint wide">Leave the shift empty to use the hotel's usual hours (Settings). If overtime per hour is empty, it is worked out from the salary × the overtime rate in Settings.</p>
+      <label class="check"><input name="ssf" type="checkbox"> In the Social Security Fund (SSF)</label>
+      <label class="check"><input name="notify" type="checkbox" checked> Notify when this person punches</label>
+      <label class="check"><input name="active" type="checkbox" checked> Still working here</label>
+      <button class="btn" type="submit">Save</button>
+      <p class="msg wide" data-staff-msg role="status"></p>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" data-form-sheet="leave" aria-labelledby="leave-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="leave-title">Leave</h2></div>
+    <button type="button" class="btn btn--plain btn--icon" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <form class="form form--2" data-leave-form>
+      <label class="wide">Staff <select name="pin" data-staff-select required></select></label>
+      <label>From <input name="from" type="date" required></label>
+      <label>To <input name="to" type="date"></label>
+      <label class="wide">Kind
+        <select name="kind">
+          <option value="paid">Paid leave</option><option value="sick">Sick leave (paid)</option>
+          <option value="unpaid">Unpaid leave</option><option value="none">Remove leave</option>
+        </select>
+      </label>
+      <label class="wide">Note <input name="note" type="text"></label>
+      <button class="btn" type="submit">Save leave</button>
+      <p class="msg wide" data-leave-msg role="status"></p>
+    </form>
+  </div>
+</dialog>
+
+<dialog class="sheet" data-form-sheet="hol" aria-labelledby="hol-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="hol-title">Holidays for everyone</h2></div>
+    <button type="button" class="btn btn--plain btn--icon" data-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <p class="hint">Dashain, Tihar, Chhath… A holiday is paid; anyone who works on it gets the whole day as overtime.</p>
+    <form class="form form--2" data-hol-form>
+      <label>Date <input name="day" type="date" required></label>
+      <label>Name <input name="name" type="text" placeholder="e.g. Tihar"></label>
+      <button class="btn" type="submit">Add holiday</button>
+      <p class="msg wide" data-hol-msg role="status"></p>
+    </form>
+  </div>
+</dialog>
+
+<!-- one person's payslip for the month, and the money to put on it -->
+<dialog class="sheet sheet--wide slipcard" data-slip aria-labelledby="slip-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="slip-title" data-slip-title>Payslip</h2></div>
+    <button type="button" class="btn btn--small" data-slip-print>Print payslip</button>
+    <button type="button" class="btn btn--plain btn--icon" data-slip-close aria-label="Close" autofocus>×</button>
+  </div>
+  <div class="sheet__body">
+    <div data-slip-doc></div>
+    <section>
+      <h3>Advances, bonuses and deductions this month</h3>
+      <div class="scroll"><table class="att stack stack--line" data-slip-adj></table></div>
+      <form class="form form--2" data-adj-form>
+        <label>Date <input name="day" type="date" required></label>
+        <label>Kind
+          <select name="kind">
+            <option value="advance">Salary advance (taken off)</option>
+            <option value="bonus">Bonus (added)</option>
+            <option value="allowance">Allowance (added)</option>
+            <option value="tax">Tax (taken off)</option>
+            <option value="deduction">Other deduction (taken off)</option>
+          </select>
+        </label>
+        <label>Amount (NPR) <input name="amount" type="number" min="1" step="1" required></label>
+        <label>Note <input name="note" type="text" placeholder="e.g. advance for Dashain"></label>
+        <button class="btn" type="submit">Add</button>
+        <p class="msg wide" data-adj-msg role="status"></p>
+      </form>
+    </section>
+  </div>
+</dialog>
+
+<!-- one person's every day in the month's dates -->
+<dialog class="sheet sheet--wide" data-rep-detail aria-labelledby="detail-title">
+  <div class="sheet__head">
+    <div class="sheet__who"><h2 id="detail-title" data-rep-detail-title></h2><p data-rep-detail-sub></p></div>
+    <button type="button" class="btn btn--plain btn--icon" data-rep-detail-close aria-label="Close">×</button>
+  </div>
+  <div class="sheet__body">
+    <div class="scroll"><table class="att stack" data-rep-detail-table></table></div>
+  </div>
 </dialog>
 
 <!-- who just came or went, and other short news (attendance.js) -->

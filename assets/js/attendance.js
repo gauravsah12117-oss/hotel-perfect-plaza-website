@@ -81,10 +81,24 @@
   }
   /* head: ["Name", ["Worked", "num"]…]; rows: arrays of cells: text, a node,
      or { v, cls }; rowProps per row (optional) */
+  /* Each cell also carries its column's name (shown only when a phone lays
+     the rows out as cards, table.stack); head classes: "num" right-aligned,
+     "opt" left off those cards. */
   function fill(table, head, rows, { foot, rowProps, empty } = {}) {
     table.textContent = "";
-    const th = h => Array.isArray(h) ? el("th", { className: h[1] }, h[0]) : el("th", {}, h);
-    const td = c => c && typeof c === "object" && !(c instanceof Node) && !Array.isArray(c) ? el("td", { className: c.cls }, c.v) : el("td", {}, c);
+    const name = h => Array.isArray(h) ? h[0] : h, cls = h => Array.isArray(h) ? h[1] || "" : "";
+    const th = h => el("th", { className: cls(h) || null }, name(h));
+    const td = (c, i) => {
+      const box = c && typeof c === "object" && !(c instanceof Node) && !Array.isArray(c), v = box ? c.v : c;
+      const e = box ? el("td", { className: c.cls }, v) : el("td", {}, v);
+      if (/\bopt\b/.test(cls(head[i]))) e.classList.add("opt");
+      if (v == null || v === "" || (Array.isArray(v) && !v.some(x => x != null && x !== ""))) e.classList.add("empty");
+      else if (v === "—") e.classList.add("nil");                    /* nothing to show: left off a phone's card */
+      if (name(head[i])) e.prepend(el("span", { className: "lbl", "aria-hidden": "true" }, name(head[i])));
+      else if (e.querySelector("button")) e.classList.add("act");
+      else e.classList.add("bare");                                   /* chips and the like: a row of their own */
+      return e;
+    };
     table.append(el("thead", {}, el("tr", {}, head.map(th))));
     const body = el("tbody");
     if (!rows.length) body.append(el("tr", {}, el("td", { colspan: head.length, className: "muted" }, empty || "Nothing here yet.")));
@@ -281,7 +295,9 @@
     bl.textContent = "";
     staff.filter(s => s.active).forEach(s => bl.append(el("label", { className: "check" },
       el("input", { type: "checkbox", value: s.pin, checked: ticked.has(s.pin) }), `${name(s)} (${s.pin})`)));
-    fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", "Day off", ["Salary", "num"], "SSF", "Messages", "", ["Punches", "num"], ""],
+    const working = staff.filter(s => s.active).length;
+    $("[data-staff-count]").textContent = `${working} people on the staff`;
+    fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", ["Day off", "opt"], ["Salary", "num"], ["SSF", "opt"], ["Messages", "opt"], "", ["Punches", "num"], ""],
       staff.map(s => [
         { v: s.pin, cls: "num" },
         { v: el("span", { className: "who" }, (() => { const a = avatar(s.name || "#" + s.pin, s.pin); a.classList.add("avatar--sm"); return a; })(), s.name || el("span", { className: "warn" }, "No name yet")), cls: "name" },
@@ -292,9 +308,32 @@
         s.notify ? "On" : el("span", { className: "muted" }, "Off"),
         s.active ? "" : el("span", { className: "chip off" }, "Left"),
         { v: s.punches, cls: "num" },
-        btn("Edit", () => editStaff(s))
-      ]), { rowProps: i => staff[i].active ? {} : { className: "muted" } });
+        btn("Edit", e => { e.stopPropagation(); editStaff(s); })
+      ]), { rowProps: i => ({ className: "click" + (staff[i].active ? "" : " muted"), title: "Change their details", onclick: () => editStaff(staff[i]) }) });
   }
+  /* the form, in its sheet */
+  const formSheet = n => $(`[data-form-sheet="${n}"]`);
+  function openForm(n) {
+    const d = formSheet(n);
+    $$(".msg", d).forEach(m => msg(m, ""));
+    hints();
+    if (!d.open) d.showModal();
+    d.scrollTop = 0;
+  }
+  /* saved: the sheet goes away and a note says so */
+  function done(n, text, av) { formSheet(n).close(); toast(text, { av }); }
+  $$("[data-open]").forEach(b => b.addEventListener("click", () => openForm(b.dataset.open)));
+  $$("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+  function newStaff() {
+    const f = $("[data-staff-form]");
+    f.reset();
+    f.pin.readOnly = false;
+    $("[data-staff-form-title]").textContent = "Add staff";
+    newPhoto = undefined; photoPreview("?", "");
+    openForm("staff");
+  }
+  $("[data-staff-add]").addEventListener("click", newStaff);
   function editStaff(s) {
     const f = $("[data-staff-form]");
     for (const k of ["pin", "name", "job", "phone", "shift_start", "shift_end", "break_start", "break_end", "joined", "department", "branch"]) f[k].value = s[k] || "";
@@ -303,19 +342,10 @@
     f.salary.value = s.salary || ""; f.ot_rate.value = s.ot_rate || "";
     f.notify.checked = s.notify; f.active.checked = s.active; f.ssf.checked = !!s.ssf;
     f.pin.readOnly = true;
-    hints();
     newPhoto = undefined; photoPreview(s.name || "#" + s.pin, s.pin);
     $("[data-staff-form-title]").textContent = "Edit " + (s.name || "Staff #" + s.pin);
-    msg($("[data-staff-msg]"), "");
-    f.scrollIntoView({ behavior: "smooth", block: "start" });
+    openForm("staff");
   }
-  $("[data-staff-new]").addEventListener("click", () => {
-    const f = $("[data-staff-form]");
-    f.pin.readOnly = false;
-    $("[data-staff-form-title]").textContent = "Add staff";
-    newPhoto = undefined; photoPreview("?", "");
-    setTimeout(() => { f.notify.checked = true; f.active.checked = true; hints(); });
-  });
 
   /* the photo in the form: undefined = unchanged, null = take it off, a data: URL = the new one.
      It is saved with the rest when Save is pressed. */
@@ -359,10 +389,10 @@
       if (newPhoto) photos[pin] = newPhoto; else delete photos[pin];
       keepPhotos(); newPhoto = undefined;
     }
+    const pin = f.pin.value.trim(), who = f.name.value || "#" + pin;
     await loadStaff();
-    const s = staff.find(x => x.pin === f.pin.value.trim());
-    if (s) editStaff(s);
-    msg(m, "Saved.", true);                                          /* after editStaff, which clears the message */
+    const av = avatar(who, pin); av.classList.add("avatar--sm");
+    done("staff", "Saved.", av);
   });
 
   /* ---------------------------------------------- departments and branches */
@@ -404,7 +434,7 @@
     const r = await post("punch-bulk", { pins, from: f.from.value, to: f.to.value, in: f.in.value, out: f.out.value,
       note: f.note.value, skip_off: f.skip_off.checked, skip_existing: f.skip_existing.checked });
     if (!r.ok) return msg(m, errText(r));
-    msg(m, `Added ${r.json.added} punches. Skipped ${r.json.skipped} days.`, true);
+    done("bulk", `Added ${r.json.added} punches. Skipped ${r.json.skipped} days.`);
     loadPunches();
   });
 
@@ -498,10 +528,6 @@
   async function loadDay() {
     const d = $("[data-day-date]").value || today();
     const isToday = d === today();
-    const db = bsOf(d);                                              /* the date box, in Nepali dates */
-    $("[data-datebox]").classList.toggle("datebox--bs", !!db);
-    $("[data-day-bs]").hidden = !db;
-    $("[data-day-bs]").textContent = db ? `${db.d} ${ND.MONTHS[db.m - 1]} ${db.y}` : "";
     let rows;
     if (isToday) {
       const r = await api("today");
@@ -735,7 +761,7 @@
       $$(".sheet__photo", dlg).forEach(n => n.remove());
     });
   });
-  $("[data-sheet]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });   /* tap outside */
+  $$("dialog.sheet").forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));   /* tap outside */
   $("[data-sheet-leave]").addEventListener("submit", async e => {
     e.preventDefault();
     const r = await post("leave", { pin: sheetRow.pin, from: today(), to: today(), kind: e.target.kind.value });
@@ -769,8 +795,6 @@
     })).catch(() => {});
   };
   $("[data-day-date]").addEventListener("change", () => loadDay());
-  /* with the Nepali date laid over it, a tap anywhere on the box opens the picker */
-  $("[data-day-date]").addEventListener("click", e => { if ($("[data-datebox]").classList.contains("datebox--bs")) try { e.target.showPicker(); } catch (x) {} });
   $("[data-day-prev]").addEventListener("click", () => go(-1));
   $("[data-day-next]").addEventListener("click", () => go(1));
 
@@ -997,17 +1021,30 @@
     loadReport();
   }));
 
-  /* under each date box in a form, the Nepali date it is */
-  function hints() {
-    $$(".form input[type=date]").forEach(i => {
-      let h = i.nextElementSibling;
-      if (!h || !h.classList.contains("bshint")) { h = el("small", { className: "bshint" }); i.after(h); }
-      const b = cal === "bs" && i.value ? ND.toBS(i.value) : null;
-      h.textContent = b ? `वि.सं. ${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}` : "";
-      h.hidden = !b;
-    });
+  /* Every date box shows its date in Nepali while Nepali dates are on. The
+     phone's own picker only knows English dates, so the Nepali one is laid
+     over the box's text and a tap anywhere on the box opens the picker. The
+     box's value stays the English date, as everywhere else in the app. */
+  const VALUE = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  function paintDate(i) {
+    const box = i.parentNode, b = i.value ? bsOf(i.value) : null, over = !!b || (cal === "bs" && !i.value);
+    if (!box.classList.contains("datebox")) return;
+    box.classList.toggle("datebox--bs", over);
+    box.classList.toggle("datebox--empty", over && !b);
+    box.lastChild.textContent = b ? `${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}` : over ? "Choose a date" : "";
   }
-  ["input", "change"].forEach(ev => document.addEventListener(ev, e => { if (e.target.matches && e.target.matches(".form input[type=date]")) hints(); }));
+  function dateBox(i) {
+    const box = el("span", { className: "datebox" });
+    i.replaceWith(box); box.append(i, el("span", { className: "datebox__bs", "aria-hidden": "true" }));
+    /* a value set from here (a form filled in, a day stepped) repaints it too */
+    Object.defineProperty(i, "value", { configurable: true, get() { return VALUE.get.call(this); }, set(v) { VALUE.set.call(this, v); paintDate(this); } });
+    ["input", "change", "blur"].forEach(ev => i.addEventListener(ev, () => paintDate(i)));
+    i.addEventListener("click", () => { if (box.classList.contains("datebox--bs")) try { i.showPicker(); } catch (e) { /* an older browser: its own tap */ } });
+    paintDate(i);
+  }
+  $$("input[type=date]").forEach(dateBox);
+  $$("form").forEach(f => f.addEventListener("reset", () => setTimeout(() => $$("input[type=date]", f).forEach(paintDate))));
+  const hints = () => $$("input[type=date]").forEach(paintDate);
 
   async function loadReport() {
     const r = await api("report", { query: { from: $("[data-rep-from]").value, to: $("[data-rep-to]").value } });
@@ -1015,15 +1052,15 @@
     report.staff = report.staff.filter(inGroup);
     const span = Math.round((Date.parse(report.to) - Date.parse(report.from)) / 86400000) + 1;
     const wholeMonth = span >= 28;
-    const all = k => report.staff.reduce((a, s) => a + s.summary[k], 0);
-    $("[data-rep-note]").textContent = `${nice(report.from)} to ${nice(report.to)}, ${span} days. ` +
-      (report.staff.length ? `${all("late")} late arrival${all("late") === 1 ? "" : "s"}, ${all("absent")} day${all("absent") === 1 ? "" : "s"} absent, ${hours(all("ot"))} hours of overtime so far.` : "") +
-      (wholeMonth ? "" : " Pay is only worked out for a whole month.");
+    $("[data-rep-title]").textContent = periodName();
+    $("[data-rep-note]").textContent = `${nice(report.from)} to ${nice(report.to)}, ${span} days.` + (wholeMonth ? "" : " Pay is only worked out for a whole month.");
+    repStats(wholeMonth);
     register(report.staff);
     lateEarly();
-    const head = ["Staff", ["Present", "num"], ["Half day", "num"], ["Absent", "num"], ["Paid leave", "num"], ["Unpaid leave", "num"], ["Off & holidays", "num"],
-      ["Late (times)", "num"], ["Late (total)", "num"], ["Hours worked", "num"], ["Overtime (h)", "num"], ["Overtime pay", "num"], ["Unpaid days", "num"], ["Salary", "num"]];
-    if (wholeMonth) head.push(["Added", "num"], ["Taken off", "num"], ["Pay", "num"], "");
+    /* "opt": left off a phone's card for each person (the payslip has it all) */
+    const head = ["Staff", ["Present", "num"], ["Half day", "num"], ["Absent", "num"], ["Paid leave", "num opt"], ["Unpaid leave", "num opt"], ["Off & holidays", "num opt"],
+      ["Late (times)", "num"], ["Late (total)", "num opt"], ["Hours worked", "num opt"], ["Overtime (h)", "num"], ["Overtime pay", "num opt"], ["Unpaid days", "num opt"], ["Salary", "num"]];
+    if (wholeMonth) head.push(["Added", "num opt"], ["Taken off", "num opt"], ["Pay", "num"], "");
     const S = report.staff;
     const n = (v, cls = "") => ({ v: v || v === 0 ? v : "—", cls: "num " + cls });
     const tot = k => S.reduce((a, s) => a + s.summary[k], 0);
@@ -1042,10 +1079,48 @@
     const foot = ["Total", n(tot("present")), "", n(tot("absent")), "", "", "", n(tot("late")), "", n(hours(tot("worked"))), n(hours(tot("ot"))), n(rs(tot("otPay"))), "", n(rs(S.reduce((a, s) => a + (s.salary || 0), 0)))];
     if (wholeMonth) foot.push(n(rs(tot("bonus") + tot("allowance"))), n(rs(tot("takenOff"))), n(rs(tot("pay"))), "");
     fill($("[data-rep-table]"), head, rows, { foot: S.length ? foot : null, rowProps: i => ({ className: "click", title: "See every day", onclick: () => detail(S[i]) }) });
-    $("[data-rep-detail]").hidden = true;
     $("[data-slips-print]").hidden = !wholeMonth || !S.length;
-    if (slipPin && wholeMonth && S.some(s => s.pin === slipPin)) openSlip(slipPin, false); else closeSlip();
+    if (slipPin && wholeMonth && S.some(s => s.pin === slipPin)) openSlip(slipPin); else closeSlip();
   }
+
+  /* the month in four numbers, like Today's; each one takes you to its list */
+  function repStats(wholeMonth) {
+    const S = report.staff, tot = k => S.reduce((a, s) => a + (s.summary[k] || 0), 0), box = $("[data-rep-stats]");
+    box.textContent = "";
+    const most = (k, f) => { const top = S.filter(s => s.summary[k]).sort((a, b) => b.summary[k] - a.summary[k]).slice(0, 2); return top.map(s => `${s.displayName} ${f(s.summary[k])}`).join(", "); };
+    const stat = (cls, label, num, sub, go) => box.append(el("button", { type: "button", className: "stat stat--" + cls, onclick: go },
+      el("span", { className: "stat__label" }, label), el("span", { className: "stat__num" }, num), el("span", { className: "stat__sub" }, sub || "")));
+    const paid = S.filter(s => s.salary || s.summary.gross);
+    stat("late", "Late arrivals", String(tot("late")), tot("lateMin") ? dur(tot("lateMin")) : "", () => { $('[data-le="late"]').click(); toCard($("[data-le-card]")); });
+    stat("absent", "Days absent", String(tot("absent")), most("absent", String), () => toCard($("[data-rep-register]").closest(".card")));
+    stat("ot", "Overtime (h)", tot("ot") ? hours(tot("ot")) : "—", tot("otPay") ? rs(tot("otPay")) : "", () => toCard($("[data-rep-totals]")));
+    if (wholeMonth && paid.length) stat("ok", "To pay", [el("small", {}, "Rs "), rs(paid.reduce((a, s) => a + s.summary.pay, 0)).slice(3)], "", () => toCard($("[data-rep-totals]")));
+  }
+  /* scroll to a card and light it up for a moment */
+  const smooth = () => matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  function toCard(card) {
+    card.scrollIntoView({ behavior: smooth(), block: "start" });
+    card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+  }
+  /* ‹ › beside the month's name: the month before or after, sliding in from its side */
+  function stepMonth(n) {
+    const f = $("[data-rep-from]").value || today(), b = bsOf(f);
+    if (b) {
+      let y = b.y, m = b.m + n;
+      if (m < 1) { m = 12; y--; } else if (m > 12) { m = 1; y++; }
+      if (!$$("[data-rep-bs-year] option").some(o => +o.value === y)) return;
+      bsMonth(y, m);
+    } else {
+      const d = new Date(f.slice(0, 7) + "-01T00:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n);
+      const m = d.toISOString().slice(0, 7);
+      $("[data-rep-month]").value = m; $("[data-rep-from]").value = m + "-01"; $("[data-rep-to]").value = monthEnd(m);
+    }
+    loadReport().then(() => ["[data-rep-title]", "[data-rep-stats]", "[data-rep-register]"].forEach(s => {
+      const e = $(s); e.classList.remove("slide-next", "slide-prev"); void e.offsetWidth; e.classList.add(n > 0 ? "slide-next" : "slide-prev");
+    })).catch(() => {});
+  }
+  $("[data-rep-prev]").addEventListener("click", () => stepMonth(-1));
+  $("[data-rep-next]").addEventListener("click", () => stepMonth(1));
 
   /* ----------------------------------------------------------- payslips */
   let slipPin = null;
@@ -1090,7 +1165,7 @@
       el("div", { className: "slip__sign" }, el("span", {}, "Received by"), el("span", {}, "For Hotel Perfect Plaza")));
   }
 
-  function openSlip(pin, scroll = true) {
+  function openSlip(pin) {
     const s = report.staff.find(x => x.pin === pin);
     if (!s) return;
     slipPin = pin;
@@ -1103,11 +1178,11 @@
     const f = $("[data-adj-form]"), t = today();
     if (!f.day.value || f.day.value < report.from || f.day.value > report.to) f.day.value = t >= report.from && t <= report.to ? t : report.to;
     hints();
-    $("[data-slip]").hidden = false;
-    if (scroll) $("[data-slip]").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!$("[data-slip]").open) $("[data-slip]").showModal();
   }
-  function closeSlip() { slipPin = null; $("[data-slip]").hidden = true; }
+  function closeSlip() { slipPin = null; if ($("[data-slip]").open) $("[data-slip]").close(); }
   $("[data-slip-close]").addEventListener("click", closeSlip);
+  $("[data-slip]").addEventListener("close", () => { slipPin = null; });
 
   $("[data-adj-form]").addEventListener("submit", async e => {
     e.preventDefault();
@@ -1182,17 +1257,17 @@
 
   function detail(s) {
     $("[data-rep-detail-title]").textContent = `${s.displayName}: every day`;
-    fill($("[data-rep-detail-table]"), ["Date", "In", "Out", ["Worked", "num"], ["Late", "num"], ["Left early", "num"], ["Overtime", "num"], "", "Punches"],
+    $("[data-rep-detail-sub]").textContent = periodName();
+    fill($("[data-rep-detail-table]"), ["Date", "In", "Out", ["Worked", "num"], ["Late", "num"], ["Left early", "num opt"], ["Overtime", "num"], "", ["Punches", "opt"]],
       s.days.map(x => [
         nice(x.day), clock(x.in) || "—", x.inside ? "still in" : clock(x.out) || "—",
         { v: dur(x.worked), cls: "num" }, { v: x.late ? dur(x.late) : "—", cls: "num" + (x.late ? " warn" : "") },
         { v: x.early ? dur(x.early) : "—", cls: "num" }, { v: x.ot ? dur(x.ot) : "—", cls: "num" + (x.ot ? " good" : "") },
         { v: chips(x, x.day === today()) }, { v: times(x), cls: "times" }
       ]));
-    $("[data-rep-detail]").hidden = false;
-    $("[data-rep-detail]").scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!$("[data-rep-detail]").open) $("[data-rep-detail]").showModal();
   }
-  $("[data-rep-detail-close]").addEventListener("click", () => { $("[data-rep-detail]").hidden = true; });
+  $("[data-rep-detail-close]").addEventListener("click", () => $("[data-rep-detail]").close());
   $("[data-rep-print]").addEventListener("click", () => window.print());
 
   const STATUS = { present: "Present", late: "Late", half: "Half day", absent: "Absent", leave: "Leave", holiday: "Holiday", off: "Day off", upcoming: "", none: "Not joined" };
@@ -1235,16 +1310,22 @@
     const f = e.target, m = $("[data-punch-msg]");
     const r = await post("punch", { pin: f.pin.value, day: f.day.value, time: f.time.value, note: f.note.value });
     if (!r.ok) return msg(m, errText(r));
-    msg(m, "Added.", true);
+    done("punch", "Added.", faceOf(f.pin.value));
     f.time.value = ""; f.note.value = "";
     loadPunches();
   });
+  /* a small face for a note about someone */
+  function faceOf(pin) {
+    const s = staff.find(x => x.pin === pin);
+    if (!s) return null;
+    const a = avatar(s.name || "#" + pin, pin); a.classList.add("avatar--sm"); return a;
+  }
 
   /* -------------------------------------------------------------- leave */
   async function loadLeave() {
     const r = await api("leave", { query: { from: $("[data-lv-from]").value, to: $("[data-lv-to]").value } });
     fill($("[data-lv-table]"), ["Date", "Staff", "Kind", "Note", ""], r.json.leave.map(l => [
-      nice(l.day), l.name || "Staff #" + l.pin, LEAVE[l.kind], l.note,
+      nice(l.day), { v: l.name || "Staff #" + l.pin, cls: "name" }, LEAVE[l.kind], l.note,
       btn("Remove", async () => { await post("leave", { pin: l.pin, from: l.day, kind: "none" }); loadLeave(); })
     ]));
     fill($("[data-hol-table]"), ["Date", "Holiday", ""], r.json.holidays.map(h => [
@@ -1257,7 +1338,7 @@
     const f = e.target, m = $("[data-leave-msg]");
     const r = await post("leave", { pin: f.pin.value, from: f.from.value, to: f.to.value || f.from.value, kind: f.kind.value, note: f.note.value });
     if (!r.ok) return msg(m, errText(r));
-    msg(m, f.kind.value === "none" ? "Leave removed." : "Saved.", true);
+    done("leave", f.kind.value === "none" ? "Leave removed." : "Saved.", faceOf(f.pin.value));
     loadLeave();
   });
   $("[data-hol-form]").addEventListener("submit", async e => {
@@ -1265,8 +1346,8 @@
     const f = e.target, m = $("[data-hol-msg]");
     const r = await post("holiday", { day: f.day.value, name: f.name.value });
     if (!r.ok) return msg(m, errText(r));
-    msg(m, "Added.", true);
-    f.reset(); hints(); loadLeave();
+    done("hol", "Added.");
+    f.reset(); loadLeave();
   });
 
   /* ----------------------------------------------------------- settings */
@@ -1494,7 +1575,6 @@
     installHelp();
   }));
   $("[data-install-close]").addEventListener("click", () => $("[data-install-help]").close());
-  $("[data-install-help]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });
   /* back in the app after a while: show what changed straight away */
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden && pass && current === "day" && $("[data-day-date]").value === today()) loadDay().catch(() => {});

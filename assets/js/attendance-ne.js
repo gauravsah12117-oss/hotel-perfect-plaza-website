@@ -39,6 +39,11 @@ window.HPP_NE = (function () {
     "Namaste": "नमस्ते", "Good morning": "शुभ प्रभात", "Good afternoon": "नमस्कार", "Good evening": "शुभ सन्ध्या",
     "Who is in the hotel": "होटलमा को को छन्", "Find a person": "व्यक्ति खोज्नुहोस्", "Updated just now": "भर्खरै अद्यावधिक",
     "Choose a photo": "फोटो छान्नुहोस्", "Remove photo": "फोटो हटाउनुहोस्",
+    "Month before": "अघिल्लो महिना", "Month after": "पछिल्लो महिना", "Choose a date": "मिति छान्नुहोस्",
+    "Add a punch": "हाजिरी थप्नुहोस्", "Several days": "धेरै दिन", "Add leave": "बिदा थप्नुहोस्",
+    "Booked leave and holidays": "राखिएका बिदा र चाडपर्व", "Change their details": "विवरण बदल्नुहोस्",
+    "Tap a person to change their details, shift, salary or photo.": "विवरण, सिफ्ट, तलब वा फोटो बदल्न व्यक्तिमा थिच्नुहोस्।",
+    "Late arrivals": "ढिलो आएको", "Days absent": "अनुपस्थित दिन", "To pay": "दिनुपर्ने",
     "A face photo, shown on Today and on the person's card. Saved with the other details.": "अनुहारको फोटो, ‘आज’ र व्यक्तिको कार्डमा देखिन्छ। अरू विवरणसँगै सेभ हुन्छ।",
     "Press Save to keep the new photo.": "नयाँ फोटो राख्न ‘सेभ गर्नुहोस्’ थिच्नुहोस्।",
     "Press Save to take the photo off.": "फोटो हटाउन ‘सेभ गर्नुहोस्’ थिच्नुहोस्।",
@@ -150,8 +155,8 @@ window.HPP_NE = (function () {
     "Usual shift starts": "सामान्य सिफ्ट सुरु", "Usual shift ends": "सामान्य सिफ्ट सकिने",
     "Late after (minutes)": "यति मिनेटपछि ढिलो", "Overtime counts from (minutes)": "यति मिनेटदेखि ओभरटाइम",
     "Overtime rate (× hourly pay)": "ओभरटाइम दर (× प्रति घण्टा तलब)",
-    "\"Late after 10\" means 9:10 is on time and 9:11 is 11 minutes late. \"Overtime from 30\" means staying 20 minutes extra isn't overtime, and 45 minutes is.":
-      "“10 मिनेटपछि ढिलो” भनेको 9:10 समयमै हो र 9:11 मा 11 मिनेट ढिलो। “30 मिनेटदेखि ओभरटाइम” भनेको 20 मिनेट बढी बस्नु ओभरटाइम होइन, 45 मिनेट हो।",
+    "\"Late after 10\" means 9:10 is on time and 9:11 is 11 minutes late. \"Overtime from 60\" means staying 30 minutes extra isn't overtime, and an hour is.":
+      "“10 मिनेटपछि ढिलो” भनेको 9:10 समयमै हो र 9:11 मा 11 मिनेट ढिलो। “60 मिनेटदेखि ओभरटाइम” भनेको 30 मिनेट बढी बस्नु ओभरटाइम होइन, एक घण्टा हो।",
     "Backup": "ब्याकअप",
     "A copy of every record on this device: the staff, their leave, the holidays, the settings and a year's punches. Download one every few months and keep it safe (email it to yourself, or a pen drive).":
       "सबै रेकर्डको प्रति यो उपकरणमा: कर्मचारी, उनीहरूको बिदा, पर्व बिदा, सेटिङ र एक वर्षको हाजिरी। केही महिनामा एक पटक डाउनलोड गरेर सुरक्षित राख्नुहोस् (आफैँलाई इमेल, वा पेन ड्राइभ)।",
@@ -169,8 +174,8 @@ window.HPP_NE = (function () {
 
     /* the roster */
     "Weekly roster": "साप्ताहिक रोस्टर", "Week before": "अघिल्लो हप्ता", "Week after": "अर्को हप्ता", "Copy last week": "गएको हप्ता जस्तै",
-    "Who works which shift each day. \"Usual\" is the person's own shift (below). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.":
-      "हरेक दिन को कुन सिफ्टमा काम गर्छ। “सामान्य” भनेको त्यो व्यक्तिको आफ्नै सिफ्ट हो (तल)। ढिलो र ओभरटाइम यहाँ छानेको सिफ्ट अनुसार हुन्छ। सिफ्टहरू सेटिङमा मिलाइन्छन्।",
+    "Who works which shift each day. \"Usual\" is the person's own shift (in the list above). Lateness and overtime follow the shift chosen here. The shifts themselves are set in Settings.":
+      "हरेक दिन को कुन सिफ्टमा काम गर्छ। “सामान्य” भनेको त्यो व्यक्तिको आफ्नै सिफ्ट हो (माथिको सूचीमा)। ढिलो र ओभरटाइम यहाँ छानेको सिफ्ट अनुसार हुन्छ। सिफ्टहरू सेटिङमा मिलाइन्छन्।",
     "Usual": "सामान्य", "Usual: day off": "सामान्य: बिदा",
     "Copy last week's roster into this week? This week's choices are replaced.": "गएको हप्ताको रोस्टर यो हप्तामा सार्ने? यो हप्ताको छनोट बदलिन्छ।",
     "Copied.": "सारियो।", "Morning": "बिहान", "Day": "दिन", "Evening": "बेलुका", "Night": "राति",
@@ -320,6 +325,7 @@ window.HPP_NE = (function () {
     [/^(.+): every day$/, m => m[1] + ": हरेक दिन"],
     [/^(.+) \(no\. (\w+)\)$/, m => m[1] + " (नं. " + m[2] + ")"],
     [/^Staff #(\w+)$/, m => "कर्मचारी #" + m[1]],
+    [/^(\d+) people on the staff$/, m => "कर्मचारी: " + m[1] + " जना"],
     [/^Edit (.+)$/, m => m[1] + ": सम्पादन"],
     [/^Machine no\. (.+) is already in the list\. Use its Edit button\.$/, m => "मेसिन नं. " + m[1] + " पहिल्यै सूचीमा छ। त्यसको ‘सम्पादन’ बटन थिच्नुहोस्।"],
     [/^(\d+) min fast$/, m => m[1] + " मिनेट छिटो"],
