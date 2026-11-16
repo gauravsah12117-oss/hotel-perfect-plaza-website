@@ -38,6 +38,12 @@ window.HPP_NE = (function () {
     "Machine online": "मेसिन अनलाइन",
     "Namaste": "नमस्ते", "Good morning": "शुभ प्रभात", "Good afternoon": "नमस्कार", "Good evening": "शुभ सन्ध्या",
     "Who is in the hotel": "होटलमा को को छन्", "Find a person": "व्यक्ति खोज्नुहोस्", "Updated just now": "भर्खरै अद्यावधिक",
+    "Choose a photo": "फोटो छान्नुहोस्", "Remove photo": "फोटो हटाउनुहोस्",
+    "A face photo, shown on Today and on the person's card. Saved with the other details.": "अनुहारको फोटो, ‘आज’ र व्यक्तिको कार्डमा देखिन्छ। अरू विवरणसँगै सेभ हुन्छ।",
+    "Press Save to keep the new photo.": "नयाँ फोटो राख्न ‘सेभ गर्नुहोस्’ थिच्नुहोस्।",
+    "Press Save to take the photo off.": "फोटो हटाउन ‘सेभ गर्नुहोस्’ थिच्नुहोस्।",
+    "That file isn't a picture this phone can open. Try a JPEG or PNG.": "यो फाइल यो फोनले खोल्न सक्ने फोटो होइन। JPEG वा PNG फोटो छान्नुहोस्।",
+    "The details are saved, but not the photo. Choose it again and press Save.": "विवरण सेभ भयो, तर फोटो भएन। फोटो फेरि छानेर ‘सेभ गर्नुहोस्’ थिच्नुहोस्।",
 
     /* today */
     "Still to set up": "मिलाउन बाँकी",

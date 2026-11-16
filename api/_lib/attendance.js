@@ -138,6 +138,14 @@ addSchema([
      name     text NOT NULL DEFAULT '',
      added_at timestamptz NOT NULL DEFAULT now(),
      last_ok  timestamptz
+   )`,
+  /* each person's photo: a small square JPEG as a data: URL (about 15 KB),
+     apart from staff so the staff list stays light. Only ever sent to a
+     signed-in owner (action=photos), never as a public file. */
+  `CREATE TABLE IF NOT EXISTS staff_photos (
+     pin        text PRIMARY KEY,
+     photo      text NOT NULL,
+     updated_at timestamptz NOT NULL DEFAULT now()
    )`
 ]);
 

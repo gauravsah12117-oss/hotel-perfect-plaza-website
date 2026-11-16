@@ -118,7 +118,7 @@ export default handle(async (req, res) => {
 
   if (get && action === "backup") {
     const year = /^\d{4}$/.test(String(req.query.year || "")) ? +req.query.year : +dayOf(nowNepal()).slice(0, 4);
-    const [staff, leave, holidays, settings, machinesRows, punches, years] = await Promise.all([
+    const [staff, leave, holidays, settings, machinesRows, punches, years, photos] = await Promise.all([
       q(`SELECT ${STAFF_COLS} FROM staff ${STAFF_ORDER}`),
       q(`SELECT pin, day::text AS day, kind, note FROM staff_leave ORDER BY day, pin`),
       q(`SELECT day::text AS day, name FROM holidays ORDER BY day`),
@@ -126,11 +126,12 @@ export default handle(async (req, res) => {
       q(`SELECT sn, name, approved FROM att_devices ORDER BY sn`),
       q(`SELECT pin, to_char(at, 'YYYY-MM-DD HH24:MI:SS') AS at, source, ignored, note FROM punches
          WHERE at >= $1::timestamp AND at < $2::timestamp ORDER BY at, id`, [`${year}-01-01 00:00:00`, `${year + 1}-01-01 00:00:00`]),
-      q(`SELECT DISTINCT EXTRACT(YEAR FROM at)::int AS y FROM punches ORDER BY y`)
+      q(`SELECT DISTINCT EXTRACT(YEAR FROM at)::int AS y FROM punches ORDER BY y`),
+      q(`SELECT pin, photo FROM staff_photos ORDER BY pin`)
     ]);
     return json(res, 200, {
       hotel: "Hotel Perfect Plaza", made: wallText(nowNepal()), year, years: years.map(r => r.y),
-      staff, leave, holidays, settings, machines: machinesRows,
+      staff, leave, holidays, settings, machines: machinesRows, photos,
       punchColumns: ["pin", "at", "source", "ignored", "note"],
       punches: punches.map(p => [p.pin, p.at, p.source, p.ignored ? 1 : 0, p.note])
     });
@@ -259,6 +260,25 @@ export default handle(async (req, res) => {
     }
     const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
     return json(res, 200, { staff: rows });
+  }
+
+  /* staff photos: fetched once when the app opens; set or removed one at a time */
+  if (get && action === "photos") {
+    const rows = await q(`SELECT pin, photo FROM staff_photos`);
+    return json(res, 200, { photos: Object.fromEntries(rows.map(r => [r.pin, r.photo])) });
+  }
+  if (post && action === "photo") {
+    if (!okPin(b.pin)) return json(res, 400, { error: "pin" });
+    if (b.photo == null || b.photo === "") {
+      await q(`DELETE FROM staff_photos WHERE pin = $1`, [b.pin]);
+      return json(res, 200, { ok: true });
+    }
+    const photo = String(b.photo);
+    if (photo.length > 250000 || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)) return json(res, 400, { error: "photo" });
+    if (!(await q(`SELECT 1 FROM staff WHERE pin = $1`, [b.pin])).length) return json(res, 400, { error: "pin" });
+    await q(`INSERT INTO staff_photos (pin, photo) VALUES ($1, $2)
+      ON CONFLICT (pin) DO UPDATE SET photo = EXCLUDED.photo, updated_at = now()`, [b.pin, photo]);
+    return json(res, 200, { ok: true });
   }
 
   if (get && action === "leave") {

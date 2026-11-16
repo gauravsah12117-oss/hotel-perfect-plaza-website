@@ -532,6 +532,30 @@ html[lang="ne"] .welcome__hello { font: 600 clamp(1.35rem, 2.6vw, 1.85rem)/1.3 v
 .rack__key i.upcoming { box-shadow: inset 0 0 0 1.5px rgba(240, 213, 138, .6); }
 .rack__key i.away { background: rgba(255, 255, 255, .15); }
 
+/* ======================================================= staff photos */
+.avatar { overflow: hidden; }
+.avatar--photo { background: var(--line); }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar--sm { width: 2rem; height: 2rem; font-size: .72rem; }
+/* on a tag: the photo, or the initials in the same round frame, so every tag is the same size */
+.tag__plate { padding-top: .9rem; gap: .2rem; }
+.tag__face, .tag b { width: 2.35rem; height: 2.35rem; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 0 0 2px rgba(255, 255, 255, .75), 0 1px 3px rgba(0, 0, 0, .3); }
+.tag__face { object-fit: cover; }
+.tag b { font-size: .9rem; background: rgba(0, 0, 0, .14); box-shadow: 0 0 0 2px rgba(255, 255, 255, .4); }
+.tag--absent .tag__face { box-shadow: 0 0 0 2px #fff, 0 1px 3px rgba(0, 0, 0, .3); }
+.tag--gone .tag__face, .tag--upcoming .tag__face, .tag--away .tag__face { filter: saturate(.55); box-shadow: 0 0 0 2px rgba(246, 234, 219, .35); }
+.att td.name .who { display: inline-flex; align-items: center; gap: .6rem; }
+.photofield { display: flex; align-items: center; gap: 1rem; }
+.photofield__act { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.photofield__act .hint { flex-basis: 100%; margin: 0; }
+.photofield .avatar--big { width: 4.5rem; height: 4.5rem; font-size: 1.4rem; }
+.filepick { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.photofield label.btn { position: relative; cursor: pointer; font-weight: 600; }
+.photofield label.btn:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.sheet__head .avatar--photo { cursor: zoom-in; }
+.sheet__photo { position: fixed; inset: 0; z-index: 5; display: grid; place-items: center; padding: 1.5rem; background: rgba(33, 26, 22, .82); cursor: zoom-out; }
+.sheet__photo img { width: min(22rem, 100%); aspect-ratio: 1; object-fit: cover; border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, .5); }
+
 /* ================================================ Today's tools bar */
 .daybar__end { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
 .find { display: flex; align-items: center; gap: .45rem; flex: 1 1 11rem; max-width: 19rem; min-height: 2.4rem; padding: 0 .75rem; border: 1px solid var(--line-2); border-radius: 10px; background: #fff; color: var(--ink-3); cursor: text; }
@@ -622,8 +646,10 @@ body { overscroll-behavior-y: contain; }             /* our own pull-to-refresh,
   .rack__tags { gap: .7rem .32rem; }
   .tag { width: 3.05rem; }
   .tag__plate { padding: .62rem .1rem .35rem; border-radius: 7px 7px 12px 12px; }
-  .tag b { font-size: .86rem; }
   .tag small { font-size: .6rem; }
+  .tag__face, .tag b { width: 2rem; height: 2rem; }
+  .tag b { font-size: .74rem; }
+  .tag__plate { padding-top: .82rem; }
   .rack__key { gap: .25rem .8rem; font-size: .74rem; }
   .daybar { gap: .5rem; }
   .find { order: 3; flex-basis: 100%; max-width: none; }

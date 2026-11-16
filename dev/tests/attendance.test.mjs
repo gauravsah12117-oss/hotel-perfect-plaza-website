@@ -362,6 +362,20 @@ test("the backup has everyone, their leave and holidays, and the year's punches"
   assert.deepEqual(b.years, [2026]);
 });
 
+test("a staff photo is kept only for someone on the staff list, only as a picture, and can be taken off", async () => {
+  const jpeg = "data:image/jpeg;base64," + Buffer.from("not really a jpeg, but base64").toString("base64");
+  await owner("staff", { method: "POST", body: { pin: "41", name: "Gita" } });
+  assert.equal((await owner("photo", { method: "POST", body: { pin: "41", photo: jpeg } })).status, 200);
+  assert.equal((await owner("photos")).json.photos["41"], jpeg);
+  assert.equal((await owner("backup", { query: { year: "2026" } })).json.photos.find(p => p.pin === "41").photo, jpeg);
+  assert.equal((await owner("photo", { method: "POST", body: { pin: "nobody", photo: jpeg } })).json.error, "pin");
+  for (const bad of ["data:image/svg+xml;base64,PHN2Zz4=", "javascript:alert(1)", "data:image/jpeg;base64,<script>", "data:image/jpeg;base64," + "A".repeat(260000)])
+    assert.equal((await owner("photo", { method: "POST", body: { pin: "41", photo: bad } })).json.error, "photo");
+  assert.equal((await call(attendanceRoute, { query: { action: "photos" } })).status, 401);   /* not without signing in */
+  await owner("photo", { method: "POST", body: { pin: "41", photo: null } });
+  assert.equal((await owner("photos")).json.photos["41"], undefined);
+});
+
 test("a stray first punch after the shift ended isn't counted as hours late", () => {
   const d = dayRecord({ staff: staff(), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-02 00:33") });
   assert.equal(d.late, 0);

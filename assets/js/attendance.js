@@ -145,7 +145,8 @@
   /* ------------------------------------------------------------ sign in */
   let timer = null;
   function signOut(text) {
-    pass = null; try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); } catch (e) {}
+    pass = null; try { sessionStorage.removeItem(KEY); localStorage.removeItem(KEY); localStorage.removeItem(PHOTO_KEY); } catch (e) {}
+    photos = {};                                                      /* staff faces don't stay on a signed-out phone */
     clearInterval(timer);
     $("[data-shell]").hidden = true; $("[data-signin]").hidden = false;
     $("#pw").value = "";
@@ -171,8 +172,10 @@
     $("[data-bulk-form]").from.value ||= t; $("[data-bulk-form]").to.value ||= t;
     $("[data-leave-form]").from.value ||= t;
     hints();
+    const faces = loadPhotos().catch(() => false);                   /* the faces kept on this phone show meanwhile */
     await loadStaff();
     show((location.hash.slice(1) || "day"));
+    faces.then(changed => { if (changed) loaders[current]().catch(() => {}); });
     if (current !== "day") api("today").then(r => machinePill(r.json.machines)).catch(() => {});
     clearInterval(timer);
     timer = setInterval(() => { if (pass && current === "day" && $("[data-day-date]").value === today() && !document.hidden) loadDay().catch(() => {}); }, 30000);
@@ -216,6 +219,45 @@
   }
   $$("[data-tab]").forEach(b => b.addEventListener("click", () => show(b.dataset.tab)));
 
+  /* ------------------------------------------------------------- photos */
+  /* Everyone's photo, fetched once when the app opens (about 15 KB each) and
+     kept on this device so faces show straight away next time. */
+  const PHOTO_KEY = "hpp-attendance-photos";
+  let photos = {};
+  try { photos = JSON.parse(localStorage.getItem(PHOTO_KEY) || "{}") || {}; } catch (e) { photos = {}; }
+  const keepPhotos = () => { try { localStorage.setItem(PHOTO_KEY, JSON.stringify(photos)); } catch (e) { /* full: they still show this time */ } };
+  async function loadPhotos() {
+    const r = await api("photos");
+    if (!r.ok) return false;
+    const before = JSON.stringify(photos);
+    photos = r.json.photos || {};
+    keepPhotos();
+    return JSON.stringify(photos) !== before;
+  }
+
+  /* a chosen picture → a square 320 × 320 JPEG, cropped a little above the
+     middle (where a face usually is) */
+  function squarePhoto(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("read"));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("image"));
+        img.onload = () => {
+          const w = img.naturalWidth, h = img.naturalHeight, side = Math.min(w, h), S = 320;
+          const c = document.createElement("canvas"); c.width = c.height = S;
+          const g = c.getContext("2d");
+          g.fillStyle = "#fff"; g.fillRect(0, 0, S, S);
+          g.drawImage(img, (w - side) / 2, Math.max(0, (h - side) * .3), side, side, 0, 0, S, S);
+          resolve(c.toDataURL("image/jpeg", .82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   /* ------------------------------------------------------------- staff */
   let staff = [];
   async function loadStaff() {
@@ -241,7 +283,7 @@
     fill($("[data-staff-table]"), [["No.", "num"], "Name", "Job", "Shift", "Day off", ["Salary", "num"], "SSF", "Messages", "", ["Punches", "num"], ""],
       staff.map(s => [
         { v: s.pin, cls: "num" },
-        { v: s.name || el("span", { className: "warn" }, "No name yet"), cls: "name" },
+        { v: el("span", { className: "who" }, (() => { const a = avatar(s.name || "#" + s.pin, s.pin); a.classList.add("avatar--sm"); return a; })(), s.name || el("span", { className: "warn" }, "No name yet")), cls: "name" },
         { v: [s.job, s.department || s.branch ? el("small", {}, [s.department, s.branch].filter(Boolean).join(" · ")) : null], cls: "job" }, s.shift_start ? [`${clock(s.shift_start)} – ${clock(s.shift_end)}`, s.break_start ? el("small", { className: "muted" }, ` (break ${clock(s.break_start)} – ${clock(s.break_end)})`) : null] : el("span", { className: "muted" }, "usual hours"),
         s.weekly_off == null ? "—" : DAYS[s.weekly_off],
         { v: s.salary ? rs(s.salary) : "—", cls: "num" },
@@ -261,6 +303,7 @@
     f.notify.checked = s.notify; f.active.checked = s.active; f.ssf.checked = !!s.ssf;
     f.pin.readOnly = true;
     hints();
+    newPhoto = undefined; photoPreview(s.name || "#" + s.pin, s.pin);
     $("[data-staff-form-title]").textContent = "Edit " + (s.name || "Staff #" + s.pin);
     msg($("[data-staff-msg]"), "");
     f.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -269,7 +312,33 @@
     const f = $("[data-staff-form]");
     f.pin.readOnly = false;
     $("[data-staff-form-title]").textContent = "Add staff";
+    newPhoto = undefined; photoPreview("?", "");
     setTimeout(() => { f.notify.checked = true; f.active.checked = true; hints(); });
+  });
+
+  /* the photo in the form: undefined = unchanged, null = take it off, a data: URL = the new one.
+     It is saved with the rest when Save is pressed. */
+  let newPhoto;
+  function photoPreview(name, pin) {
+    const src = newPhoto === undefined ? photos[pin] : newPhoto;
+    const p = $("[data-photo-preview]");
+    p.textContent = ""; p.classList.toggle("avatar--photo", !!src);
+    p.append(src ? el("img", { src, alt: "" }) : initials(name));
+    $("[data-photo-remove]").hidden = !src;
+  }
+  $("[data-photo-file]").addEventListener("change", async e => {
+    const file = e.target.files[0], f = $("[data-staff-form]");
+    e.target.value = "";
+    if (!file) return;
+    try { newPhoto = await squarePhoto(file); }
+    catch (err) { return msg($("[data-staff-msg]"), "That file isn't a picture this phone can open. Try a JPEG or PNG."); }
+    photoPreview(f.name.value || "?", f.pin.value.trim());
+    msg($("[data-staff-msg]"), "Press Save to keep the new photo.", true);
+  });
+  $("[data-photo-remove]").addEventListener("click", () => {
+    const f = $("[data-staff-form]");
+    newPhoto = null; photoPreview(f.name.value || "?", f.pin.value.trim());
+    msg($("[data-staff-msg]"), "Press Save to take the photo off.", true);
   });
   $("[data-staff-form]").addEventListener("submit", async e => {
     e.preventDefault();
@@ -283,10 +352,16 @@
       salary: f.salary.value, ot_rate: f.ot_rate.value, joined: f.joined.value, notify: f.notify.checked, active: f.active.checked, ssf: f.ssf.checked
     });
     if (!r.ok) return msg(m, errText(r));
-    msg(m, "Saved.", true);
+    if (newPhoto !== undefined) {
+      const pin = f.pin.value.trim(), p = await post("photo", { pin, photo: newPhoto });
+      if (!p.ok) return msg(m, "The details are saved, but not the photo. Choose it again and press Save.");
+      if (newPhoto) photos[pin] = newPhoto; else delete photos[pin];
+      keepPhotos(); newPhoto = undefined;
+    }
     await loadStaff();
     const s = staff.find(x => x.pin === f.pin.value.trim());
     if (s) editStaff(s);
+    msg(m, "Saved.", true);                                          /* after editStaff, which clears the message */
   });
 
   /* ---------------------------------------------- departments and branches */
@@ -509,7 +584,9 @@
         placed.add(r.pin);
         const first = String(r.name).replace(/^Staff #/, "#").split(/\s+/)[0];
         tags.append(el("button", { type: "button", role: "listitem", className: "tag tag--" + k + (fresh.has(r.pin) ? " swing" : ""), "aria-label": `${r.name}, ${label}`, title: label, onclick: () => openSheet(r) },
-          el("span", { className: "tag__plate" }, el("b", { "data-no-tr": true }, initials(r.name)), el("small", {}, first))));
+          el("span", { className: "tag__plate" },
+            photos[r.pin] ? el("img", { className: "tag__face", src: photos[r.pin], alt: "", decoding: "async" }) : el("b", { "data-no-tr": true }, initials(r.name)),
+            el("small", {}, first))));
       }
       key.append(el("span", {}, el("i", { className: k }), label, " ", el("b", {}, String(list.length))));
     }
@@ -530,9 +607,12 @@
     const words = String(name).replace(/^Staff #/, "#").split(/\s+/).filter(Boolean);
     return (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
   }
+  /* the person's photo if there is one (Staff → Choose a photo), else their initials */
   function avatar(name, pin, big) {
     let h = 0; for (const c of String(pin)) h = (h * 31 + c.charCodeAt(0)) % 997;
-    return el("span", { className: "avatar" + (big ? " avatar--big" : ""), "data-c": String(h % 6), "aria-hidden": "true", "data-no-tr": true }, initials(name));
+    const src = photos[pin];
+    return el("span", { className: "avatar" + (big ? " avatar--big" : "") + (src ? " avatar--photo" : ""), "data-c": String(h % 6), "aria-hidden": "true", "data-no-tr": true },
+      src ? el("img", { src, alt: "", decoding: "async" }) : initials(name));
   }
 
   /* how much of the shift is done: a bar that fills through the day, blue past the end */
@@ -604,6 +684,10 @@
     sheetRow = r;
     const dlg = $("[data-sheet]");
     const av = avatar(r.name, r.pin, true); av.setAttribute("data-sheet-avatar", "");
+    if (photos[r.pin]) av.addEventListener("click", () => {           /* tap the face to see it bigger */
+      const big = el("div", { className: "sheet__photo", onclick: () => big.remove() }, el("img", { src: photos[r.pin], alt: r.name }));
+      dlg.append(big);
+    });
     $("[data-sheet-avatar]").replaceWith(av);
     $("[data-sheet-name]").textContent = r.name;
     $("[data-sheet-job]").textContent = [r.job, r.phone].filter(Boolean).join(" · ");
@@ -641,7 +725,10 @@
       if (dy > 90) { dlg.style.transform = "translateY(100%)"; setTimeout(() => { dlg.close(); dlg.style.transform = dlg.style.transition = ""; }, 200); }
       else dlg.style.transform = "";
     });
-    dlg.addEventListener("close", () => { const box = $("[data-toasts]"); if (dlg.contains(box)) document.body.append(box); });
+    dlg.addEventListener("close", () => {
+      const box = $("[data-toasts]"); if (dlg.contains(box)) document.body.append(box);
+      $$(".sheet__photo", dlg).forEach(n => n.remove());
+    });
   });
   $("[data-sheet]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });   /* tap outside */
   $("[data-sheet-leave]").addEventListener("submit", async e => {
