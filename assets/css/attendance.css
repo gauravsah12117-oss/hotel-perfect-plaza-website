@@ -114,6 +114,12 @@ main { width: 100%; max-width: 84rem; padding: 1.5rem clamp(1rem, 2.5vw, 2rem) 3
 .pagehead__note { color: var(--ink-2); max-width: 44rem; }
 .pick { display: flex; align-items: center; gap: .4rem; }
 .pick.wrap { flex-wrap: wrap; gap: .5rem .9rem; }
+/* Today's date box in Nepali dates: the phone's picker only knows English
+   dates, so the Nepali one is laid over its text; a tap still opens it */
+.datebox { position: relative; display: inline-flex; }
+.datebox__bs { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--ink); white-space: nowrap; }
+.datebox--bs input[type=date] { color: transparent; min-width: 11.5rem; cursor: pointer; }
+.datebox--bs input[type=date]::-webkit-datetime-edit { color: transparent; }
 
 .setup { border-left: 4px solid var(--late); background: #FFFBF1; }
 .setup ul { margin: .5rem 0 0; padding-left: 1.2rem; }

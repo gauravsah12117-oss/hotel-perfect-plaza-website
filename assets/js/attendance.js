@@ -40,12 +40,13 @@
 
   /* Dates in the Nepali calendar (वि.सं., nepali-date.js) or the English one,
      per device: the वि.सं. / AD button. Dates are kept and sent as English
-     (AD) dates throughout; only what is shown changes. Nepali-language
-     phones start on Nepali dates. */
+     (AD) dates throughout; only what is shown changes. Every phone starts
+     on Nepali dates. The choice is kept under a new name since that became
+     the start for everyone, so an AD choice made before then is reset. */
   const ND = window.NepaliDate || null;
-  const CAL_KEY = "hpp-attendance-cal";
-  let cal = lang === "ne" ? "bs" : "ad";
-  try { cal = localStorage.getItem(CAL_KEY) || cal; } catch (e) {}
+  const CAL_KEY = "hpp-attendance-date";
+  let cal = "bs";
+  try { cal = localStorage.getItem(CAL_KEY) || cal; localStorage.removeItem("hpp-attendance-cal"); } catch (e) {}
   if (!ND) cal = "ad";
   const bsOf = d => cal === "bs" ? ND.toBS(d) : null;          /* null outside the calendar's years: English */
   const bsText = d => { const b = ND && ND.toBS(d); return b ? `${b.d} ${ND.MONTHS[b.m - 1]} ${b.y}` : ""; };
@@ -497,6 +498,10 @@
   async function loadDay() {
     const d = $("[data-day-date]").value || today();
     const isToday = d === today();
+    const db = bsOf(d);                                              /* the date box, in Nepali dates */
+    $("[data-datebox]").classList.toggle("datebox--bs", !!db);
+    $("[data-day-bs]").hidden = !db;
+    $("[data-day-bs]").textContent = db ? `${db.d} ${ND.MONTHS[db.m - 1]} ${db.y}` : "";
     let rows;
     if (isToday) {
       const r = await api("today");
@@ -764,6 +769,8 @@
     })).catch(() => {});
   };
   $("[data-day-date]").addEventListener("change", () => loadDay());
+  /* with the Nepali date laid over it, a tap anywhere on the box opens the picker */
+  $("[data-day-date]").addEventListener("click", e => { if ($("[data-datebox]").classList.contains("datebox--bs")) try { e.target.showPicker(); } catch (x) {} });
   $("[data-day-prev]").addEventListener("click", () => go(-1));
   $("[data-day-next]").addEventListener("click", () => go(1));
 

@@ -28,11 +28,12 @@ export function dur(min, lang = "en") {
   return [h ? h + " h" : "", m || !h ? m + " min" : ""].filter(Boolean).join(" ");
 }
 
-/* "Thu 5 Nov (19 Kartik 2083)" / "बिहीबार, कात्तिक १९, २०८३" */
+/* "Thu 19 Kartik 2083 (5 Nov)" / "बिहीबार, कात्तिक १९, २०८३": the Nepali date first */
 export function date(day, lang) {
   const d = new Date(day + "T00:00:00Z"), ND = globalThis.NepaliDate, b = ND && ND.toBS(day);
   if (lang === "ne") return b ? `${NE_WD[d.getUTCDay()]}, ${ND.MONTHS_NE[b.m - 1]} ${neDigits(b.d)}, ${neDigits(b.y)}` : `${NE_WD[d.getUTCDay()]}, ${neDigits(day)}`;
-  return `${WD[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]}` + (b ? ` (${b.d} ${ND.MONTHS[b.m - 1]} ${b.y})` : "");
+  const ad = `${d.getUTCDate()} ${MON[d.getUTCMonth()]}`;
+  return `${WD[d.getUTCDay()]} ` + (b ? `${b.d} ${ND.MONTHS[b.m - 1]} ${b.y} (${ad})` : ad);
 }
 
 const T = {

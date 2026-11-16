@@ -396,7 +396,7 @@ test("the Nepali calendar: known dates, every day there and back, and the summar
     prev = b;
   }
   assert.equal(ND.toBS("2017-01-01"), null);                               /* before the table: English dates */
-  assert.equal(nepDate("2026-11-05", "en"), "Thu 5 Nov (19 Kartik 2083)");
+  assert.equal(nepDate("2026-11-05", "en"), "Thu 19 Kartik 2083 (5 Nov)");
   assert.equal(nepDate("2026-11-05", "ne"), "बिहीबार, कात्तिक १९, २०८३");
 });
 
