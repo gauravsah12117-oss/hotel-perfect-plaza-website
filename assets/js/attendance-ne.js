@@ -37,6 +37,7 @@ window.HPP_NE = (function () {
     "Sections": "खण्डहरू",
     "Machine online": "मेसिन अनलाइन",
     "Namaste": "नमस्ते", "Good morning": "शुभ प्रभात", "Good afternoon": "नमस्कार", "Good evening": "शुभ सन्ध्या",
+    "Who is in the hotel": "होटलमा को को छन्", "Find a person": "व्यक्ति खोज्नुहोस्", "Updated just now": "भर्खरै अद्यावधिक",
 
     /* today */
     "Still to set up": "मिलाउन बाँकी",
@@ -270,8 +271,26 @@ window.HPP_NE = (function () {
       .replace(/\bRs\b/g, "रु").replace(/\(by hand\)/g, "(हातैले)").replace(/\b(\d+) on leave\b/g, "$1 जना बिदामा");
   }
 
+  /* one part of a day mark's label (the register, the person card) */
+  function markPart(p) {
+    let m;
+    if (p === "still to come") return "आउन बाँकी";
+    if ((m = /^(.+) to (.+)$/.exec(p))) return inline(m[1]) + " देखि " + (m[2] === "now" ? "अहिलेसम्म" : m[2] === "no punch out" ? "? (निस्कँदा औँला लगाएको छैन)" : inline(m[2]) + " सम्म");
+    if ((m = /^(.+) overtime$/.exec(p))) return inline(m[1]) + " ओभरटाइम";
+    if ((m = /^planned: (.+)$/.exec(p))) return "तय भएको: " + (m[1] === "day off" ? "साप्ताहिक बिदा" : tr(m[1]));
+    return tr(p);
+  }
+
   /* [pattern, (match) → Nepali] — tried in order, on the whole phrase */
   const PATTERNS = [
+    [/^(.+) came in at (\d{1,2}:\d{2} [AP]M)$/, m => m[1] + " " + inline(m[2]) + " मा आइपुगे"],
+    [/^(.+) left at (\d{1,2}:\d{2} [AP]M)$/, m => m[1] + " " + inline(m[2]) + " मा गए"],
+    [/^(.+), (In the hotel now|Not come yet|Not due yet|Gone home|On leave or day off)$/, m => m[1] + ", " + W[m[2]]],
+    [/^Updated (\d+) min ago$/, m => m[1] + " मिनेटअघि अद्यावधिक"],
+    /* a day's mark in the register: "Mon, 3 Kartik: 9:02 AM to 6:10 PM, 9h worked, 24m late" */
+    [/^((?:Sun|Mon|Tue|Wed|Thu|Fri|Sat), [^:]+): (.+)$/, m => inline(m[1]) + ": " + m[2].split(", ").map(markPart).join(", ")],
+    [/^No one matches "(.*)"\.$/, m => "“" + m[1] + "” नामको कोही भेटिएन।"],
+    [/^(.+) of (.+) done$/, m => inline(m[2]) + " मध्ये " + inline(m[1]) + " भयो"],
     [/^Today, (.+)$/, m => "आज, " + inline(m[1])],
     [/^Machine offline since (.+)$/, m => "मेसिन " + inline(m[1]) + " देखि अफलाइन"],
     [/^A fingerprint machine \((.+)\) is waiting for you to approve it\.$/, m => "फिंगरप्रिन्ट मेसिन (" + m[1] + ") तपाईंको स्वीकृति कुर्दै छ।"],

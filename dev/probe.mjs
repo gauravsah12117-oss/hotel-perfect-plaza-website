@@ -11,8 +11,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 const W = +(process.env.VW || 1440), H = +(process.env.VH || 900);
 const port = 9500 + Math.floor(Math.random() * 400), profile = mkdtempSync(join(tmpdir(), "cdp-"));
-const chrome = spawn(process.env.CHROME_BIN || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", ["--headless=new", "--disable-gpu", "--hide-scrollbars",
-  `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, `--window-size=${W},${H}`, "about:blank"], { stdio: "ignore" });
+const chrome = spawn(process.env.CHROME_BIN || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", ["--headless=new", "--disable-gpu", "--hide-scrollbars", "--disable-component-update", "--disable-background-networking", "--disable-extensions", "--no-first-run",
+  `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, `--window-size=${W},${H}`, "about:blank"], { stdio: "ignore", env: { ...process.env, TEMP: profile, TMP: profile } });  /* its leftovers go with the profile */
 const wait = ms => new Promise(r => setTimeout(r, ms));
 let ep; for (let i = 0; i < 60; i++) { try { ep = (await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()).webSocketDebuggerUrl; break; } catch { await wait(250); } }
 const ws = new WebSocket(ep); await new Promise(r => ws.addEventListener("open", r, { once: true }));

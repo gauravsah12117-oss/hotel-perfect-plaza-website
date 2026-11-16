@@ -34,6 +34,8 @@
     <symbol id="i-out" viewBox="0 0 24 24"><path d="M10 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2H10"/><path d="M14.5 8l4 4-4 4M18.5 12H9"/></symbol>
     <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/></symbol>
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.5 16.5V11a5.5 5.5 0 0 1 11 0v5.5l1.5 1.5H5z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4.5 4.5"/></symbol>
   </defs>
 </svg>
 
@@ -106,9 +108,16 @@
             <span>📲 Put the <strong lang="ne">हाजिरी</strong> app on this phone's home screen</span>
             <button type="button" class="btn btn--small" data-install-any>Install</button>
           </div>
-          <div class="welcome">
-            <p class="welcome__hello" data-greeting>Namaste</p>
-            <p class="welcome__sub">Hotel Perfect Plaza, Janakpurdham</p>
+          <div class="lobby">
+            <div class="welcome">
+              <p class="welcome__hello" data-greeting>Namaste</p>
+              <p class="welcome__sub">Hotel Perfect Plaza, Janakpurdham</p>
+            </div>
+            <!-- the key board at reception: a brass tag per person, lit while they're in the hotel -->
+            <div class="rack" data-rack hidden>
+              <div class="rack__tags" data-rack-tags role="list" aria-label="Who is in the hotel"></div>
+              <p class="rack__key" data-rack-key></p>
+            </div>
           </div>
 
           <div class="card setup" data-setup hidden>
@@ -133,8 +142,12 @@
               <button type="button" data-view="simple" aria-pressed="true">Simple</button>
               <button type="button" data-view="timeline" aria-pressed="false">Timeline</button>
             </div>
+            <label class="find"><svg><use href="#i-search"/></svg><input type="search" data-find placeholder="Find a person" aria-label="Find a person" autocomplete="off"></label>
             <select class="groupfilter" data-group-filter aria-label="Department" hidden></select>
-            <button type="button" class="btn btn--ghost btn--small" data-share>Share today</button>
+            <div class="daybar__end">
+              <button type="button" class="refresh" data-refresh hidden><svg><use href="#i-refresh"/></svg><span data-updated>Updated just now</span></button>
+              <button type="button" class="btn btn--ghost btn--small" data-share>Share today</button>
+            </div>
           </div>
 
           <!-- Simple: people in groups, big and easy to read, with a call button -->
@@ -584,6 +597,11 @@
   </div>
   <div class="sheet__body" data-install-steps></div>
 </dialog>
+
+<!-- who just came or went, and other short news (attendance.js) -->
+<div class="toasts" data-toasts aria-live="polite"></div>
+<!-- pull down on Today to refresh -->
+<div class="ptr" data-ptr aria-hidden="true"><svg><use href="#i-refresh"/></svg></div>
 
 <!-- what is printed when printing payslips (attendance.js fills it) -->
 <div class="printarea" data-printarea hidden></div>

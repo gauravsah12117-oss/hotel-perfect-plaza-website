@@ -101,18 +101,38 @@
   }
   tickClock(); setInterval(tickClock, 15000);
 
+  /* short news at the bottom of the screen: who just came, a day's marks.
+     Tapping one does its action (opens the person), or just closes it. */
+  function toast(content, { av, onclick, ms = 5000 } = {}) {
+    const box = $("[data-toasts]"), host = $("dialog[open]") || document.body;
+    if (box.parentNode !== host) host.append(box);                     /* above an open person card, not behind it */
+    const t = el("button", { type: "button", className: "toast" }, av || null, el("span", {}, content));
+    const bye = () => { t.classList.add("bye"); setTimeout(() => t.remove(), 260); };
+    t.addEventListener("click", () => { bye(); if (onclick) onclick(); });
+    box.append(t);
+    while (box.children.length > 3) box.firstElementChild.remove();
+    setTimeout(bye, ms);
+  }
+
+  /* anything still loading: a thin moving line under the top bar */
+  let busy = 0;
+  const setBusy = n => { busy = Math.max(0, busy + n); document.body.classList.toggle("busy", busy > 0); };
+
   async function api(action, { method = "GET", query = {}, body } = {}) {
     let res;
+    setBusy(1);
     try {
       res = await fetch("/api/attendance?" + new URLSearchParams({ action, ...query }), {
         method, headers: { Authorization: "Bearer " + pass, ...(body ? { "Content-Type": "application/json" } : {}) },
         body: body ? JSON.stringify(body) : undefined
       });
     } catch (e) {
+      setBusy(-1);
       $("[data-offline]").hidden = false;
       msg($("[data-login-msg]"), "No internet. Connect and try again.");
       throw e;
     }
+    setBusy(-1);
     $("[data-offline]").hidden = true;
     let json = {}; try { json = await res.json(); } catch (e) {}
     if (res.status === 401) { signOut(String(pass || "").startsWith("v1.") ? "Signed out: the password was changed. Sign in with the new one." : "Wrong password."); throw new Error("password"); }
@@ -185,8 +205,12 @@
     $("[data-page-title]").textContent = TITLES[tab];
     document.title = T(TITLES[tab] + " — Hotel Perfect Plaza");
     scrollTo(0, 0);
-    $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
-    $$("[data-panel]").forEach(p => { p.hidden = p.dataset.panel !== tab; });
+    $$("[data-tab]").forEach((b, i) => { b.setAttribute("aria-selected", String(b.dataset.tab === tab)); if (b.dataset.tab === tab) $("[data-tabs]").style.setProperty("--i", i); });
+    $$("[data-panel]").forEach(p => {
+      const was = p.hidden;
+      p.hidden = p.dataset.panel !== tab;
+      if (was && !p.hidden) { p.classList.remove("enter"); void p.offsetWidth; p.classList.add("enter"); }
+    });
     try { history.replaceState(null, "", "#" + tab); } catch (e) {}
     loaders[tab]().catch(e => console.error(e));
   }
@@ -416,11 +440,79 @@
     $("[data-board-note]").textContent = isToday ? "Updates by itself every 30 seconds" : "";
     const hour = new Date(Date.now() + 345 * 60000).getUTCHours();
     $("[data-greeting]").textContent = hour >= 4 && hour < 12 ? "Good morning" : hour >= 12 && hour < 17 ? "Good afternoon" : "Good evening";
+
+    /* who has punched since the last look: their tag swings, their card
+       glows, and a note at the bottom says who and when */
+    fresh = new Set();
+    if (isToday && seenDay === d) for (const r of rows) {
+      const was = seenCount.get(r.pin);
+      if (was != null && r.rec.punches.length > was) fresh.add(r.pin);
+    }
+    seenDay = isToday ? d : ""; seenCount = new Map(rows.map(r => [r.pin, r.rec.punches.length]));
+    for (const r of rows.filter(x => fresh.has(x.pin))) {
+      const p = r.rec.punches[r.rec.punches.length - 1];
+      toast(r.rec.inside ? `${r.name} came in at ${clock(p.time)}` : `${r.name} left at ${clock(p.time)}`, { av: avatar(r.name, r.pin), onclick: () => openSheet(r), ms: 8000 });
+    }
+    updatedAt = Date.now(); updatedLabel();
+    $("[data-refresh]").hidden = !isToday;
+
+    dayRows = rows; dayToday = isToday; dayNow = isToday ? ms(nowStamp) : null;
     lede(rows, isToday);
-    lastBoard = [rows, isToday ? ms(nowStamp) : null, isToday];
-    simple(rows, isToday);
+    rack(rows, isToday);
+    redraw();
+  }
+  let seenDay = "", seenCount = new Map(), fresh = new Set(), updatedAt = 0, dayRows = [], dayToday = false, dayNow = null, findQ = "";
+
+  /* the list and the timeline, narrowed by "Find a person" */
+  function redraw() {
+    const q = findQ.trim().toLowerCase();
+    const rows = q ? dayRows.filter(r => [r.name, r.job, r.pin].some(v => String(v || "").toLowerCase().includes(q))) : dayRows;
+    lastBoard = [rows, dayNow, dayToday, findQ.trim()];
+    simple(rows, dayToday, findQ.trim());
     applyView();
     if (view === "timeline") board(...lastBoard);
+  }
+  $("[data-find]").addEventListener("input", e => { findQ = e.target.value; redraw(); });
+
+  function updatedLabel() {
+    const m = Math.floor((Date.now() - updatedAt) / 60000);
+    $("[data-updated]").textContent = m < 1 ? "Updated just now" : `Updated ${m} min ago`;
+  }
+  setInterval(() => { if (updatedAt && current === "day") updatedLabel(); }, 20000);
+  async function refreshDay(spinner) {
+    spinner.classList.add("spin");
+    const t0 = Date.now();
+    try { await loadDay(); } catch (e) { /* the offline note says why */ }
+    await new Promise(r => setTimeout(r, Math.max(0, 600 - (Date.now() - t0))));
+    spinner.classList.remove("spin");
+  }
+  $("[data-refresh]").addEventListener("click", e => refreshDay(e.currentTarget));
+
+  /* The key board: a tag per person, in the order of the groups below. */
+  const RACK = [
+    ["in", "In the hotel now", x => x.inside],
+    ["absent", "Not come yet", x => x.status === "absent"],
+    ["upcoming", "Not due yet", x => x.status === "upcoming" && !x.punches.length && !x.leave && !x.off && !x.holiday],
+    ["gone", "Gone home", x => x.punches.length && !x.inside],
+    ["away", "On leave or day off", () => true]
+  ];
+  function rack(rows, isToday) {
+    const box = $("[data-rack]");
+    box.hidden = !isToday || !rows.length;
+    if (box.hidden) return;
+    const tags = $("[data-rack-tags]"), key = $("[data-rack-key]"), placed = new Set();
+    tags.textContent = ""; key.textContent = "";
+    for (const [k, label, test] of RACK) {
+      const list = rows.filter(r => !placed.has(r.pin) && test(r.rec));
+      if (!list.length) continue;
+      for (const r of list) {
+        placed.add(r.pin);
+        const first = String(r.name).replace(/^Staff #/, "#").split(/\s+/)[0];
+        tags.append(el("button", { type: "button", role: "listitem", className: "tag tag--" + k + (fresh.has(r.pin) ? " swing" : ""), "aria-label": `${r.name}, ${label}`, title: label, onclick: () => openSheet(r) },
+          el("span", { className: "tag__plate" }, el("b", { "data-no-tr": true }, initials(r.name)), el("small", {}, first))));
+      }
+      key.append(el("span", {}, el("i", { className: k }), label, " ", el("b", {}, String(list.length))));
+    }
   }
 
   /* Simple or Timeline */
@@ -434,18 +526,36 @@
   $$("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
 
   /* a person's initials in a coloured circle */
-  function avatar(name, pin, big) {
+  function initials(name) {
     const words = String(name).replace(/^Staff #/, "#").split(/\s+/).filter(Boolean);
-    const letters = (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
+    return (words.length > 1 ? words[0][0] + words[words.length - 1][0] : (words[0] || "?").slice(0, 2)).toUpperCase();
+  }
+  function avatar(name, pin, big) {
     let h = 0; for (const c of String(pin)) h = (h * 31 + c.charCodeAt(0)) % 997;
-    return el("span", { className: "avatar" + (big ? " avatar--big" : ""), "data-c": String(h % 6), "aria-hidden": "true" }, letters);
+    return el("span", { className: "avatar" + (big ? " avatar--big" : ""), "data-c": String(h % 6), "aria-hidden": "true", "data-no-tr": true }, initials(name));
+  }
+
+  /* how much of the shift is done: a bar that fills through the day, blue past the end */
+  function progress(x) {
+    if (!x.punches.length || x.off || x.holiday || !x.shiftLen) return null;
+    const mins = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+    const brk = x.breakStart && x.breakEnd ? (mins(x.breakEnd) - mins(x.breakStart) + 1440) % 1440 : 0;
+    const need = x.shiftLen - brk;
+    if (need <= 0) return null;
+    const over = x.worked > need;
+    const bar = el("i");
+    bar.style.width = over ? "100%" : Math.max(3, x.worked / need * 100).toFixed(1) + "%";
+    const p = el("span", { className: "prog" + (over ? " ot" : ""), title: `${dur(x.worked)} of ${dur(need)} done`, role: "img", "aria-label": `${dur(x.worked)} of ${dur(need)} done` }, bar);
+    if (over) p.style.setProperty("--full", (need / x.worked * 100).toFixed(1) + "%");
+    return p;
   }
   const telOf = p => String(p || "").replace(/[^\d+]/g, "");
 
   /* The day as groups of people: not come, not due yet, in the hotel, gone
      home, away. Each person opens their card; each has a call button. */
-  function simple(rows, isToday) {
+  function simple(rows, isToday, q) {
     const box = $("[data-simple]"); box.textContent = "";
+    if (!rows.length && q) { box.append(el("p", { className: "card nomatch" }, `No one matches "${q}".`)); return; }
     if (!rows.length) { box.append(el("p", { className: "card board__empty" }, "No staff yet. Add them in Staff, or they appear here after their first punch.")); return; }
     const away = x => ["leave", "off", "holiday", "none"].includes(x.status);
     const groups = isToday ? [
@@ -466,17 +576,27 @@
         el("h3", {}, el("span", {}, title), " ", el("b", {}, String(list.length))));
       for (const r of list) {
         const tel = telOf(r.phone);
-        sec.append(el("div", { className: "pcard" },
+        const av = avatar(r.name, r.pin);
+        if (isToday && r.rec.inside) av.classList.add("avatar--in");
+        if (r.rec.status === "absent") av.classList.add("avatar--absent");
+        sec.append(el("div", { className: "pcard" + (fresh.has(r.pin) ? " is-new" : "") },
           el("button", { type: "button", className: "pcard__open", onclick: () => openSheet(r) },
-            avatar(r.name, r.pin),
+            av,
             el("span", { className: "pcard__who" }, el("b", {}, r.name), r.job ? el("small", {}, r.job) : null, el("span", { className: "chips" }, chips(r.rec, isToday))),
-            el("span", { className: "pcard__facts" }, facts(r.rec, isToday))),
+            el("span", { className: "pcard__facts" }, facts(r.rec, isToday), isToday ? progress(r.rec) : null)),
           tel ? el("a", { className: "callbtn", href: "tel:" + tel, "aria-label": `Call ${r.name}` }, "📞", el("span", {}, "Call")) : null));
       }
       box.append(sec);
     }
   }
-  const jump = key => { setView("simple"); const g = $(`[data-group="${key}"]`); if (g) g.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const jump = key => {
+    setView("simple");
+    if (findQ) { findQ = $("[data-find]").value = ""; redraw(); }
+    const g = $(`[data-group="${key}"]`);
+    if (!g) return;
+    g.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    g.classList.remove("flash"); void g.offsetWidth; g.classList.add("flash");
+  };
 
   /* --------------------------------------------------------- person card */
   let sheetRow = null;
@@ -501,11 +621,28 @@
     const s = rep.staff.find(x => x.pin === r.pin);
     if (!s || sheetRow !== r) return;
     const x = s.summary, stat = (k, v, cls) => el("div", { className: cls || "" }, el("b", {}, String(v)), el("span", {}, k));
-    $("[data-sheet-stats]").append(stat("Present", x.present), stat("Absent", x.absent, x.absent ? "bad" : ""), stat("Late", x.late, x.late ? "warn" : ""),
-      stat("Leave", x.paidLeave + x.unpaidLeave), stat("Overtime (h)", hours(x.ot)), s.salary ? stat("Pay so far", rs(x.pay), "good") : null);
+    $("[data-sheet-stats]").append(...[stat("Present", x.present), stat("Absent", x.absent, x.absent ? "bad" : ""), stat("Late", x.late, x.late ? "warn" : ""),
+      stat("Leave", x.paidLeave + x.unpaidLeave), stat("Overtime (h)", hours(x.ot)), s.salary ? stat("Pay so far", rs(x.pay), "good") : null].filter(Boolean));
     $("[data-sheet-marks]").append(...s.days.map(d => el("span", { className: "sheet__mark" }, mark(d), el("small", {}, String((bsOf(d.day) || { d: +d.day.slice(8) }).d)))));
   }
   $("[data-sheet-close]").addEventListener("click", () => $("[data-sheet]").close());
+  /* phones: the card comes up from the bottom; drag it down by its top to put it away */
+  $$(".sheet").forEach(dlg => {
+    const head = $(".sheet__head", dlg);
+    let y0 = null, dy = 0;
+    head.addEventListener("touchstart", e => {
+      if (!matchMedia("(max-width: 900px)").matches || e.target.closest("button, a, input, select")) return;
+      y0 = e.touches[0].clientY; dy = 0; dlg.style.transition = "none";
+    }, { passive: true });
+    head.addEventListener("touchmove", e => { if (y0 == null) return; dy = Math.max(0, e.touches[0].clientY - y0); dlg.style.transform = `translateY(${dy}px)`; }, { passive: true });
+    head.addEventListener("touchend", () => {
+      if (y0 == null) return;
+      y0 = null; dlg.style.transition = "transform .2s ease-out";
+      if (dy > 90) { dlg.style.transform = "translateY(100%)"; setTimeout(() => { dlg.close(); dlg.style.transform = dlg.style.transition = ""; }, 200); }
+      else dlg.style.transform = "";
+    });
+    dlg.addEventListener("close", () => { const box = $("[data-toasts]"); if (dlg.contains(box)) document.body.append(box); });
+  });
   $("[data-sheet]").addEventListener("click", e => { if (e.target === e.currentTarget) e.currentTarget.close(); });   /* tap outside */
   $("[data-sheet-leave]").addEventListener("submit", async e => {
     e.preventDefault();
@@ -532,10 +669,65 @@
   });
   let lastBoard = null, resizing = 0;
   addEventListener("resize", () => { clearTimeout(resizing); resizing = setTimeout(() => { if (lastBoard && current === "day") board(...lastBoard); }, 150); });
-  const go = n => { $("[data-day-date]").value = addDays($("[data-day-date]").value || today(), n); loadDay(); };
+  /* the day before or after, sliding in from the side it comes from */
+  const go = n => {
+    $("[data-day-date]").value = addDays($("[data-day-date]").value || today(), n);
+    loadDay().then(() => ["[data-day-lede]", "[data-simple]", "[data-timeline]"].forEach(s => {
+      const e = $(s); e.classList.remove("slide-next", "slide-prev"); void e.offsetWidth; e.classList.add(n > 0 ? "slide-next" : "slide-prev");
+    })).catch(() => {});
+  };
   $("[data-day-date]").addEventListener("change", () => loadDay());
   $("[data-day-prev]").addEventListener("click", () => go(-1));
   $("[data-day-next]").addEventListener("click", () => go(1));
+
+  /* phones: pull Today down to refresh it, swipe sideways for the day before or after */
+  (function touches() {
+    const panel = $('[data-panel="day"]'), ptr = $("[data-ptr]");
+    let x0 = 0, y0 = 0, dx = 0, dy = 0, mode = "", top = false;
+    const pullBy = () => Math.min(dy * .45, 90);
+    const place = (p, extra) => {
+      const bar = $(".topbar").getBoundingClientRect().bottom;
+      ptr.style.transform = `translateY(${bar - 44 + p}px) rotate(${p * 4}deg)`;
+      ptr.style.opacity = String(Math.min(1, p / 45));
+      ptr.style.transition = extra || "none";
+    };
+    panel.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) { mode = "none"; return; }
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = dy = 0; top = scrollY <= 0;
+      mode = e.target.closest(".scroll, input, select, textarea, .board") ? "none" : "";
+    }, { passive: true });
+    panel.addEventListener("touchmove", e => {
+      if (mode === "none" || e.touches.length !== 1) return;
+      dx = e.touches[0].clientX - x0; dy = e.touches[0].clientY - y0;
+      if (!mode) {
+        if (Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.6) mode = "swipe";
+        else if (top && dy > 10 && dy > Math.abs(dx) * 1.5) mode = "pull";
+        else if (Math.abs(dy) > 14) mode = "none";
+      }
+      if (mode === "pull") place(pullBy());
+    }, { passive: true });
+    panel.addEventListener("touchend", async () => {
+      const was = mode; mode = "";
+      if (was === "swipe" && Math.abs(dx) > 80) {
+        if (dx < 0 && !$("[data-day-next]").disabled) go(1);
+        else if (dx > 0) go(-1);
+      }
+      if (was !== "pull") return;
+      if (pullBy() > 55) {
+        place(55, "transform .2s"); ptr.classList.add("spin");
+        try { await loadDay(); } catch (e) { /* the offline note says why */ }
+        await new Promise(r => setTimeout(r, 400));
+        ptr.classList.remove("spin");
+      }
+      place(0, "transform .25s, opacity .25s");
+    });
+  })();
+
+  /* a mark in the register: tap it to read what it stands for (phones have no hover) */
+  document.addEventListener("click", e => {
+    const m = e.target.closest && e.target.closest(".register .r, .sheet__mark .r");
+    if (m && m.title) toast(m.title, { ms: 4000 });
+  });
   $("[data-day-today]").addEventListener("click", () => { $("[data-day-date]").value = today(); loadDay(); });
 
   const ms = s => Date.parse(s.slice(0, 19).replace(" ", "T") + "Z");      /* Nepal wall time → ms */
@@ -553,14 +745,18 @@
     const ot = rows.reduce((a, r) => a + r.rec.ot, 0);
     const names = list => list.map(r => r.name).join(", ");
     const GROUP = { ok: "gone", in: "inside", late: "inside", absent: "absent", ot: "gone" };
-    const stat = (cls, label, num, sub) => box.append(el("button", { type: "button", className: "stat stat--" + cls, onclick: () => jump(GROUP[cls]) },
-      el("span", { className: "stat__label" }, label), el("span", { className: "stat__num" }, num), el("span", { className: "stat__sub" }, sub || "")));
+    const stat = (cls, label, num, sub, part) => {
+      const meter = part == null ? null : el("span", { className: "stat__meter", "aria-hidden": "true" }, el("i"));
+      if (meter) meter.firstChild.style.width = (part * 100).toFixed(1) + "%";
+      box.append(el("button", { type: "button", className: "stat stat--" + cls, onclick: () => jump(GROUP[cls]) },
+        el("span", { className: "stat__label" }, label), el("span", { className: "stat__num" }, num), meter, el("span", { className: "stat__sub" }, sub || "")));
+    };
     /* the same, as text to share */
     const line = (label, value) => value ? `\n${T(label)}: ${T(value)}` : "";
     shareText = T($("[data-day-title]").textContent) + line(isToday ? "Came today" : "Came", `${came.length} / ${rows.length}`) +
       line("In the hotel now", isToday ? names(inside) : "") + line("Late", late.map(r => `${r.name} ${dur(r.rec.late)}`).join(", ")) +
       line(isToday ? "Not come" : "Absent", names(away)) + line("On leave", names(leave)) + line("Overtime", ot ? dur(ot) : "");
-    stat("ok", isToday ? "Came today" : "Came", [String(came.length), el("small", {}, " / " + rows.length)], rows.length ? (came.length === rows.length ? "Everyone" : "") : "No staff yet");
+    stat("ok", isToday ? "Came today" : "Came", [String(came.length), el("small", {}, " / " + rows.length)], rows.length ? (came.length === rows.length ? "Everyone" : "") : "No staff yet", rows.length ? came.length / rows.length : null);
     if (isToday) stat("in", "In the hotel now", String(inside.length), names(inside));
     stat("late", "Late", String(late.length), late.map(r => `${r.name} ${dur(r.rec.late)}`).join(", "));
     stat("absent", isToday ? "Not come" : "Absent", String(away.length), names(away) + (leave.length ? (away.length ? "; " : "") + `${leave.length} on leave` : ""));
@@ -569,8 +765,9 @@
 
   /* The day as a strip per person: the shift (dashed), time at work (green),
      a late start (marigold), overtime (blue), each punch (a tick), now (red). */
-  function board(rows, nowT, isToday) {
+  function board(rows, nowT, isToday, q) {
     const box = $("[data-board]"); box.textContent = "";
+    if (!rows.length && q) { box.append(el("p", { className: "nomatch" }, `No one matches "${q}".`)); return; }
     if (!rows.length) { box.append(el("p", { className: "board__empty" }, "No staff yet. Add them in Staff, or they appear here after their first punch.")); return; }
     const info = rows.map(r => {
       const x = r.rec, s = at(x.day, x.shiftStart);
@@ -623,7 +820,7 @@
       P.forEach(p => place(strip, "s-punch" + (p.manual ? " hand" : ""), p.t, null, clock(p.time) + (p.manual ? ", added by hand" : "")));
       if (nowT) place(strip, "s-now", nowT, null);
 
-      box.append(el("div", { className: "srow" + (x.status === "absent" ? " absent" : "") },
+      box.append(el("div", { className: "srow" + (x.status === "absent" ? " absent" : "") + (fresh.has(r.pin) ? " is-new" : "") },
         el("div", { className: "srow__who" }, el("b", {}, r.name), r.job ? el("small", {}, r.job) : null, el("div", { className: "chips" }, chips(x, isToday))),
         strip,
         el("div", { className: "srow__facts" }, facts(x, isToday))));
