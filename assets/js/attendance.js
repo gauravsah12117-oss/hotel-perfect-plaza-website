@@ -427,7 +427,7 @@
     const any = depts.length || branches.length > 1;
     $$("[data-group-filter]").forEach(sel => {
       sel.textContent = ""; sel.hidden = !any;
-      sel.append(el("option", { value: "" }, "All departments"));
+      sel.append(el("option", { value: "" }, "Everyone"));
       if (branches.length > 1) sel.append(el("optgroup", { label: "Branch" }, branches.map(b => el("option", { value: "b:" + b }, b))));
       if (depts.length) sel.append(el("optgroup", { label: "Department" }, depts.map(d => el("option", { value: "d:" + d }, d))));
       sel.value = grp;
