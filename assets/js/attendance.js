@@ -752,7 +752,7 @@
     if (!s || sheetRow !== r) return;
     const x = s.summary, stat = (k, v, cls) => el("div", { className: cls || "" }, el("b", {}, String(v)), el("span", {}, k));
     $("[data-sheet-stats]").append(...[stat("Present", x.present), stat("Absent", x.absent, x.absent ? "bad" : ""), stat("Late", x.late, x.late ? "warn" : ""),
-      stat("Leave", x.paidLeave + x.unpaidLeave), stat("Overtime (h)", hours(x.ot)), s.salary ? stat("Pay so far", rs(x.pay), "good") : null].filter(Boolean));
+      stat("Leave", x.paidLeave + x.unpaidLeave), stat("Overtime (h)", hours(x.ot))]);
     $("[data-sheet-marks]").append(...s.days.map(d => el("span", { className: "sheet__mark" }, mark(d), el("small", {}, String((bsOf(d.day) || { d: +d.day.slice(8) }).d)))));
   }
   $("[data-sheet-close]").addEventListener("click", () => $("[data-sheet]").close());
@@ -789,7 +789,14 @@
     msg($("[data-sheet-msg]"), r.ok ? "Added." : errText(r), r.ok);
     if (r.ok) { e.target.time.value = ""; loadDay(); }
   });
-  $("[data-sheet-slip]").addEventListener("click", () => { slipPin = sheetRow.pin; $("[data-sheet]").close(); show("report"); });
+  /* the payslip of the last month that is over (this one isn't paid yet) */
+  $("[data-sheet-slip]").addEventListener("click", () => {
+    slipPin = sheetRow.pin; $("[data-sheet]").close();
+    const t = today(), b = bsOf(t);
+    if (b) bsMonth(b.m === 1 ? b.y - 1 : b.y, b.m === 1 ? 12 : b.m - 1);
+    else { const m = addDays(t.slice(0, 8) + "01", -1).slice(0, 7); $("[data-rep-month]").value = m; $("[data-rep-from]").value = m + "-01"; $("[data-rep-to]").value = monthEnd(m); }
+    show("report");
+  });
 
   /* ---------------------------------------------------- share the day */
   let shareText = "";
@@ -1066,9 +1073,11 @@
     report = r.json;
     report.staff = report.staff.filter(inGroup);
     const span = Math.round((Date.parse(report.to) - Date.parse(report.from)) / 86400000) + 1;
-    const wholeMonth = span >= 28;
+    /* pay only for a whole month that is over (its last day counts): a month
+       just started would show nearly the whole salary as already earned */
+    const whole = span >= 28, wholeMonth = whole && report.to <= today();
     $("[data-rep-title]").textContent = periodName();
-    $("[data-rep-note]").textContent = `${nice(report.from)} to ${nice(report.to)}, ${span} days.` + (wholeMonth ? "" : " Pay is only worked out for a whole month.");
+    $("[data-rep-note]").textContent = `${nice(report.from)} to ${nice(report.to)}, ${span} days.` + (wholeMonth ? "" : whole ? " Pay is worked out once the month is over." : " Pay is only worked out for a whole month.");
     repStats(wholeMonth);
     register(report.staff);
     lateEarly();

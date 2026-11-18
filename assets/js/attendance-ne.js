@@ -42,6 +42,7 @@ window.HPP_NE = (function () {
     "Remove from the staff list": "कर्मचारी सूचीबाट हटाउनुहोस्",
     "Takes them off the app for good, with their punches, leave and payslip entries. Someone who has only left the job: untick \"Still working here\" instead, so their records stay.":
       "उहाँलाई एपबाट सधैँका लागि हटाउँछ, हाजिरी, बिदा र तलब पर्चीका प्रविष्टिसहित। काम मात्र छोडेको भए ‘अझै यहाँ काम गर्छन्’ को टिक हटाउनुहोस्, ताकि रेकर्ड रहिरहोस्।",
+    "Last month's payslip": "गत महिनाको तलब पर्ची",
     "Month before": "अघिल्लो महिना", "Month after": "पछिल्लो महिना", "Choose a date": "मिति छान्नुहोस्",
     "Add a punch": "हाजिरी थप्नुहोस्", "Several days": "धेरै दिन", "Add leave": "बिदा थप्नुहोस्",
     "Booked leave and holidays": "राखिएका बिदा र चाडपर्व", "Change their details": "विवरण बदल्नुहोस्",
@@ -322,6 +323,7 @@ window.HPP_NE = (function () {
       const n = /(\d+) late arrivals?, (\d+) days? absent, ([\d.]+) hours of overtime so far\./.exec(m[4]);
       if (n) out += ` ${n[1]} पटक ढिलो, ${n[2]} दिन अनुपस्थित, अहिलेसम्म ${n[3]} घण्टा ओभरटाइम।`;
       if (/Pay is only worked out for a whole month/.test(m[4])) out += " पाउने रकम पूरा महिनाको मात्र हिसाब हुन्छ।";
+      if (/Pay is worked out once the month is over/.test(m[4])) out += " पाउने रकम महिना सकिएपछि हिसाब हुन्छ।";
       return out;
     }],
     [/^, (\d+) absent$/, m => ", " + m[1] + " अनुपस्थित"],
