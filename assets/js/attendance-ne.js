@@ -39,6 +39,9 @@ window.HPP_NE = (function () {
     "Namaste": "नमस्ते", "Good morning": "शुभ प्रभात", "Good afternoon": "नमस्कार", "Good evening": "शुभ सन्ध्या",
     "Who is in the hotel": "होटलमा को को छन्", "Find a person": "व्यक्ति खोज्नुहोस्", "Updated just now": "भर्खरै अद्यावधिक",
     "Choose a photo": "फोटो छान्नुहोस्", "Remove photo": "फोटो हटाउनुहोस्",
+    "Remove from the staff list": "कर्मचारी सूचीबाट हटाउनुहोस्",
+    "Takes them off the app for good, with their punches, leave and payslip entries. Someone who has only left the job: untick \"Still working here\" instead, so their records stay.":
+      "उहाँलाई एपबाट सधैँका लागि हटाउँछ, हाजिरी, बिदा र तलब पर्चीका प्रविष्टिसहित। काम मात्र छोडेको भए ‘अझै यहाँ काम गर्छन्’ को टिक हटाउनुहोस्, ताकि रेकर्ड रहिरहोस्।",
     "Month before": "अघिल्लो महिना", "Month after": "पछिल्लो महिना", "Choose a date": "मिति छान्नुहोस्",
     "Add a punch": "हाजिरी थप्नुहोस्", "Several days": "धेरै दिन", "Add leave": "बिदा थप्नुहोस्",
     "Booked leave and holidays": "राखिएका बिदा र चाडपर्व", "Change their details": "विवरण बदल्नुहोस्",

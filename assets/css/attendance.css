@@ -821,3 +821,8 @@ body { overscroll-behavior-y: contain; }             /* our own pull-to-refresh,
   .stack td.name .who { gap: .7rem; }
   .stack td.name .avatar--sm { width: 2.5rem; height: 2.5rem; font-size: .85rem; }
 }
+
+/* Staff → a person → Remove from the staff list: set apart below Save */
+.removebox { display: grid; gap: .4rem; margin-top: .6rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.removebox .btn { justify-self: start; }
+.removebox .hint { margin: 0; }

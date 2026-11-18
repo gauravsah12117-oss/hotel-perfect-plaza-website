@@ -330,6 +330,7 @@
     f.reset();
     f.pin.readOnly = false;
     $("[data-staff-form-title]").textContent = "Add staff";
+    $("[data-staff-remove-box]").hidden = true;
     newPhoto = undefined; photoPreview("?", "");
     openForm("staff");
   }
@@ -344,8 +345,22 @@
     f.pin.readOnly = true;
     newPhoto = undefined; photoPreview(s.name || "#" + s.pin, s.pin);
     $("[data-staff-form-title]").textContent = "Edit " + (s.name || "Staff #" + s.pin);
+    $("[data-staff-remove-box]").hidden = false;
     openForm("staff");
   }
+  /* off the list for good (after a clear warning); the machine's later
+     punches for that number are ignored until it is added again */
+  $("[data-staff-remove]").addEventListener("click", async () => {
+    const f = $("[data-staff-form]"), pin = f.pin.value.trim(), s = staff.find(x => x.pin === pin);
+    if (!s) return;
+    const who = s.name || "Staff #" + pin;
+    if (!confirm(`Remove ${who} (no. ${pin}) from the staff list? Their punches, leave and payslip entries go too, and this can't be undone.`)) return;
+    const r = await post("staff-remove", { pin });
+    if (!r.ok) return msg($("[data-staff-msg]"), errText(r));
+    delete photos[pin]; keepPhotos();
+    await loadStaff();
+    done("staff", `${who} was removed.`);
+  });
 
   /* the photo in the form: undefined = unchanged, null = take it off, a data: URL = the new one.
      It is saved with the rest when Save is pressed. */

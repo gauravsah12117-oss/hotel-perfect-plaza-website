@@ -376,6 +376,30 @@ test("a staff photo is kept only for someone on the staff list, only as a pictur
   assert.equal((await owner("photos")).json.photos["41"], undefined);
 });
 
+test("someone taken off the staff list goes with their records, and the machine can't bring them back until they're added again", async () => {
+  await approvedMachine();
+  await owner("staff", { method: "POST", body: { pin: "51", name: "Hari" } });
+  await owner("staff", { method: "POST", body: { pin: "52", name: "Mina" } });
+  await punch([["51", nowText(30)], ["52", nowText(30)]]);
+  await owner("leave", { method: "POST", body: { pin: "51", from: "2026-12-01", to: "2026-12-01", kind: "paid" } });
+  assert.equal((await owner("staff-remove", { method: "POST", body: { pin: "nobody" } })).json.error, "pin");
+  assert.equal((await owner("staff-remove", { method: "POST", body: { pin: "51" } })).status, 200);
+  let list = (await owner("staff")).json.staff;
+  assert.deepEqual(list.map(s => s.pin), ["52"]);                          /* Mina and her punch stay */
+  assert.equal(list[0].punches, 1);
+  assert.equal((await owner("leave", { query: { from: "2026-12-01", to: "2026-12-01" } })).json.leave.length, 0);
+  /* the machine still knows the finger: its punches and its user list are ignored */
+  await punch([["51", nowText(5)]]);
+  await machine("cdata", { method: "POST", query: { table: "OPERLOG" }, body: "USER PIN=51\tName=Hari\n" });
+  assert.deepEqual((await owner("staff")).json.staff.map(s => s.pin), ["52"]);
+  /* added again (a new person on that number): it counts from then on */
+  await owner("staff", { method: "POST", body: { pin: "51", name: "Ramesh" } });
+  await punch([["51", nowText(2)]]);
+  list = (await owner("staff")).json.staff;
+  assert.equal(list.find(s => s.pin === "51").punches, 1);
+  assert.equal((await call(attendanceRoute, { method: "POST", query: { action: "staff-remove" }, body: { pin: "52" } })).status, 401);
+});
+
 test("a stray first punch after the shift ended isn't counted as hours late", () => {
   const d = dayRecord({ staff: staff(), day: "2026-10-01", set: SET, now: later, punches: ps("2026-10-02 00:33") });
   assert.equal(d.late, 0);

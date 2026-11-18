@@ -39,7 +39,7 @@
    POST action=notify-test              a test to every phone (app and Telegram) */
 
 import { createHash, createHmac, timingSafeEqual, randomBytes } from "node:crypto";
-import { q } from "./_lib/db.js";
+import { q, tx } from "./_lib/db.js";
 import {
   attendance, today, machines, getSettings, setSetting, DEFAULTS, STAFF_COLS, STAFF_ORDER, shiftList, checkAbsent,
   okDay, addDays, dayStart, wall, wallText, toMin, nowNepal, dayOf, DAY
@@ -257,6 +257,7 @@ export default handle(async (req, res) => {
           grace = EXCLUDED.grace, department = EXCLUDED.department, branch = EXCLUDED.branch`,
         [b.pin, clean(b.name, 80), clean(b.job, 60), clean(b.phone, 30), shiftStart, shiftEnd, off, salary, otRate, joined,
          b.active !== false, b.notify !== false, b.ssf === true, breakStart, breakEnd, grace, clean(b.department, 40), clean(b.branch, 40)]);
+      await q(`DELETE FROM staff_removed WHERE pin = $1`, [b.pin]);   /* added again: the machine's punches count again */
     }
     const rows = await q(`SELECT ${STAFF_COLS}, (SELECT count(*)::int FROM punches p WHERE p.pin = staff.pin) AS punches FROM staff ${STAFF_ORDER}`);
     return json(res, 200, { staff: rows });
@@ -266,6 +267,18 @@ export default handle(async (req, res) => {
   if (get && action === "photos") {
     const rows = await q(`SELECT pin, photo FROM staff_photos`);
     return json(res, 200, { photos: Object.fromEntries(rows.map(r => [r.pin, r.photo])) });
+  }
+  /* someone off the staff list for good: their details, photo, punches,
+     leave, roster and payslip entries; the machine's later punches for that
+     number are ignored until it is added again */
+  if (post && action === "staff-remove") {
+    if (!okPin(b.pin)) return json(res, 400, { error: "pin" });
+    if (!(await q(`SELECT 1 FROM staff WHERE pin = $1`, [b.pin])).length) return json(res, 400, { error: "pin" });
+    await tx([
+      ...["punches", "staff_leave", "roster", "pay_adjust", "att_alerts", "staff_photos", "staff"].map(t => [`DELETE FROM ${t} WHERE pin = $1`, [b.pin]]),
+      [`INSERT INTO staff_removed (pin) VALUES ($1) ON CONFLICT (pin) DO UPDATE SET removed_at = now()`, [b.pin]]
+    ]);
+    return json(res, 200, { ok: true });
   }
   if (post && action === "photo") {
     if (!okPin(b.pin)) return json(res, 400, { error: "pin" });

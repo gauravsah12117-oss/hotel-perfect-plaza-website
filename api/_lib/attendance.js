@@ -146,7 +146,10 @@ addSchema([
      pin        text PRIMARY KEY,
      photo      text NOT NULL,
      updated_at timestamptz NOT NULL DEFAULT now()
-   )`
+   )`,
+  /* machine numbers taken off the staff list: the machine's punches for
+     them are ignored until that number is added again (Staff → Add staff) */
+  `CREATE TABLE IF NOT EXISTS staff_removed (pin text PRIMARY KEY, removed_at timestamptz NOT NULL DEFAULT now())`
 ]);
 
 /* ------------------------------------------------------------- the clock */
@@ -514,6 +517,8 @@ export async function monthSummary(now = nowNepal()) {
 export async function recordPunches(rows, sn, now = nowNepal()) {
   rows = rows.filter(r => r.pin && wall(r.at) !== null);
   if (!rows.length) return { taken: 0, added: [] };
+  const gone = new Set((await q(`SELECT pin FROM staff_removed`)).map(r => r.pin));
+  if (gone.size) { const n = rows.length; rows = rows.filter(r => !gone.has(r.pin)); if (!rows.length) return { taken: n, added: [] }; }
   /* someone joined no later than their first punch: new staff start then, so
      the days before aren't absences, and the machine's history moves an
      earlier join date back (it sends who is enrolled before their punches) */
@@ -585,8 +590,9 @@ async function announce(added, now) {
 /* "USER PIN=5\tName=Ram Sah\t…" lines (sent when someone is enrolled):
    fills in names the hotel hasn't typed yet. */
 export async function recordUsers(users) {
+  const gone = new Set((await q(`SELECT pin FROM staff_removed`)).map(r => r.pin));
   for (const u of users) {
-    if (!u.pin) continue;
+    if (!u.pin || gone.has(u.pin)) continue;                         /* taken off the list in the app */
     await q(`INSERT INTO staff (pin, name) VALUES ($1, $2) ON CONFLICT (pin) DO UPDATE SET name = EXCLUDED.name WHERE staff.name = ''`, [u.pin, u.name || ""]);
   }
 }
